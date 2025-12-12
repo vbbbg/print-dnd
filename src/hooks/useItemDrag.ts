@@ -11,6 +11,83 @@ interface DragState {
   initialItemY: number
 }
 
+// 1. Constrain to Paper Bounds
+const constrainToPaperBounds = (
+  x: number,
+  y: number,
+  itemWidth: number,
+  itemHeight: number,
+  paperWidth: number,
+  paperHeight: number
+) => {
+  const newX = Math.max(0, Math.min(x, paperWidth - itemWidth))
+  const newY = Math.max(0, Math.min(y, paperHeight - itemHeight))
+  return { x: newX, y: newY }
+}
+
+// 2. Constrain to avoid Body Region (Table)
+// Returns the adjusted Y coordinate
+const constrainToAvoidBody = (
+  y: number,
+  itemHeight: number,
+  bodyTop: number,
+  footerTop: number
+) => {
+  const itemBottom = y + itemHeight
+  // Check if entering Body Region
+  if (y < footerTop && itemBottom > bodyTop) {
+    // "Snap to closest edge" logic allows jumping over the body
+    const validTopY = bodyTop - itemHeight
+    const validBottomY = footerTop
+
+    const distToTop = Math.abs(y - validTopY)
+    const distToBottom = Math.abs(y - validBottomY)
+
+    if (distToTop < distToBottom) {
+      return validTopY
+    } else {
+      return validBottomY
+    }
+  }
+  return y
+}
+
+// Main calculation function
+const calculateItemPosition = (
+  item: { width: number; height: number },
+  deltaX: number,
+  deltaY: number,
+  initialX: number,
+  initialY: number,
+  paperWidth: number,
+  paperHeight: number,
+  bodyTop: number,
+  footerTop: number,
+  applyBodyConstraint: boolean
+) => {
+  let newX = initialX + deltaX
+  let newY = initialY + deltaY
+
+  // 1. Apply Paper Bounds
+  const bounded = constrainToPaperBounds(
+    newX,
+    newY,
+    item.width,
+    item.height,
+    paperWidth,
+    paperHeight
+  )
+  newX = bounded.x
+  newY = bounded.y
+
+  // 2. Apply Body Avoidance (Only if requested, e.g., on drop)
+  if (applyBodyConstraint) {
+    newY = constrainToAvoidBody(newY, item.height, bodyTop, footerTop)
+  }
+
+  return { x: newX, y: newY }
+}
+
 export const useItemDrag = (
   editorRef: RefObject<HTMLDivElement>,
   onUpdateState: (updater: (prev: EditorState) => EditorState) => void
@@ -41,8 +118,7 @@ export const useItemDrag = (
   )
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      e.preventDefault()
+    const updateState = (e: MouseEvent, applyBodyConstraint: boolean) => {
       if (!dragItem || !editorRef.current) return
 
       const deltaX = (e.clientX - dragItem.startX) / SCALE
@@ -56,80 +132,6 @@ export const useItemDrag = (
         else if (dragItem.region === 'header') items = [...prev.headerItems]
         else if (dragItem.region === 'footer') items = [...prev.footerItems]
 
-        // 1. Constrain to Paper Bounds
-        const constrainToPaperBounds = (
-          x: number,
-          y: number,
-          itemWidth: number,
-          itemHeight: number,
-          paperWidth: number,
-          paperHeight: number
-        ) => {
-          const newX = Math.max(0, Math.min(x, paperWidth - itemWidth))
-          const newY = Math.max(0, Math.min(y, paperHeight - itemHeight))
-          return { x: newX, y: newY }
-        }
-
-        // 2. Constrain to avoid Body Region (Table)
-        // Returns the adjusted Y coordinate
-        const constrainToAvoidBody = (
-          y: number,
-          itemHeight: number,
-          bodyTop: number,
-          footerTop: number
-        ) => {
-          const itemBottom = y + itemHeight
-          // Check if entering Body Region
-          if (y < footerTop && itemBottom > bodyTop) {
-            // "Snap to closest edge" logic allows jumping over the body
-            const validTopY = bodyTop - itemHeight
-            const validBottomY = footerTop
-
-            const distToTop = Math.abs(y - validTopY)
-            const distToBottom = Math.abs(y - validBottomY)
-
-            if (distToTop < distToBottom) {
-              return validTopY
-            } else {
-              return validBottomY
-            }
-          }
-          return y
-        }
-
-        // Main calculation function
-        const calculateItemPosition = (
-          item: { width: number; height: number },
-          deltaX: number,
-          deltaY: number,
-          initialX: number,
-          initialY: number,
-          paperWidth: number,
-          paperHeight: number,
-          bodyTop: number,
-          footerTop: number
-        ) => {
-          let newX = initialX + deltaX
-          let newY = initialY + deltaY
-
-          // 1. Apply Paper Bounds
-          const bounded = constrainToPaperBounds(
-            newX,
-            newY,
-            item.width,
-            item.height,
-            paperWidth,
-            paperHeight
-          )
-          newX = bounded.x
-          newY = bounded.y
-
-          // 2. Apply Body Avoidance
-          newY = constrainToAvoidBody(newY, item.height, bodyTop, footerTop)
-
-          return { x: newX, y: newY }
-        }
-
         if (items[dragItem.index]) {
           const item = { ...items[dragItem.index] }
 
@@ -142,7 +144,8 @@ export const useItemDrag = (
             prev.paperWidth,
             prev.paperHeight,
             prev.bodyTop,
-            prev.footerTop
+            prev.footerTop,
+            applyBodyConstraint
           )
 
           item.x = newX
@@ -160,7 +163,17 @@ export const useItemDrag = (
       })
     }
 
-    const handleMouseUp = () => {
+    const handleMouseMove = (e: MouseEvent) => {
+      e.preventDefault()
+      // During drag, allow visual overlap (pass through)
+      updateState(e, false)
+    }
+
+    const handleMouseUp = (e: MouseEvent) => {
+      // Must prevent default to avoid any weird selection
+      e.preventDefault()
+      // Final update with strict constraints (snap out of body)
+      updateState(e, true)
       setDragItem(null)
     }
 

@@ -17,6 +17,7 @@
 - 不允许拖动到 paper 之外
 - 不允许拖动到表格区域
 - header region 可以拖动到 footer region
+- item 拖动时，可以经过表格区域，只是不允许放置
 
 ### 单位与坐标
 
