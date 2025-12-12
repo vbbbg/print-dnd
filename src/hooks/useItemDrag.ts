@@ -56,10 +56,98 @@ export const useItemDrag = (
         else if (dragItem.region === 'header') items = [...prev.headerItems]
         else if (dragItem.region === 'footer') items = [...prev.footerItems]
 
+        // 1. Constrain to Paper Bounds
+        const constrainToPaperBounds = (
+          x: number,
+          y: number,
+          itemWidth: number,
+          itemHeight: number,
+          paperWidth: number,
+          paperHeight: number
+        ) => {
+          const newX = Math.max(0, Math.min(x, paperWidth - itemWidth))
+          const newY = Math.max(0, Math.min(y, paperHeight - itemHeight))
+          return { x: newX, y: newY }
+        }
+
+        // 2. Constrain to avoid Body Region (Table)
+        // Returns the adjusted Y coordinate
+        const constrainToAvoidBody = (
+          y: number,
+          itemHeight: number,
+          bodyTop: number,
+          footerTop: number
+        ) => {
+          const itemBottom = y + itemHeight
+          // Check if entering Body Region
+          if (y < footerTop && itemBottom > bodyTop) {
+            // "Snap to closest edge" logic allows jumping over the body
+            const validTopY = bodyTop - itemHeight
+            const validBottomY = footerTop
+
+            const distToTop = Math.abs(y - validTopY)
+            const distToBottom = Math.abs(y - validBottomY)
+
+            if (distToTop < distToBottom) {
+              return validTopY
+            } else {
+              return validBottomY
+            }
+          }
+          return y
+        }
+
+        // Main calculation function
+        const calculateItemPosition = (
+          item: { width: number; height: number },
+          deltaX: number,
+          deltaY: number,
+          initialX: number,
+          initialY: number,
+          paperWidth: number,
+          paperHeight: number,
+          bodyTop: number,
+          footerTop: number
+        ) => {
+          let newX = initialX + deltaX
+          let newY = initialY + deltaY
+
+          // 1. Apply Paper Bounds
+          const bounded = constrainToPaperBounds(
+            newX,
+            newY,
+            item.width,
+            item.height,
+            paperWidth,
+            paperHeight
+          )
+          newX = bounded.x
+          newY = bounded.y
+
+          // 2. Apply Body Avoidance
+          newY = constrainToAvoidBody(newY, item.height, bodyTop, footerTop)
+
+          return { x: newX, y: newY }
+        }
+
         if (items[dragItem.index]) {
           const item = { ...items[dragItem.index] }
-          item.x = dragItem.initialItemX + deltaX
-          item.y = dragItem.initialItemY + deltaY
+
+          const { x: newX, y: newY } = calculateItemPosition(
+            item,
+            deltaX,
+            deltaY,
+            dragItem.initialItemX,
+            dragItem.initialItemY,
+            prev.paperWidth,
+            prev.paperHeight,
+            prev.bodyTop,
+            prev.footerTop
+          )
+
+          item.x = newX
+          item.y = newY
+
           // Update the array
           items[dragItem.index] = item
 

@@ -14,6 +14,9 @@
 - 除了表格区域，其他各个区域的item，可以拖动放置
 - 拖动时，要实时更新，不显示preview
 - 坐标系统使用 mm 单位，显示时通过 `SCALE` 常量 (3.78px/mm) 进行转换
+- 不允许拖动到 paper 之外
+- 不允许拖动到表格区域
+- header region 可以拖动到 footer region
 
 ### 单位与坐标
 
