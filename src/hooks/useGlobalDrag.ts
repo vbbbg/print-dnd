@@ -1,6 +1,20 @@
 import { useState, useEffect, RefObject } from 'react'
-import { EditorState } from '../types/editor'
+import { EditorState, EditorItem } from '../types/editor'
 import { SCALE } from '../constants/units'
+
+// Helper to get max bottom Y of a list of items
+const getMaxBottom = (items: EditorItem[]) => {
+  if (!items || items.length === 0) return 0
+  return Math.max(...items.map((i) => i.y + i.height))
+}
+
+// Helper to get content height (bottom - top)
+const getContentHeight = (items: EditorItem[]) => {
+  if (!items || items.length === 0) return 0
+  const top = Math.min(...items.map((i) => i.y))
+  const bottom = Math.max(...items.map((i) => i.y + i.height))
+  return bottom - top
+}
 
 export const useGlobalDrag = (
   editorRef: RefObject<HTMLDivElement>,
@@ -12,7 +26,7 @@ export const useGlobalDrag = (
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      e.preventDefault() // Prevent text selection/scrolling
+      e.preventDefault()
       if (!dragging || !editorRef.current) return
 
       const paperElement = editorRef.current.querySelector(
@@ -21,7 +35,6 @@ export const useGlobalDrag = (
       if (!paperElement) return
 
       const rect = paperElement.getBoundingClientRect()
-      // Use the constant SCALE
       const relativeY = (e.clientY - rect.top) / SCALE
 
       onUpdateState((prev) => {
@@ -29,23 +42,78 @@ export const useGlobalDrag = (
         const minHeight = 5
 
         if (dragging === 'header') {
-          const newTop = Math.max(
-            minHeight,
-            Math.min(relativeY, prev.bodyTop - minHeight)
-          )
-          newState.headerTop = newTop
+          // Resizing Title (0~headerTop) / Header (headerTop~bodyTop)
+          // 1. Min Y: Must enclose Title Items
+          const titleBottom = getMaxBottom(prev.titleItems)
+          const minTop = Math.max(minHeight, titleBottom + minHeight)
+
+          // 2. Max Y: Must allow space for shifted Header Items
+          // If we move headerTop down, headerItems move down.
+          // We need to ensure they don't cross bodyTop.
+          // Space Available = (bodyTop - minHeight) - newHeaderTop
+          // Space Needed = HeaderContentHeight (approx)
+          // Actually simpler: The lowest item will move by Delta. NewLowest <= bodyTop.
+          // LowestY + Delta <= bodyTop.
+          // Delta = newTop - oldTop.
+          // LowestY + newTop - oldTop <= bodyTop.
+          // newTop <= bodyTop - LowestY + oldTop.
+
+          const headerContentBottom = getMaxBottom(prev.headerItems)
+          const maxShift = prev.bodyTop - minHeight - headerContentBottom
+          const maxTop = prev.headerTop + maxShift
+
+          // Clamp
+          let newTop = Math.max(minTop, Math.min(relativeY, maxTop))
+
+          // Shift Delta
+          const delta = newTop - prev.headerTop
+          if (delta !== 0) {
+            newState.headerTop = newTop
+            newState.headerItems = prev.headerItems.map((item) => ({
+              ...item,
+              y: item.y + delta,
+            }))
+          }
         } else if (dragging === 'body') {
-          const newTop = Math.max(
+          // Resizing Header (headerTop~bodyTop) / Body Table (bodyTop~footerTop)
+          // 1. Min Y: Must enclose Header Items
+          const headerBottom = getMaxBottom(prev.headerItems)
+          const minTop = Math.max(
             prev.headerTop + minHeight,
-            Math.min(relativeY, prev.footerTop - minHeight)
+            headerBottom + minHeight
           )
+
+          // 2. Max Y: footerTop - minHeight
+          const maxTop = prev.footerTop - minHeight
+
+          const newTop = Math.max(minTop, Math.min(relativeY, maxTop))
           newState.bodyTop = newTop
         } else if (dragging === 'footer') {
-          const newTop = Math.max(
-            prev.bodyTop + minHeight,
-            Math.min(relativeY, prev.paperHeight - minHeight)
-          )
-          newState.footerTop = newTop
+          // Resizing Body (bodyTop~footerTop) / Footer (footerTop~paperHeight)
+          // 1. Min Y: bodyTop + minHeight
+          const minTop = prev.bodyTop + minHeight
+
+          // 2. Max Y: Must allow space for shifted Footer Items
+          // MaxBottom <= paperHeight
+          // LowestY + Delta <= paperHeight
+          // delta = newTop - oldTop
+          // LowestY + newTop - oldTop <= paperHeight
+          // newTop <= paperHeight - LowestY + oldTop
+
+          const footerContentBottom = getMaxBottom(prev.footerItems)
+          const maxShift = prev.paperHeight - minHeight - footerContentBottom
+          const maxTop = prev.footerTop + maxShift
+
+          const newTop = Math.max(minTop, Math.min(relativeY, maxTop))
+
+          const delta = newTop - prev.footerTop
+          if (delta !== 0) {
+            newState.footerTop = newTop
+            newState.footerItems = prev.footerItems.map((item) => ({
+              ...item,
+              y: item.y + delta,
+            }))
+          }
         }
 
         return newState
