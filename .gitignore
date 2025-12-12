@@ -113,3 +113,4 @@ typings/
 .yarn/install-state.gz
 .pnp.*
 dist
+.idea

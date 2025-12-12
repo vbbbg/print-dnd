@@ -1,13 +1,7 @@
-import './App.css'
+import { TemplateEditor } from './components/TemplateEditor'
 
 function App() {
-  return (
-    <>
-      <div>
-        <h1>Vite + React</h1>
-      </div>
-    </>
-  )
+  return <TemplateEditor />
 }
 
 export default App
