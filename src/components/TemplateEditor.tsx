@@ -44,67 +44,36 @@ export const TemplateEditor: React.FC = () => {
   // Helper to handle mouse move (global)
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
+      e.preventDefault() // Prevent text selection/scrolling
       if (!dragging || !editorRef.current) return
-
-      // Calculate new Y relative to the paper
-      // We assume paper is centered or we need to find its rect.
-      // For simplicity, let's look at the delta or get the exact offset.
-      // Since Paper renders relative to its container, finding the exact "top" relative to Paper
-      // is easiest if we know where Paper is.
-      // However, we can also just use movementY if we are careful, but absolute position is more robust.
-
-      // Better approach: Get the paper element's bounding rect
-      // We can pass a ref to Paper or wrap it.
-      // For now, let's assume the mouse event clientY mapped to the paper coordinate space.
-
-      // Let's find the paper element from our ref or just assume the editorRef contains the paper.
-      // Actually, let's just use the relative movement for simplicity if we don't have a direct ref to the paper DOM.
-      // OR, we can just grab the paper DOM element via a selector or ref passed down.
-      // Let's look for the paper element in the event target's hierarchy or just add a Ref to Paper.
-      // To keep it simple without changing Paper props too much, let's look at the offset logic.
-
-      // Refined Logic:
-      // We need to calculate the new 'top' value for the line being dragged.
-      // `e.clientY` is the global mouse Y.
-      // We need to convert `e.clientY` to "pixels from top of paper".
-
-      // Let's try to find the paper Rect.
-      // We can use a ref on the wrapper div in TemplateEditor, find the Paper child?
-      // Or just compute deltas. Deltas are easiest but can drift.
-      // Let's try absolute mapping.
 
       const paperElement = editorRef.current?.querySelector(
         '[data-paper-root="true"]'
-      ) // Robust selector using data attribute
+      )
       if (!paperElement) return
 
       const rect = paperElement.getBoundingClientRect()
-      // Adjust relativeY by scale factor because the paper is scaled
       const relativeY = (e.clientY - rect.top) / SCALE
 
       setEditorState((prev) => {
         const newState = { ...prev }
-        const minHeight = 5 // Minimum height in mm
+        const minHeight = 5
 
         if (dragging === 'header') {
-          // Adjusting the line between Title and Header (headerTop)
-          // Constraints: > 0, < bodyTop - minHeight
+          // ...
+          // Explicitly ensure bodyTop matches prev.bodyTop (it does by default, but essentially we are sure)
           const newTop = Math.max(
             minHeight,
             Math.min(relativeY, prev.bodyTop - minHeight)
           )
           newState.headerTop = newTop
         } else if (dragging === 'body') {
-          // Adjusting the line between Header and Body (bodyTop)
-          // Constraints: > headerTop + minHeight, < footerTop - minHeight
           const newTop = Math.max(
             prev.headerTop + minHeight,
             Math.min(relativeY, prev.footerTop - minHeight)
           )
           newState.bodyTop = newTop
         } else if (dragging === 'footer') {
-          // Adjusting the line between Body and Footer (footerTop)
-          // Constraints: > bodyTop + minHeight, < paperHeight - minHeight
           const newTop = Math.max(
             prev.bodyTop + minHeight,
             Math.min(relativeY, prev.paperHeight - minHeight)
@@ -135,7 +104,7 @@ export const TemplateEditor: React.FC = () => {
     <DndProvider backend={HTML5Backend}>
       <div
         ref={editorRef}
-        className="min-h-screen bg-gray-100 flex justify-center items-start p-5"
+        className={`min-h-screen bg-gray-100 flex justify-center items-start p-5 ${dragging ? 'select-none cursor-ns-resize' : ''}`}
       >
         <div
           style={{

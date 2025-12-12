@@ -24,7 +24,7 @@ export const Paper: React.FC<PaperProps> = ({ state, onResizeStart }) => {
     >
       {/* Title Region */}
       <div
-        className="absolute w-full border-b border-dashed border-gray-300 p-1 box-border"
+        className="absolute w-full border-b border-dashed border-gray-300 box-border"
         style={{
           top: 0,
           height: headerTop,
@@ -37,7 +37,7 @@ export const Paper: React.FC<PaperProps> = ({ state, onResizeStart }) => {
 
       {/* Header Region */}
       <div
-        className="absolute w-full border-b border-dashed border-gray-300 p-1 box-border"
+        className="absolute w-full border-b border-dashed border-gray-300 box-border"
         style={{
           top: headerTop,
           height: bodyTop - headerTop,
@@ -50,7 +50,7 @@ export const Paper: React.FC<PaperProps> = ({ state, onResizeStart }) => {
 
       {/* Body Region */}
       <div
-        className="absolute w-full border-b border-dashed border-gray-300 p-1 box-border"
+        className="absolute w-full border-b border-dashed border-gray-300 box-border"
         style={{
           top: bodyTop,
           height: footerTop - bodyTop,
@@ -63,7 +63,7 @@ export const Paper: React.FC<PaperProps> = ({ state, onResizeStart }) => {
 
       {/* Footer Region */}
       <div
-        className="absolute w-full p-1 box-border"
+        className="absolute w-full box-border"
         style={{
           top: footerTop,
           height: paperHeight - footerTop,
