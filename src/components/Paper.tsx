@@ -16,7 +16,7 @@ export const Paper: React.FC<PaperProps> = ({ state, onResizeStart }) => {
   return (
     <div
       data-paper-root="true"
-      className="relative bg-white shadow-xl mx-auto overflow-hidden"
+      className="relative bg-white shadow-xl mx-auto"
       style={{
         width: paperWidth,
         height: paperHeight,
