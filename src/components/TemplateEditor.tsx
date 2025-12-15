@@ -1,6 +1,7 @@
-import React, { useState, useRef } from 'react'
+import React, { useRef } from 'react'
 import { EditorState } from '../types/editor'
 import { getMockEditorState } from '../utils/mockData.ts'
+import useSyncState from '../hooks/useSyncState'
 import { Paper } from './Paper'
 import { useGlobalDrag } from '../hooks/useGlobalDrag'
 import { useItemDrag } from '../hooks/useItemDrag'
@@ -8,7 +9,7 @@ import { useItemResize } from '../hooks/useItemResize'
 
 export const TemplateEditor: React.FC = () => {
   const [editorState, setEditorState] =
-    useState<EditorState>(getMockEditorState())
+    useSyncState<EditorState>(getMockEditorState)
 
   const editorRef = useRef<HTMLDivElement>(null)
 

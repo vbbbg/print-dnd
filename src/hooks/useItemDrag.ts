@@ -293,11 +293,8 @@ export const useItemDrag = (
       const deltaX = (e.clientX - dragItem.startX) / SCALE
       const deltaY = (e.clientY - dragItem.startY) / SCALE
 
-      // Calculate Snap Lines just once preferably, or here if state is stable
-      // We need 'prev' state to know where other items are.
-      // But we can't access 'prev' state synchronously inside the onUpdateState callback for calculation usage easily
-      // UNLESS we calculate lines referencing the state passed to onUpdateState.
-      // However, we need to update 'guides' state which is external to onUpdateState.
+      // Calculate guides BEFORE updating state using synchronous state access
+      let calculatedGuides: Guide[] = []
 
       onUpdateState((prev) => {
         const newState = { ...prev }
@@ -333,48 +330,9 @@ export const useItemDrag = (
           item.x = newX
           item.y = newY
 
-          // Side effect: update guides
-          // NOTE: calling setGuides inside onUpdateState (reducer-like) is risky/bad practice
-          // but we are in an event handler context technically.
-          // Better to move guide calculation out if possible, but we need 'prev' state.
-          // We will schedule it.
+          // Store guides for later update (only during drag)
           if (!applyBodyConstraint) {
-            // Only update guides during drag
-            // We can't set state directly in the updater if it causes re-renders.
-            // But onUpdateState is likely `setEditorState`.
-            // Actually, setGuides will trigger another render.
-            // Let's use a ref or check if guides changed to avoid thrashing?
-            // For now, let's allow it but be careful.
-            // Actually, we can't extract 'guides' easily out of this closure.
-          }
-
-          // Hack: we need to allow the parent hook usage to extract guides.
-          // Since we can't easily return values from setEditorState, we might need a workaround.
-          // Let's stick the guides in a ref or use a separate effects if possible.
-          // OR: We drag based on latest state ref?
-
-          // For now, let's assume we can emit the guides via a side channel or
-          // we simply don't have access to them outside of the item update for now?
-          // Wait, 'guides' need to be rendered.
-          // Let's attach them to the 'editorState' temporarily? No, that dirties data.
-
-          // Solution: Calculate snap lines OUTSIDE onUpdateState using a REF to the latest state if available.
-          // But we typically only have state inside the setter.
-          // Ok, we will expose `guides` via the return value of useItemDrag,
-          // and we will update it by using a `useEffect` that tracks `dragItem` and mouse position?
-          // No, logic duplication.
-
-          // Compromise: We update `guides` state inside this callback.
-          // React batches updates. It should be fine.
-          if (!applyBodyConstraint) {
-            // only show guides during drag
-            // To avoid infinite loops or tearing, check if changed
-            // JSON.stringify check is expensive but safe for small arrays
-            // We'll trust React.
-            // We need to defer this setGuides to avoid "component updating while" warning
-            setTimeout(() => setGuides(newGuides), 0)
-          } else {
-            setTimeout(() => setGuides([]), 0)
+            calculatedGuides = newGuides
           }
 
           // Update the array
@@ -387,6 +345,14 @@ export const useItemDrag = (
 
         return newState
       })
+
+      // Update guides synchronously after state update
+      // Safe because we're in an event handler, not during render
+      if (!applyBodyConstraint) {
+        setGuides(calculatedGuides)
+      } else {
+        setGuides([])
+      }
     }
 
     const handleMouseMove = (e: MouseEvent) => {
