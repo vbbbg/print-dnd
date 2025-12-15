@@ -15,7 +15,7 @@ export const TemplateEditor: React.FC = () => {
   const { dragging, setDragging } = useGlobalDrag(editorRef, setEditorState)
 
   // Use custom hook for item drag handling
-  const { handleItemDragStart, dragItem } = useItemDrag(
+  const { handleItemDragStart, dragItem, guides } = useItemDrag(
     editorRef,
     setEditorState
   )
@@ -44,6 +44,7 @@ export const TemplateEditor: React.FC = () => {
       >
         <Paper
           state={editorState}
+          guides={guides}
           onResizeStart={handleResizeStart}
           onItemDragStart={handleItemDragStart}
         />

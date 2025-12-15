@@ -13,7 +13,6 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
   item,
   isSelected,
   onMouseDown,
-  onClick,
 }) => {
   // Style based on item properties
   const style: React.CSSProperties = {
@@ -31,23 +30,19 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
     textAlign: item.horizontalAlignment,
     lineHeight: '1.2', // default
     cursor: 'move',
-    border: isSelected ? '1px solid blue' : '1px solid transparent',
-    // Debug visual
-    // backgroundColor: 'rgba(0, 0, 255, 0.1)',
   }
 
   return (
     <div
       style={style}
       onMouseDown={onMouseDown}
-      onClick={onClick}
-      className={`hover:border-blue-300 hover:border-dashed box-border flex items-center ${
+      className={`border border-blue-200 hover:border-blue-400 border-dashed box-border flex items-center ${
         item.horizontalAlignment === 'center'
           ? 'justify-center'
           : item.horizontalAlignment === 'right'
             ? 'justify-end'
             : 'justify-start'
-      }`}
+      } ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
       title={item.name || item.field}
     >
       {item.value || item.alias || item.name}

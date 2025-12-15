@@ -44,3 +44,8 @@ export interface EditorState {
   bodyItems: TableData
   footerItems: EditorItem[]
 }
+
+export interface Guide {
+  type: 'horizontal' | 'vertical'
+  pos: number // mm
+}

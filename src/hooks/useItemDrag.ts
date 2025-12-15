@@ -1,5 +1,5 @@
 import { useState, useEffect, RefObject, useCallback } from 'react'
-import { EditorState } from '../types/editor'
+import { EditorState, EditorItem, Guide } from '../types/editor'
 import { SCALE } from '../constants/units'
 
 interface DragState {
@@ -52,6 +52,157 @@ const constrainToAvoidBody = (
   return y
 }
 
+// 3. Snapping Logic
+// Threshold: 5px converted to mm
+const SNAP_THRESHOLD_MM = 5 / SCALE
+
+const getSnapLines = (
+  state: EditorState,
+  skipIndex: number,
+  skipRegion: string
+) => {
+  const xLines: number[] = [0, state.paperWidth / 2, state.paperWidth]
+  const yLines: number[] = [0, state.paperHeight / 2, state.paperHeight]
+
+  // Explicit loop for better control
+  const addItems = (items: EditorItem[], region: string) => {
+    items.forEach((item, idx) => {
+      // Skip the item being dragged
+      if (region === skipRegion && idx === skipIndex) return
+
+      xLines.push(item.x)
+      xLines.push(item.x + item.width / 2)
+      xLines.push(item.x + item.width)
+      yLines.push(item.y)
+      yLines.push(item.y + item.height / 2)
+      yLines.push(item.y + item.height)
+    })
+  }
+
+  addItems(state.titleItems, 'title')
+  addItems(state.headerItems, 'header')
+  addItems(state.footerItems, 'footer')
+
+  return { xLines, yLines }
+}
+
+const snapToGuides = (
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  xLines: number[],
+  yLines: number[]
+) => {
+  let snappedX = x
+  let snappedY = y
+  const activeGuides: Guide[] = []
+
+  // Define snap points for the item (left, center, right)
+  const xPoints = [
+    { value: x, offset: 0, label: 'left' },
+    { value: x + width / 2, offset: -width / 2, label: 'center' },
+    { value: x + width, offset: -width, label: 'right' },
+  ]
+
+  // Define snap points for the item (top, middle, bottom)
+  const yPoints = [
+    { value: y, offset: 0, label: 'top' },
+    { value: y + height / 2, offset: -height / 2, label: 'middle' },
+    { value: y + height, offset: -height, label: 'bottom' },
+  ]
+
+  // Find X-axis snapping (vertical lines)
+  // For each snap point, find the nearest matching guide line
+  let bestXSnap: { line: number; offset: number; distance: number } | null =
+    null
+
+  for (const pt of xPoints) {
+    let closestLine: number | null = null
+    let minDistance = SNAP_THRESHOLD_MM
+
+    for (const line of xLines) {
+      const distance = Math.abs(pt.value - line)
+      if (distance < minDistance) {
+        closestLine = line
+        minDistance = distance
+      }
+    }
+
+    // If this point has a matching guide, record it
+    if (closestLine !== null) {
+      // Track the best snap for positioning (closest overall)
+      if (!bestXSnap || minDistance < bestXSnap.distance) {
+        bestXSnap = {
+          line: closestLine,
+          offset: pt.offset,
+          distance: minDistance,
+        }
+      }
+      // Add this guide line (for this specific snap point)
+      // Avoid duplicates
+      if (
+        !activeGuides.find(
+          (g) => g.type === 'vertical' && g.pos === closestLine
+        )
+      ) {
+        activeGuides.push({ type: 'vertical', pos: closestLine })
+      }
+    }
+  }
+
+  // Apply best X snap
+  if (bestXSnap) {
+    snappedX = bestXSnap.line + bestXSnap.offset
+  }
+
+  // Find Y-axis snapping (horizontal lines)
+  // For each snap point, find the nearest matching guide line
+  let bestYSnap: { line: number; offset: number; distance: number } | null =
+    null
+
+  for (const pt of yPoints) {
+    let closestLine: number | null = null
+    let minDistance = SNAP_THRESHOLD_MM
+
+    for (const line of yLines) {
+      const distance = Math.abs(pt.value - line)
+      if (distance < minDistance) {
+        closestLine = line
+        minDistance = distance
+      }
+    }
+
+    // If this point has a matching guide, record it
+    if (closestLine !== null) {
+      // Track the best snap for positioning (closest overall)
+      if (!bestYSnap || minDistance < bestYSnap.distance) {
+        bestYSnap = {
+          line: closestLine,
+          offset: pt.offset,
+          distance: minDistance,
+        }
+      }
+      // Add this guide line (for this specific snap point)
+      // Avoid duplicates
+      if (
+        !activeGuides.find(
+          (g) => g.type === 'horizontal' && g.pos === closestLine
+        )
+      ) {
+        activeGuides.push({ type: 'horizontal', pos: closestLine })
+      }
+    }
+  }
+
+  // Apply best Y snap
+  if (bestYSnap) {
+    snappedY = bestYSnap.line + bestYSnap.offset
+  }
+
+  return { x: snappedX, y: snappedY, guides: activeGuides }
+}
+
 // Main calculation function
 const calculateItemPosition = (
   item: { width: number; height: number },
@@ -63,12 +214,29 @@ const calculateItemPosition = (
   paperHeight: number,
   bodyTop: number,
   footerTop: number,
-  applyBodyConstraint: boolean
+  applyBodyConstraint: boolean,
+  snapData?: { xLines: number[]; yLines: number[] }
 ) => {
   let newX = initialX + deltaX
   let newY = initialY + deltaY
+  let guides: Guide[] = []
 
-  // 1. Apply Paper Bounds
+  // 0. Apply Snapping (Visual Soft Constraint)
+  if (snapData) {
+    const snapResult = snapToGuides(
+      newX,
+      newY,
+      item.width,
+      item.height,
+      snapData.xLines,
+      snapData.yLines
+    )
+    newX = snapResult.x
+    newY = snapResult.y
+    guides = snapResult.guides
+  }
+
+  // 1. Apply Paper Bounds (Hard Constraint)
   const bounded = constrainToPaperBounds(
     newX,
     newY,
@@ -85,7 +253,7 @@ const calculateItemPosition = (
     newY = constrainToAvoidBody(newY, item.height, bodyTop, footerTop)
   }
 
-  return { x: newX, y: newY }
+  return { x: newX, y: newY, guides }
 }
 
 export const useItemDrag = (
@@ -93,6 +261,7 @@ export const useItemDrag = (
   onUpdateState: (updater: (prev: EditorState) => EditorState) => void
 ) => {
   const [dragItem, setDragItem] = useState<DragState | null>(null)
+  const [guides, setGuides] = useState<Guide[]>([])
 
   const handleItemDragStart = useCallback(
     (
@@ -124,6 +293,12 @@ export const useItemDrag = (
       const deltaX = (e.clientX - dragItem.startX) / SCALE
       const deltaY = (e.clientY - dragItem.startY) / SCALE
 
+      // Calculate Snap Lines just once preferably, or here if state is stable
+      // We need 'prev' state to know where other items are.
+      // But we can't access 'prev' state synchronously inside the onUpdateState callback for calculation usage easily
+      // UNLESS we calculate lines referencing the state passed to onUpdateState.
+      // However, we need to update 'guides' state which is external to onUpdateState.
+
       onUpdateState((prev) => {
         const newState = { ...prev }
         let items: any[] = []
@@ -135,7 +310,13 @@ export const useItemDrag = (
         if (items[dragItem.index]) {
           const item = { ...items[dragItem.index] }
 
-          const { x: newX, y: newY } = calculateItemPosition(
+          const snapData = getSnapLines(prev, dragItem.index, dragItem.region)
+
+          const {
+            x: newX,
+            y: newY,
+            guides: newGuides,
+          } = calculateItemPosition(
             item,
             deltaX,
             deltaY,
@@ -145,11 +326,56 @@ export const useItemDrag = (
             prev.paperHeight,
             prev.bodyTop,
             prev.footerTop,
-            applyBodyConstraint
+            applyBodyConstraint,
+            snapData
           )
 
           item.x = newX
           item.y = newY
+
+          // Side effect: update guides
+          // NOTE: calling setGuides inside onUpdateState (reducer-like) is risky/bad practice
+          // but we are in an event handler context technically.
+          // Better to move guide calculation out if possible, but we need 'prev' state.
+          // We will schedule it.
+          if (!applyBodyConstraint) {
+            // Only update guides during drag
+            // We can't set state directly in the updater if it causes re-renders.
+            // But onUpdateState is likely `setEditorState`.
+            // Actually, setGuides will trigger another render.
+            // Let's use a ref or check if guides changed to avoid thrashing?
+            // For now, let's allow it but be careful.
+            // Actually, we can't extract 'guides' easily out of this closure.
+          }
+
+          // Hack: we need to allow the parent hook usage to extract guides.
+          // Since we can't easily return values from setEditorState, we might need a workaround.
+          // Let's stick the guides in a ref or use a separate effects if possible.
+          // OR: We drag based on latest state ref?
+
+          // For now, let's assume we can emit the guides via a side channel or
+          // we simply don't have access to them outside of the item update for now?
+          // Wait, 'guides' need to be rendered.
+          // Let's attach them to the 'editorState' temporarily? No, that dirties data.
+
+          // Solution: Calculate snap lines OUTSIDE onUpdateState using a REF to the latest state if available.
+          // But we typically only have state inside the setter.
+          // Ok, we will expose `guides` via the return value of useItemDrag,
+          // and we will update it by using a `useEffect` that tracks `dragItem` and mouse position?
+          // No, logic duplication.
+
+          // Compromise: We update `guides` state inside this callback.
+          // React batches updates. It should be fine.
+          if (!applyBodyConstraint) {
+            // only show guides during drag
+            // To avoid infinite loops or tearing, check if changed
+            // JSON.stringify check is expensive but safe for small arrays
+            // We'll trust React.
+            // We need to defer this setGuides to avoid "component updating while" warning
+            setTimeout(() => setGuides(newGuides), 0)
+          } else {
+            setTimeout(() => setGuides([]), 0)
+          }
 
           // Update the array
           items[dragItem.index] = item
@@ -175,6 +401,7 @@ export const useItemDrag = (
       // Final update with strict constraints (snap out of body)
       updateState(e, true)
       setDragItem(null)
+      setGuides([])
     }
 
     if (dragItem) {
@@ -191,5 +418,6 @@ export const useItemDrag = (
   return {
     handleItemDragStart,
     dragItem,
+    guides,
   }
 }

@@ -8,14 +8,6 @@ const getMaxBottom = (items: EditorItem[]) => {
   return Math.max(...items.map((i) => i.y + i.height))
 }
 
-// Helper to get content height (bottom - top)
-const getContentHeight = (items: EditorItem[]) => {
-  if (!items || items.length === 0) return 0
-  const top = Math.min(...items.map((i) => i.y))
-  const bottom = Math.max(...items.map((i) => i.y + i.height))
-  return bottom - top
-}
-
 export const useGlobalDrag = (
   editorRef: RefObject<HTMLDivElement>,
   onUpdateState: (updater: (prev: EditorState) => EditorState) => void

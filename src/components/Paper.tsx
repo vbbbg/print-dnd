@@ -1,5 +1,5 @@
 import React, { useRef } from 'react'
-import { EditorState } from '../types/editor'
+import { EditorState, Guide } from '../types/editor'
 import { ResizeHandle } from './ResizeHandle'
 import { DraggableItem } from './DraggableItem'
 import { RegionTable } from './RegionTable'
@@ -18,12 +18,14 @@ interface PaperProps {
     itemX: number,
     itemY: number
   ) => void
+  guides?: Guide[]
 }
 
 export const Paper: React.FC<PaperProps> = ({
   state,
   onResizeStart,
   onItemDragStart,
+  guides,
 }) => {
   const {
     headerTop,
@@ -153,6 +155,21 @@ export const Paper: React.FC<PaperProps> = ({
         onMouseDown={(e) => onResizeStart('footer', e)}
         className="resize-handle-footer group z-10"
       />
+
+      {/* Alignment Guides */}
+      {guides?.map((guide, idx) => {
+        const isV = guide.type === 'vertical'
+        return (
+          <div
+            key={`guide-${idx}`}
+            className={`absolute bg-blue-500 z-50 pointer-events-none ${isV ? 'w-px h-full' : 'h-px w-full'}`}
+            style={{
+              left: isV ? mmToPx(guide.pos) : 0,
+              top: isV ? 0 : mmToPx(guide.pos),
+            }}
+          />
+        )
+      })}
     </div>
   )
 }
