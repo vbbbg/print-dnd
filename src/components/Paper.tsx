@@ -4,6 +4,7 @@ import { ResizeHandle } from './ResizeHandle'
 import { DraggableItem } from './DraggableItem'
 import { RegionTable } from './RegionTable'
 import { mmToPx } from '../constants/units'
+import { ResizeDirection } from './ResizeHandles'
 
 interface PaperProps {
   state: EditorState
@@ -18,6 +19,16 @@ interface PaperProps {
     itemX: number,
     itemY: number
   ) => void
+  onItemResizeStart?: (
+    index: number,
+    region: 'title' | 'header' | 'footer',
+    direction: ResizeDirection,
+    e: React.MouseEvent,
+    itemX: number,
+    itemY: number,
+    itemWidth: number,
+    itemHeight: number
+  ) => void
   guides?: Guide[]
 }
 
@@ -25,6 +36,7 @@ export const Paper: React.FC<PaperProps> = ({
   state,
   onResizeStart,
   onItemDragStart,
+  onItemResizeStart,
   guides,
 }) => {
   const {
@@ -115,6 +127,21 @@ export const Paper: React.FC<PaperProps> = ({
           onMouseDown={(e) =>
             onItemDragStart(index, 'title', e, item.x, item.y)
           }
+          onResizeStart={
+            onItemResizeStart
+              ? (direction, e) =>
+                  onItemResizeStart(
+                    index,
+                    'title',
+                    direction,
+                    e,
+                    item.x,
+                    item.y,
+                    item.width,
+                    item.height
+                  )
+              : undefined
+          }
         />
       ))}
 
@@ -125,6 +152,21 @@ export const Paper: React.FC<PaperProps> = ({
           onMouseDown={(e) =>
             onItemDragStart(index, 'header', e, item.x, item.y)
           }
+          onResizeStart={
+            onItemResizeStart
+              ? (direction, e) =>
+                  onItemResizeStart(
+                    index,
+                    'header',
+                    direction,
+                    e,
+                    item.x,
+                    item.y,
+                    item.width,
+                    item.height
+                  )
+              : undefined
+          }
         />
       ))}
 
@@ -134,6 +176,21 @@ export const Paper: React.FC<PaperProps> = ({
           item={item}
           onMouseDown={(e) =>
             onItemDragStart(index, 'footer', e, item.x, item.y)
+          }
+          onResizeStart={
+            onItemResizeStart
+              ? (direction, e) =>
+                  onItemResizeStart(
+                    index,
+                    'footer',
+                    direction,
+                    e,
+                    item.x,
+                    item.y,
+                    item.width,
+                    item.height
+                  )
+              : undefined
           }
         />
       ))}

@@ -4,6 +4,7 @@ import { getMockEditorState } from '../utils/mockData.ts'
 import { Paper } from './Paper'
 import { useGlobalDrag } from '../hooks/useGlobalDrag'
 import { useItemDrag } from '../hooks/useItemDrag'
+import { useItemResize } from '../hooks/useItemResize'
 
 export const TemplateEditor: React.FC = () => {
   const [editorState, setEditorState] =
@@ -20,8 +21,14 @@ export const TemplateEditor: React.FC = () => {
     setEditorState
   )
 
-  // Helper to handle resize start
-  const handleResizeStart = (
+  // Use custom hook for item resize handling
+  const { handleResizeStart: handleItemResizeStart, resizing } = useItemResize(
+    editorRef,
+    setEditorState
+  )
+
+  // Helper to handle region resize start
+  const handleRegionResizeStart = (
     region: 'header' | 'body' | 'footer',
     e: React.MouseEvent
   ) => {
@@ -30,7 +37,7 @@ export const TemplateEditor: React.FC = () => {
     setDragging(region)
   }
 
-  const isDraggingAny = dragging || dragItem
+  const isDraggingAny = dragging || dragItem || resizing
 
   return (
     <div
@@ -45,8 +52,9 @@ export const TemplateEditor: React.FC = () => {
         <Paper
           state={editorState}
           guides={guides}
-          onResizeStart={handleResizeStart}
+          onResizeStart={handleRegionResizeStart}
           onItemDragStart={handleItemDragStart}
+          onItemResizeStart={handleItemResizeStart}
         />
       </div>
     </div>

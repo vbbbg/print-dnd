@@ -1,19 +1,24 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { EditorItem } from '../types/editor'
 import { mmToPx } from '../constants/units'
+import { ResizeHandles, ResizeDirection } from './ResizeHandles'
 
 interface DraggableItemProps {
   item: EditorItem
   isSelected?: boolean
   onMouseDown?: (e: React.MouseEvent) => void
   onClick?: () => void
+  onResizeStart?: (direction: ResizeDirection, e: React.MouseEvent) => void
 }
 
 export const DraggableItem: React.FC<DraggableItemProps> = ({
   item,
   isSelected,
   onMouseDown,
+  onResizeStart,
 }) => {
+  const [isHovered, setIsHovered] = useState(false)
+
   // Style based on item properties
   const style: React.CSSProperties = {
     position: 'absolute',
@@ -32,10 +37,14 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
     cursor: 'move',
   }
 
+  const showHandles = (isHovered || isSelected) && onResizeStart
+
   return (
     <div
       style={style}
       onMouseDown={onMouseDown}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       className={`border border-blue-200 hover:border-blue-400 border-dashed box-border flex items-center ${
         item.horizontalAlignment === 'center'
           ? 'justify-center'
@@ -46,6 +55,7 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
       title={item.name || item.field}
     >
       {item.value || item.alias || item.name}
+      {showHandles && <ResizeHandles onResizeStart={onResizeStart} />}
     </div>
   )
 }
