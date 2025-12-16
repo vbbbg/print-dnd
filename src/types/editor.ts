@@ -1,4 +1,9 @@
-export type RegionType = 'title' | 'header' | 'body' | 'footer'
+export interface PaperDefinition {
+  type: string
+  name: string
+  width?: number
+  height?: number
+}
 
 export interface EditorItem {
   type: 'text' | 'image' // simplified for now
@@ -39,6 +44,15 @@ export interface EditorState {
   footerTop: number
   paperHeight: number
   paperWidth: number
+  paperType: 'A4' | 'A4_2' | 'A4_3' | 'custom'
+  paperDefinitions: PaperDefinition[]
+  name: string
+  margins: {
+    top: number
+    bottom: number
+    left: number
+    right: number
+  }
   titleItems: EditorItem[]
   headerItems: EditorItem[]
   bodyItems: TableData

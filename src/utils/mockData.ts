@@ -1,4 +1,5 @@
 import { EditorState, EditorItem, TableData } from '../types/editor'
+import { PAPER_DEFINITIONS } from '../constants/paper'
 
 export const getMockEditorState = (): EditorState => {
   const titleItems: EditorItem[] = [
@@ -431,6 +432,15 @@ export const getMockEditorState = (): EditorState => {
     footerTop: 240,
     paperHeight: 297,
     paperWidth: 210,
+    paperType: 'A4',
+    paperDefinitions: PAPER_DEFINITIONS,
+    name: 'Sale Order Template',
+    margins: {
+      top: 10,
+      bottom: 10,
+      left: 10,
+      right: 10,
+    },
     titleItems,
     headerItems,
     bodyItems,

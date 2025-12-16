@@ -8,6 +8,8 @@ import { useGlobalDrag } from '../hooks/useGlobalDrag'
 import { useItemDrag } from '../hooks/useItemDrag'
 import { useItemResize } from '../hooks/useItemResize'
 import { useToolbar } from '../hooks/useToolbar'
+import { BasicSettingsCard } from './BasicSettingsCard'
+import { constrainItemsToMargins } from '../utils/itemUtils'
 
 export const TemplateEditor: React.FC = () => {
   const [editorState, setEditorState] =
@@ -99,6 +101,56 @@ export const TemplateEditor: React.FC = () => {
 
   const isDraggingAny = dragging || dragItem || resizing
 
+  const handleSettingsChange = useCallback(
+    (updates: Partial<EditorState>) => {
+      saveSnapshot()
+      setEditorState((prev) => {
+        // Create initial new state
+        let newState = { ...prev, ...updates }
+
+        // If margins or paper size changed, we need to re-validate all items
+        const hasMarginUpdates =
+          updates.margins !== undefined ||
+          updates.paperWidth !== undefined ||
+          updates.paperHeight !== undefined ||
+          updates.paperType !== undefined
+
+        if (hasMarginUpdates) {
+          const currentMargins = newState.margins || {
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+          }
+          const w = newState.paperWidth
+          const h = newState.paperHeight
+
+          newState.titleItems = constrainItemsToMargins(
+            newState.titleItems,
+            currentMargins,
+            w,
+            h
+          )
+          newState.headerItems = constrainItemsToMargins(
+            newState.headerItems,
+            currentMargins,
+            w,
+            h
+          )
+          newState.footerItems = constrainItemsToMargins(
+            newState.footerItems,
+            currentMargins,
+            w,
+            h
+          )
+        }
+
+        return newState
+      })
+    },
+    [saveSnapshot, setEditorState]
+  )
+
   return (
     <>
       <Toolbar
@@ -131,6 +183,12 @@ export const TemplateEditor: React.FC = () => {
             onItemResizeStart={handleItemResizeStart}
           />
         </div>
+      </div>
+      <div className="fixed top-24 right-5 z-40 max-h-[calc(100vh-120px)] overflow-y-auto">
+        <BasicSettingsCard
+          state={editorState}
+          onChange={handleSettingsChange}
+        />
       </div>
     </>
   )

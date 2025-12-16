@@ -18,10 +18,16 @@ const constrainToPaperBounds = (
   itemWidth: number,
   itemHeight: number,
   paperWidth: number,
-  paperHeight: number
+  paperHeight: number,
+  margins?: { top: number; bottom: number; left: number; right: number }
 ) => {
-  const newX = Math.max(0, Math.min(x, paperWidth - itemWidth))
-  const newY = Math.max(0, Math.min(y, paperHeight - itemHeight))
+  const minX = margins ? margins.left : 0
+  const maxX = paperWidth - itemWidth - (margins ? margins.right : 0)
+  const minY = margins ? margins.top : 0
+  const maxY = paperHeight - itemHeight - (margins ? margins.bottom : 0)
+
+  const newX = Math.max(minX, Math.min(x, maxX))
+  const newY = Math.max(minY, Math.min(y, maxY))
   return { x: newX, y: newY }
 }
 
@@ -215,7 +221,8 @@ const calculateItemPosition = (
   bodyTop: number,
   footerTop: number,
   applyBodyConstraint: boolean,
-  snapData?: { xLines: number[]; yLines: number[] }
+  snapData?: { xLines: number[]; yLines: number[] },
+  margins?: { top: number; bottom: number; left: number; right: number }
 ) => {
   let newX = initialX + deltaX
   let newY = initialY + deltaY
@@ -243,7 +250,8 @@ const calculateItemPosition = (
     item.width,
     item.height,
     paperWidth,
-    paperHeight
+    paperHeight,
+    margins
   )
   newX = bounded.x
   newY = bounded.y
@@ -324,7 +332,8 @@ export const useItemDrag = (
             prev.bodyTop,
             prev.footerTop,
             applyBodyConstraint,
-            snapData
+            snapData,
+            prev.margins
           )
 
           item.x = newX

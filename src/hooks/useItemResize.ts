@@ -131,15 +131,47 @@ export const useItemResize = (
           }
         }
 
-        // Apply paper bounds constraint
-        newX = Math.max(0, newX)
-        newY = Math.max(0, newY)
-        if (newX + newWidth > prev.paperWidth) {
-          newWidth = prev.paperWidth - newX
+        // Apply margin/paper bounds constraint
+        const margins = prev.margins || { top: 0, bottom: 0, left: 0, right: 0 }
+        const minX = margins.left
+        const maxX = prev.paperWidth - margins.right
+        const minY = margins.top
+        const maxY = prev.paperHeight - margins.bottom
+
+        // Constraint Left (West)
+        if (['w', 'nw', 'sw'].includes(resizing.direction)) {
+          if (newX < minX) {
+            newX = minX
+            // Maintain right edge position: Right = newX + newWidth
+            // So: initialRight (fixed) = newX + newWidth -> newWidth = initialRight - newX
+            // Actually simpler: initialRight = resizing.initialX + resizing.initialWidth
+            newWidth = resizing.initialX + resizing.initialWidth - newX
+          }
         }
-        if (newY + newHeight > prev.paperHeight) {
-          newHeight = prev.paperHeight - newY
+
+        // Constraint Top (North)
+        if (['n', 'nw', 'ne'].includes(resizing.direction)) {
+          if (newY < minY) {
+            newY = minY
+            newHeight = resizing.initialY + resizing.initialHeight - newY
+          }
         }
+
+        // Constraint Right (East) & General Bounds
+        // If the right edge exceeds bounds, clamp width
+        // Note: For 'w' resize, newX + newWidth is constant, so this effectively checks if initial state was valid
+        if (newX + newWidth > maxX) {
+          newWidth = Math.max(MIN_SIZE_MM, maxX - newX)
+        }
+
+        // Constraint Bottom (South) & General Bounds
+        if (newY + newHeight > maxY) {
+          newHeight = Math.max(MIN_SIZE_MM, maxY - newY)
+        }
+
+        // Final safety check for X/Y (e.g. if item pushed blindly)
+        newX = Math.max(minX, newX)
+        newY = Math.max(minY, newY)
 
         // Update item
         item.x = newX
