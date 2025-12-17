@@ -29,6 +29,12 @@ interface PaperProps {
     itemWidth: number,
     itemHeight: number
   ) => void
+  onColumnResizeStart?: (
+    index: number,
+    e: React.MouseEvent,
+    minWidthLeft: number,
+    minWidthRight: number
+  ) => void
   guides?: Guide[]
 }
 
@@ -37,6 +43,7 @@ export const Paper: React.FC<PaperProps> = ({
   onResizeStart,
   onItemDragStart,
   onItemResizeStart,
+  onColumnResizeStart,
   guides,
 }) => {
   const {
@@ -117,11 +124,7 @@ export const Paper: React.FC<PaperProps> = ({
           top: 0,
           height: mmToPx(headerTop),
         }}
-      >
-        <div className="text-gray-400 text-xs text-center uppercase tracking-wider p-1 pointer-events-none">
-          Title Region
-        </div>
-      </div>
+      />
 
       {/* Header Region Background */}
       <div
@@ -130,11 +133,7 @@ export const Paper: React.FC<PaperProps> = ({
           top: mmToPx(headerTop),
           height: mmToPx(bodyTop - headerTop),
         }}
-      >
-        <div className="text-gray-400 text-xs text-center uppercase tracking-wider p-1 pointer-events-none">
-          Header Region
-        </div>
-      </div>
+      />
 
       {/* Body Region (Table) */}
       <div
@@ -152,10 +151,12 @@ export const Paper: React.FC<PaperProps> = ({
           }}
         >
           {/* Render Table */}
-          {bodyItems && <RegionTable data={bodyItems} />}
-        </div>
-        <div className="text-gray-400 text-xs text-center uppercase tracking-wider p-1 pointer-events-none relative z-10">
-          Body Region
+          {bodyItems && (
+            <RegionTable
+              data={bodyItems}
+              onColumnResizeStart={onColumnResizeStart}
+            />
+          )}
         </div>
       </div>
 
@@ -166,11 +167,7 @@ export const Paper: React.FC<PaperProps> = ({
           top: mmToPx(footerTop),
           height: mmToPx(paperHeight - footerTop),
         }}
-      >
-        <div className="text-gray-400 text-xs text-center uppercase tracking-wider p-1 pointer-events-none">
-          Footer Region
-        </div>
-      </div>
+      />
 
       {/* Render Items (Global Coordinates) */}
       {titleItems?.map((item, index) => (

@@ -108,7 +108,7 @@ export const useFieldSettings = ({
         const newCol: TableColumn = {
           title: field.key,
           colname: field.value,
-          width: field.width || 20,
+          width: Math.max(field.width || 20, 20),
           visible: true,
         }
         newCols.push(newCol)

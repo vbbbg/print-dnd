@@ -7,6 +7,7 @@ import { Toolbar } from './Toolbar'
 import { useGlobalDrag } from '../hooks/useGlobalDrag'
 import { useItemDrag } from '../hooks/useItemDrag'
 import { useItemResize } from '../hooks/useItemResize'
+import { useColumnResize } from '../hooks/useColumnResize'
 import { useToolbar } from '../hooks/useToolbar'
 import { BasicSettingsCard } from './BasicSettingsCard'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -48,6 +49,14 @@ export const TemplateEditor: React.FC = () => {
   // Use custom hook for item resize handling
   const { handleResizeStart: originalHandleItemResizeStart, resizing } =
     useItemResize(editorRef, setEditorState)
+
+  // Use custom hook for column resize handling
+  const {
+    handleColumnResizeStart,
+    handleColumnResizeMove,
+    handleColumnResizeEnd,
+    resizingColIndex,
+  } = useColumnResize(setEditorState)
 
   // Wrap item drag start to save snapshot first
   const handleItemDragStart = useCallback(
@@ -102,7 +111,38 @@ export const TemplateEditor: React.FC = () => {
     [saveSnapshot, setDragging]
   )
 
-  const isDraggingAny = dragging || dragItem || resizing
+  const isDraggingAny =
+    dragging || dragItem || resizing || resizingColIndex !== null
+
+  // Global Mouse Move and Up handlers
+  React.useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (resizingColIndex !== null) {
+        handleColumnResizeMove(e, editorState)
+      }
+    }
+
+    const handleMouseUp = () => {
+      if (resizingColIndex !== null) {
+        handleColumnResizeEnd()
+      }
+    }
+
+    if (resizingColIndex !== null) {
+      window.addEventListener('mousemove', handleMouseMove)
+      window.addEventListener('mouseup', handleMouseUp)
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [
+    resizingColIndex,
+    handleColumnResizeMove,
+    handleColumnResizeEnd,
+    editorState,
+  ])
 
   const handleSettingsChange = useCallback(
     (updates: Partial<EditorState>) => {
@@ -254,6 +294,7 @@ export const TemplateEditor: React.FC = () => {
               onResizeStart={handleRegionResizeStart}
               onItemDragStart={handleItemDragStart}
               onItemResizeStart={handleItemResizeStart}
+              onColumnResizeStart={handleColumnResizeStart}
             />
           </div>
         </div>
