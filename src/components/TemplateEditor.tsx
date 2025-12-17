@@ -9,7 +9,10 @@ import { useItemDrag } from '../hooks/useItemDrag'
 import { useItemResize } from '../hooks/useItemResize'
 import { useToolbar } from '../hooks/useToolbar'
 import { BasicSettingsCard } from './BasicSettingsCard'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { FieldSettingsPanel } from './FieldSettingsPanel'
 import { constrainItemsToMargins } from '../utils/itemUtils'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export const TemplateEditor: React.FC = () => {
   const [editorState, setEditorState] =
@@ -151,45 +154,140 @@ export const TemplateEditor: React.FC = () => {
     [saveSnapshot, setEditorState]
   )
 
+  const [leftPanelOpen, setLeftPanelOpen] = React.useState(true)
+  const [rightPanelOpen, setRightPanelOpen] = React.useState(true)
+
   return (
-    <>
-      <Toolbar
-        zoom={zoom}
-        onZoomIn={handleZoomIn}
-        onZoomOut={handleZoomOut}
-        canUndo={canUndo}
-        canRedo={canRedo}
-        onUndo={undo}
-        onRedo={redo}
-        onResetLayout={handleResetLayout}
-        onPrintPreview={handlePrintPreview}
-        onSaveAsTemplate={handleSaveAsTemplate}
-      />
-      <div
-        ref={editorRef}
-        className={`min-h-screen bg-gray-100 flex justify-center items-start p-5 pt-24 ${isDraggingAny ? 'select-none' : ''} ${dragging ? 'cursor-ns-resize' : ''}`}
-      >
-        <div
-          style={{
-            transform: `scale(${zoom / 100})`,
-            transformOrigin: 'top center',
-          }}
-        >
-          <Paper
-            state={editorState}
-            guides={guides}
-            onResizeStart={handleRegionResizeStart}
-            onItemDragStart={handleItemDragStart}
-            onItemResizeStart={handleItemResizeStart}
-          />
-        </div>
-      </div>
-      <div className="fixed top-24 right-5 z-40 max-h-[calc(100vh-120px)] overflow-y-auto">
-        <BasicSettingsCard
-          state={editorState}
-          onChange={handleSettingsChange}
+    <div className="h-screen flex flex-col overflow-hidden bg-gray-100">
+      {/* 1. Header/Toolbar Area - Now separate or part of the flow */}
+      {/* For now, let's keep the toolbar floating or move it to a top bar */}
+      <div className="h-14 border-b bg-white flex items-center justify-center relative z-50 shadow-sm">
+        <Toolbar
+          zoom={zoom}
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+          canUndo={canUndo}
+          canRedo={canRedo}
+          onUndo={undo}
+          onRedo={redo}
+          onResetLayout={handleResetLayout}
+          onPrintPreview={handlePrintPreview}
+          onSaveAsTemplate={handleSaveAsTemplate}
         />
       </div>
-    </>
+
+      {/* 2. Main Content Area */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Sidebar */}
+        <div
+          className={`${leftPanelOpen ? 'w-72' : 'w-0'} bg-white border-r transition-all duration-300 relative flex flex-col`}
+        >
+          <div
+            className={`flex-1 overflow-hidden ${leftPanelOpen ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 flex flex-col`}
+          >
+            <Tabs
+              defaultValue="settings"
+              className="flex-1 flex flex-col overflow-hidden"
+            >
+              <div className="px-4 pt-2 border-b">
+                <TabsList className="w-full grid grid-cols-2">
+                  <TabsTrigger value="settings">基础设置</TabsTrigger>
+                  <TabsTrigger value="fields">字段设置</TabsTrigger>
+                </TabsList>
+              </div>
+
+              <TabsContent
+                value="settings"
+                className="flex-1 overflow-hidden p-0 m-0 data-[state=inactive]:hidden"
+              >
+                <BasicSettingsCard
+                  state={editorState}
+                  onChange={handleSettingsChange}
+                />
+              </TabsContent>
+
+              <TabsContent
+                value="fields"
+                className="flex-1 overflow-hidden p-0 m-0 data-[state=inactive]:hidden"
+              >
+                <FieldSettingsPanel
+                  state={editorState}
+                  onChange={handleSettingsChange}
+                />
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          {/* Toggle Button Left */}
+          <button
+            onClick={() => setLeftPanelOpen(!leftPanelOpen)}
+            className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-12 bg-white border border-gray-200 rounded-r-lg shadow-sm flex items-center justify-center cursor-pointer hover:bg-gray-50 z-50 text-gray-500 hover:text-gray-700"
+            style={{
+              right: '-24px',
+            }}
+            title={leftPanelOpen ? 'Close Sidebar' : 'Open Sidebar'}
+          >
+            {leftPanelOpen ? (
+              <ChevronLeft className="w-4 h-4" />
+            ) : (
+              <ChevronRight className="w-4 h-4" />
+            )}
+          </button>
+        </div>
+
+        {/* Center Canvas */}
+        <div
+          className="flex-1 overflow-auto p-8 relative flex justify-center items-start bg-gray-100/50"
+          ref={editorRef}
+        >
+          <div
+            className={`${isDraggingAny ? 'select-none' : ''} ${dragging ? 'cursor-ns-resize' : ''}`}
+            style={{
+              transform: `scale(${zoom / 100})`,
+              transformOrigin: 'top center',
+              transition: 'transform 0.1s ease-out',
+            }}
+          >
+            <Paper
+              state={editorState}
+              guides={guides}
+              onResizeStart={handleRegionResizeStart}
+              onItemDragStart={handleItemDragStart}
+              onItemResizeStart={handleItemResizeStart}
+            />
+          </div>
+        </div>
+
+        {/* Right Sidebar */}
+        <div
+          className={`${rightPanelOpen ? 'w-72' : 'w-0'} bg-white border-l transition-all duration-300 relative flex flex-col`}
+        >
+          <div
+            className={`flex-1 overflow-hidden ${rightPanelOpen ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 p-4`}
+          >
+            <h3 className="font-bold text-lg border-b pb-2 mb-4">组件属性</h3>
+            <div className="text-sm text-gray-500 text-center py-10">
+              暂无内容
+            </div>
+          </div>
+
+          {/* Toggle Button Right */}
+          <button
+            onClick={() => setRightPanelOpen(!rightPanelOpen)}
+            className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-12 bg-white border border-gray-200 rounded-l-lg shadow-sm flex items-center justify-center cursor-pointer hover:bg-gray-50 z-50 text-gray-500 hover:text-gray-700"
+            style={{
+              left: '-24px',
+            }}
+            title={rightPanelOpen ? 'Close Sidebar' : 'Open Sidebar'}
+          >
+            {rightPanelOpen ? (
+              <ChevronRight className="w-4 h-4" />
+            ) : (
+              <ChevronLeft className="w-4 h-4" />
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }

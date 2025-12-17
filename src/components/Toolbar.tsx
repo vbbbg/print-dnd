@@ -36,7 +36,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onSaveAsTemplate,
 }) => {
   return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-white shadow-lg rounded-lg px-2 py-2 flex items-center gap-2 z-50 border border-gray-200">
+    <div className="h-full flex items-center gap-2 px-2">
       {/* Undo/Redo */}
       <div className="flex items-center gap-1 border-r border-gray-200 pr-2 mr-2">
         <Button

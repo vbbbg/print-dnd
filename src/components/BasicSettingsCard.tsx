@@ -52,7 +52,7 @@ export const BasicSettingsCard: React.FC<BasicSettingsCardProps> = ({
   }
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-lg w-80 flex flex-col gap-4">
+    <div className="flex flex-col gap-4 p-4 h-full overflow-y-auto">
       <h3 className="font-bold text-lg border-b pb-2">基础设置</h3>
 
       {/* Template Name */}

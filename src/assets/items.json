@@ -1,0 +1,1496 @@
+{
+  "header": [
+    {
+      "width": 0,
+      "key": "单号",
+      "value": "billNo",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "客户分类",
+      "value": "customerType",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "客户名称",
+      "value": "customerName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "结算单位",
+      "value": "settlementCustomerName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "客户编号",
+      "value": "serialNo",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "结算方式",
+      "value": "settleMethod",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "可用额度",
+      "value": "availableCredit",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "级别价",
+      "value": "priceLevel",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "销售区域",
+      "value": "region",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "经手人",
+      "value": "handlerName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "部门",
+      "value": "departmentName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "业务经理",
+      "value": "bizManagerName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "客户标签",
+      "value": "customerTags",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "客户备注",
+      "value": "customerRemark",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "开户名称",
+      "value": "bankName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "开户银行",
+      "value": "bank",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "银行账户",
+      "value": "bankAccount",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "发票抬头",
+      "value": "receiptTitle",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "税号",
+      "value": "taxNumber",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "企业性质",
+      "value": "ownership",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "录单时间",
+      "value": "makeTimeDate",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "收款日期",
+      "value": "latestPayDateStr",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "制单时间",
+      "value": "dataCreateTimeDate",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "提交时间",
+      "value": "postingTimeDate",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "审核时间",
+      "value": "auditTimeDate",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "交货时间",
+      "value": "deliveryTimeDate",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "发票类型",
+      "value": "invoiceTypeStr",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "收货人",
+      "value": "contactsName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "收货电话",
+      "value": "phone",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "收货地址",
+      "value": "fullAddress",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "收款状态",
+      "value": "payStatus",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "订货人",
+      "value": "contactName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "订货人电话",
+      "value": "contactPhone",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "联系人",
+      "value": "customerContactsName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "联系人电话",
+      "value": "customerContactsPhone",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "公司地址",
+      "value": "customerAddress",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "发货仓库",
+      "value": "warehouseName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "发货方式",
+      "value": "deliveryMethodName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "物流公司",
+      "value": "logisticsName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "装车备注",
+      "value": "loadingRemark",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "单据备注",
+      "value": "remark",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "订单来源",
+      "value": "sourceName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "买家备注",
+      "value": "buyerRemark",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "审核人",
+      "value": "examineUserName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "关联报价单编号",
+      "value": "quotationBillNo",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "货运电话",
+      "value": "2438267939406422016",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "货运地址",
+      "value": "2438267978107162624",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "email",
+      "value": "2457856057885081600",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "厂家编码",
+      "value": "2525355613652258816",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "联系电话",
+      "value": "2529326458548670464",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "返点",
+      "value": "2549169725230350336",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "返点账户",
+      "value": "2549169778103746560",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "地域（安宁）",
+      "value": "2589825763294175232",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "客户类型（安宁）",
+      "value": "2589825874149629952",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "项目预计成交金额",
+      "value": "2617727223087792128",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "客户类型",
+      "value": "2617735921982013440",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "项目类型",
+      "value": "2617736060003983360",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "产品类型",
+      "value": "2617736248642805760",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "20250902测试",
+      "value": "2618035100902002688",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "111111",
+      "value": "2631495614804566016",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "22222",
+      "value": "2631495813505519616",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "路线",
+      "value": "fieldRefHas5",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "制单人",
+      "value": "fieldRefBasics2",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "引用联系电话",
+      "value": "fieldRefHas1",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "收货地址",
+      "value": "fieldText1",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "对账月份",
+      "value": "fieldCheck1",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "引用公司地址",
+      "value": "fieldRefHas2",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "单据日期",
+      "value": "fieldDate1",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "单据日期1",
+      "value": "fieldDate2",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "收款方式",
+      "value": "fieldText2",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    }
+  ],
+  "body": [
+    {
+      "width": 1,
+      "key": "行号",
+      "value": "serialNumber",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 3,
+      "key": "图片",
+      "value": "coverUrl",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 1,
+      "key": "赠品",
+      "value": "activityTypeStr",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2,
+      "key": "商品编号",
+      "value": "code",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 3.5,
+      "key": "商品条码",
+      "value": "barCode",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 8,
+      "key": "商品名称（含规格）",
+      "value": "spuSkuName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 5,
+      "key": "商品名称",
+      "value": "spuName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 3,
+      "key": "商城展示名称",
+      "value": "showName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 3,
+      "key": "规格",
+      "value": "skuName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 3,
+      "key": "默认供应商",
+      "value": "supplierName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 3,
+      "key": "商品分类",
+      "value": "categoryPathName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 3,
+      "key": "专题分类",
+      "value": "subjectName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2,
+      "key": "批号",
+      "value": "batchNo",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2,
+      "key": "生产日期",
+      "value": "productionDate",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2,
+      "key": "到期日期",
+      "value": "expirationDate",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2,
+      "key": "保质期",
+      "value": "shelfLife",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 3,
+      "key": "品牌",
+      "value": "brandName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 3,
+      "key": "商品标签",
+      "value": "tagName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 3,
+      "key": "搜索关键字",
+      "value": "keywords",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 3,
+      "key": "商品备注",
+      "value": "note",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 3,
+      "key": "规格备注1",
+      "value": "skuRemark1",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 3,
+      "key": "规格备注2",
+      "value": "skuRemark2",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 3,
+      "key": "仓库",
+      "value": "warehouseName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 1,
+      "key": "单位",
+      "value": "unitName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 3,
+      "key": "基本单位条码",
+      "value": "baseUnitBarCode",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "换算关系",
+      "value": "skuRateStr",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "最低售价",
+      "value": "upsetPrice",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "默认订货价",
+      "value": "defaultOrderPrice",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "零售价",
+      "value": "retailPrice",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "批发价2",
+      "value": "178091822162751488",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "商超价",
+      "value": "297292347346198528",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "散称价",
+      "value": "491692002061254656",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "合伙人",
+      "value": "517688226522095616",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "批发价1",
+      "value": "524913938723258368",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "测试",
+      "value": "556854474476400640",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "维修工价",
+      "value": "561129315182223360",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "一级批发价",
+      "value": "578188915601784832",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "展示价格",
+      "value": "614848596629069824",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 1,
+      "key": "库存数量",
+      "value": "bookStockQty",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 1,
+      "key": "可用库存量",
+      "value": "canUseQty",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 1,
+      "key": "数量",
+      "value": "qty",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "包装单位一",
+      "value": "packQty1",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "包装单位二",
+      "value": "packQty2",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "包装单位三",
+      "value": "packQty3",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "辅助数量",
+      "value": "helpQty",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "基本单位数量",
+      "value": "baseUnitQty",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "辅助数量一",
+      "value": "helpQty1",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "辅助数量二",
+      "value": "helpQty2",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "辅助数量三",
+      "value": "helpQty3",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2,
+      "key": "副单位",
+      "value": "deputyUnitName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "副单位数量",
+      "value": "deputyUnitQty",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "副单位换算率",
+      "value": "deputyUnitRate",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "副单位库存量",
+      "value": "deputyUnitStockQty",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "辅助单位一价格",
+      "value": "helpPrice1",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "辅助单位二价格",
+      "value": "helpPrice2",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "辅助单位三价格",
+      "value": "helpPrice3",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 1.5,
+      "key": "单价",
+      "value": "price",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "基本单位含税价格",
+      "value": "baseUnitPrice",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "基本单位价格",
+      "value": "baseUnitNoTaxPrice",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "客户最近售价",
+      "value": "recentSalesPrice",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2,
+      "key": "金额",
+      "value": "subTotal",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 1.5,
+      "key": "折扣(%)",
+      "value": "discount",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 1.5,
+      "key": "折后单价",
+      "value": "discountAfterPrice",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2,
+      "key": "折后金额",
+      "value": "discountAfterTotal",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 3,
+      "key": "优惠后折扣(%)",
+      "value": "specialDiscount",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 3,
+      "key": "优惠后单价",
+      "value": "afterSpecialDiscountPrice",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 3,
+      "key": "优惠后金额",
+      "value": "afterSpecialDiscountMoney",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 1.5,
+      "key": "税率(%)",
+      "value": "tax",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2,
+      "key": "税额",
+      "value": "taxMoney",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 1.5,
+      "key": "含税单价",
+      "value": "discountAfterTaxPrice",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2,
+      "key": "含税金额",
+      "value": "discountAfterTaxTotal",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2,
+      "key": "重量(kg)",
+      "value": "computeWeight",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2,
+      "key": "体积(m³)",
+      "value": "computeVolume",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2,
+      "key": "预估毛利",
+      "value": "estimateGrossMoney",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "预估毛利率(%)",
+      "value": "estimateGrossRate",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2,
+      "key": "中止数量",
+      "value": "suspendQty",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2,
+      "key": "中止后数量",
+      "value": "suspendAfterQty",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "关联报价单编号",
+      "value": "quotationBillNo",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 5,
+      "key": "备注",
+      "value": "remark",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 5,
+      "key": "套餐名称",
+      "value": "packageName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "类型",
+      "value": "item1",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "单价",
+      "value": "text2",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "货位",
+      "value": "num3",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 2.5,
+      "key": "商品特性",
+      "value": "item3",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "介绍费",
+      "value": "fieldNum1",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "引用基础资",
+      "value": "fieldRefHas1",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "805测试",
+      "value": "fieldText1",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "成本价",
+      "value": "fieldRefHas2",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "43242",
+      "value": "fieldRefHas3",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "商品备注",
+      "value": "fieldRefHas4",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "货位新",
+      "value": "fieldRefHas5",
+      "customColFlg": true,
+      "index": 0,
+      "child": []
+    }
+  ],
+  "footer": [
+    {
+      "width": 0,
+      "key": "大写金额",
+      "value": "capitalizeAmount",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "制单人",
+      "value": "creatorName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "优惠前金额",
+      "value": "discountBeforeMoney",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "促销优惠金额",
+      "value": "promotionsMoney",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "抹零金额",
+      "value": "eraseMoney",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "销售费用",
+      "value": "incomeCostBillMoney",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "抹零后金额",
+      "value": "eraseAfterMoney",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "运费",
+      "value": "freight",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "订货数量",
+      "value": "qty",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "单据金额",
+      "value": "dueMoney",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "收款账户",
+      "value": "accountName",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "收款金额",
+      "value": "accountPayMoney",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "结算金额",
+      "value": "payMoney",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "此前应收",
+      "value": "beforDueFrom",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "本单应收",
+      "value": "receivableMoney",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "本单累计应收",
+      "value": "cumulativeReceivableMoney",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "客户应收",
+      "value": "dueFromMoney",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "预收余额",
+      "value": "preStoreMoney",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "包装",
+      "value": "packageQty",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "是否原单退货",
+      "value": "originalReturnQty",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "销售重量",
+      "value": "computeWeight",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "销售体积",
+      "value": "computeVolume",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "打印次数",
+      "value": "printCount",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "打印时间",
+      "value": "printTime",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    },
+    {
+      "width": 0,
+      "key": "打印人员",
+      "value": "printer",
+      "customColFlg": false,
+      "index": 0,
+      "child": []
+    }
+  ]
+}
