@@ -144,7 +144,13 @@ export const Paper: React.FC<PaperProps> = ({
           height: mmToPx(footerTop - bodyTop),
         }}
       >
-        <div className="absolute inset-0 p-2 z-0">
+        <div
+          className="absolute z-0 top-0 bottom-0"
+          style={{
+            left: mmToPx(margins?.left || 0),
+            right: mmToPx(margins?.right || 0),
+          }}
+        >
           {/* Render Table */}
           {bodyItems && <RegionTable data={bodyItems} />}
         </div>
