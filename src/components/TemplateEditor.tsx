@@ -1,6 +1,7 @@
 import React, { useRef, useCallback } from 'react'
 import { EditorState } from '../types/editor'
 import { getMockEditorState } from '../utils/mockData.ts'
+import { MOCK_REAL_DATA } from '../utils/mockRealData'
 import useSyncState from '../hooks/useSyncState'
 import { Paper } from './Paper'
 import { Toolbar } from './Toolbar'
@@ -12,12 +13,18 @@ import { useToolbar } from '../hooks/useToolbar'
 import { BasicSettingsCard } from './BasicSettingsCard'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { FieldSettingsPanel } from './FieldSettingsPanel'
+import { ItemSettingsPanel } from './ItemSettingsPanel'
 import { constrainItemsToMargins } from '../utils/itemUtils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export const TemplateEditor: React.FC = () => {
   const [editorState, setEditorState] =
     useSyncState<EditorState>(getMockEditorState)
+
+  const [selectedItemIdx, setSelectedItemIdx] = React.useState<{
+    region: 'title' | 'header' | 'footer'
+    index: number
+  } | null>({ region: 'title', index: 0 })
 
   const editorRef = useRef<HTMLDivElement>(null)
 
@@ -59,6 +66,7 @@ export const TemplateEditor: React.FC = () => {
   } = useColumnResize(setEditorState)
 
   // Wrap item drag start to save snapshot first
+  // Wrap item drag start to save snapshot first
   const handleItemDragStart = useCallback(
     (
       index: number,
@@ -68,6 +76,7 @@ export const TemplateEditor: React.FC = () => {
       itemY: number
     ) => {
       saveSnapshot() // Save state before drag starts
+      setSelectedItemIdx({ region, index }) // Select item on drag/click
       originalHandleItemDragStart(index, region, e, itemX, itemY)
     },
     [saveSnapshot, originalHandleItemDragStart]
@@ -197,6 +206,38 @@ export const TemplateEditor: React.FC = () => {
   const [leftPanelOpen, setLeftPanelOpen] = React.useState(true)
   const [rightPanelOpen, setRightPanelOpen] = React.useState(true)
 
+  // Derive selected item from state
+  const selectedItem = React.useMemo(() => {
+    if (!selectedItemIdx) return null
+    const { region, index } = selectedItemIdx
+    if (region === 'title') return editorState.titleItems[index]
+    if (region === 'header') return editorState.headerItems[index]
+    if (region === 'footer') return editorState.footerItems[index]
+    return null
+  }, [selectedItemIdx, editorState])
+
+  const handleItemUpdate = (updates: any) => {
+    if (!selectedItemIdx) return
+    const { region, index } = selectedItemIdx
+    setEditorState((prev) => {
+      let items: any[] = []
+      if (region === 'title') items = [...prev.titleItems]
+      else if (region === 'header') items = [...prev.headerItems]
+      else items = [...prev.footerItems]
+
+      items[index] = { ...items[index], ...updates }
+
+      return {
+        ...prev,
+        [region === 'title'
+          ? 'titleItems'
+          : region === 'header'
+            ? 'headerItems'
+            : 'footerItems']: items,
+      }
+    })
+  }
+
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gray-100">
       {/* 1. Header/Toolbar Area - Now separate or part of the flow */}
@@ -295,21 +336,34 @@ export const TemplateEditor: React.FC = () => {
               onItemDragStart={handleItemDragStart}
               onItemResizeStart={handleItemResizeStart}
               onColumnResizeStart={handleColumnResizeStart}
+              selectedItemIdx={selectedItemIdx}
+              data={MOCK_REAL_DATA}
             />
           </div>
         </div>
 
         {/* Right Sidebar */}
         <div
-          className={`${rightPanelOpen ? 'w-72' : 'w-0'} bg-white border-l transition-all duration-300 relative flex flex-col`}
+          className={`${rightPanelOpen ? 'w-72' : 'w-0'} bg-white transition-all duration-300 relative flex flex-col`}
         >
           <div
-            className={`flex-1 overflow-hidden ${rightPanelOpen ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 p-4`}
+            className={`flex-1 overflow-hidden ${rightPanelOpen ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 h-full`}
           >
-            <h3 className="font-bold text-lg border-b pb-2 mb-4">组件属性</h3>
-            <div className="text-sm text-gray-500 text-center py-10">
-              暂无内容
-            </div>
+            {selectedItem ? (
+              <ItemSettingsPanel
+                item={selectedItem}
+                onChange={handleItemUpdate}
+              />
+            ) : (
+              <div className="flex flex-col h-full">
+                <h3 className="font-bold text-lg border-b p-4 mb-4">
+                  组件属性
+                </h3>
+                <div className="text-sm text-gray-500 text-center py-10">
+                  请选择一个组件以编辑属性
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Toggle Button Right */}

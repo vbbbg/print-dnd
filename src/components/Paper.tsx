@@ -36,6 +36,11 @@ interface PaperProps {
     minWidthRight: number
   ) => void
   guides?: Guide[]
+  selectedItemIdx?: {
+    region: 'title' | 'header' | 'footer'
+    index: number
+  } | null
+  data?: Record<string, any>
 }
 
 export const Paper: React.FC<PaperProps> = ({
@@ -45,6 +50,8 @@ export const Paper: React.FC<PaperProps> = ({
   onItemResizeStart,
   onColumnResizeStart,
   guides,
+  selectedItemIdx,
+  data = {},
 }) => {
   const {
     headerTop,
@@ -174,6 +181,11 @@ export const Paper: React.FC<PaperProps> = ({
         <DraggableItem
           key={`title-${index}`}
           item={item}
+          data={data}
+          isSelected={
+            selectedItemIdx?.region === 'title' &&
+            selectedItemIdx?.index === index
+          }
           onMouseDown={(e) =>
             onItemDragStart(index, 'title', e, item.x, item.y)
           }
@@ -199,6 +211,11 @@ export const Paper: React.FC<PaperProps> = ({
         <DraggableItem
           key={`header-${index}`}
           item={item}
+          data={data}
+          isSelected={
+            selectedItemIdx?.region === 'header' &&
+            selectedItemIdx?.index === index
+          }
           onMouseDown={(e) =>
             onItemDragStart(index, 'header', e, item.x, item.y)
           }
@@ -224,6 +241,11 @@ export const Paper: React.FC<PaperProps> = ({
         <DraggableItem
           key={`footer-${index}`}
           item={item}
+          data={data}
+          isSelected={
+            selectedItemIdx?.region === 'footer' &&
+            selectedItemIdx?.index === index
+          }
           onMouseDown={(e) =>
             onItemDragStart(index, 'footer', e, item.x, item.y)
           }

@@ -9,6 +9,7 @@ interface DraggableItemProps {
   onMouseDown?: (e: React.MouseEvent) => void
   onClick?: () => void
   onResizeStart?: (direction: ResizeDirection, e: React.MouseEvent) => void
+  data?: Record<string, any>
 }
 
 export const DraggableItem: React.FC<DraggableItemProps> = ({
@@ -16,6 +17,7 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
   isSelected,
   onMouseDown,
   onResizeStart,
+  data = {},
 }) => {
   const [isHovered, setIsHovered] = useState(false)
 
@@ -51,10 +53,12 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
           : item.horizontalAlignment === 'right'
             ? 'justify-end'
             : 'justify-start'
-      } ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+      }`}
       title={item.name || item.field}
     >
-      {item.value || item.alias || item.name}
+      {item.field && data[item.field]
+        ? `${item.alias || item.name}: ${data[item.field]}`
+        : item.alias || item.value || item.name}
       {showHandles && <ResizeHandles onResizeStart={onResizeStart} />}
     </div>
   )
