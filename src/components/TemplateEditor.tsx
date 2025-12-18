@@ -318,11 +318,11 @@ export const TemplateEditor: React.FC = () => {
 
         {/* Center Canvas */}
         <div
-          className="flex-1 overflow-auto p-8 relative flex justify-center items-start bg-gray-100/50"
+          className="flex-1 overflow-auto p-10 relative flex bg-gray-100/50"
           ref={editorRef}
         >
           <div
-            className={`${isDraggingAny ? 'select-none' : ''} ${dragging ? 'cursor-ns-resize' : ''}`}
+            className={`m-auto ${isDraggingAny ? 'select-none' : ''} ${dragging ? 'cursor-ns-resize' : ''}`}
             style={{
               transform: `scale(${zoom / 100})`,
               transformOrigin: 'top center',
