@@ -29,6 +29,7 @@ interface UseToolbarReturn {
   // Other actions
   handlePrintPreview: () => void
   handleSaveAsTemplate: () => void
+  handleExportJson: () => void
 }
 
 /**
@@ -120,6 +121,20 @@ export function useToolbar({
     // TODO: Implement save template functionality
   }, [])
 
+  // Export JSON handler
+  const handleExportJson = useCallback(() => {
+    const dataStr = JSON.stringify(editorState, null, 2)
+    const dataUri =
+      'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr)
+
+    const exportFileDefaultName = `${new Date().getTime()}_template.json`
+
+    const linkElement = document.createElement('a')
+    linkElement.setAttribute('href', dataUri)
+    linkElement.setAttribute('download', exportFileDefaultName)
+    linkElement.click()
+  }, [editorState])
+
   return {
     // History
     canUndo,
@@ -137,5 +152,6 @@ export function useToolbar({
     // Other actions
     handlePrintPreview,
     handleSaveAsTemplate,
+    handleExportJson,
   }
 }

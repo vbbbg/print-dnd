@@ -8,6 +8,7 @@ import {
   RotateCcw,
   Printer,
   Save,
+  FileJson,
 } from 'lucide-react'
 
 interface ToolbarProps {
@@ -21,6 +22,7 @@ interface ToolbarProps {
   onResetLayout: () => void
   onPrintPreview: () => void
   onSaveAsTemplate: () => void
+  onExportJson: () => void
 }
 
 export const Toolbar: React.FC<ToolbarProps> = ({
@@ -34,6 +36,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onResetLayout,
   onPrintPreview,
   onSaveAsTemplate,
+  onExportJson,
 }) => {
   return (
     <div className="h-full flex items-center gap-2 px-2">
@@ -91,6 +94,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         <Button onClick={onSaveAsTemplate} className="gap-2">
           <Save className="h-4 w-4" />
           另存为模板
+        </Button>
+        <Button onClick={onExportJson} className="gap-2" variant="outline">
+          <FileJson className="h-4 w-4" />
+          导出JSON
         </Button>
       </div>
     </div>

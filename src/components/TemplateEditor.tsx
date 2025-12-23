@@ -42,6 +42,7 @@ export const TemplateEditor: React.FC = () => {
     handleZoomOut,
     handlePrintPreview,
     handleSaveAsTemplate,
+    handleExportJson,
   } = useToolbar({ editorState, setEditorState })
 
   // Use the custom hook for global drag handling (Regions)
@@ -261,6 +262,7 @@ export const TemplateEditor: React.FC = () => {
           onResetLayout={handleResetLayout}
           onPrintPreview={handlePrintPreview}
           onSaveAsTemplate={handleSaveAsTemplate}
+          onExportJson={handleExportJson}
         />
       </div>
 
