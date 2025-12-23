@@ -114,3 +114,4 @@ typings/
 .pnp.*
 dist
 .idea
+.vite
