@@ -1,8 +1,29 @@
 const express = require('express')
-const puppeteer = require('puppeteer')
 const { buildHtmlFromTemplate } = require('./renderEngine')
 const app = express()
-const port = 3001
+
+// Vercel uses process.env.VERCEL = '1'
+const isVercel = process.env.VERCEL === '1'
+
+let chromium
+let puppeteerCore
+
+if (isVercel) {
+  chromium = require('@sparticuz/chromium')
+  puppeteerCore = require('puppeteer-core')
+  // Configure sparticuz chromium
+  chromium.setGraphicsMode = false
+} else {
+  // Local development fallback
+  try {
+    // Attempt to require puppeteer if available (local dev)
+    require('puppeteer')
+  } catch (e) {
+    console.warn(
+      'Puppeteer not found, ensuring puppeteer-core or similar is handled.'
+    )
+  }
+}
 
 app.use(express.json())
 
@@ -29,21 +50,35 @@ app.post('/api/print', async (req, res) => {
 
     const { join } = require('path')
 
-    // Launch puppeteer
-    // Explicitly pointing to the installed local Chrome to bypass resolution errors
-    const browser = await puppeteer.launch({
-      headless: true,
-      executablePath: join(
-        __dirname,
-        '../.chrome/chrome/mac_arm-121.0.6167.85/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing'
-      ),
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-      ],
-    })
+    let browser
+    if (isVercel) {
+      // Vercel / Lambda Environment
+      browser = await puppeteerCore.launch({
+        args: chromium.args,
+        defaultViewport: chromium.defaultViewport,
+        executablePath: await chromium.executablePath(),
+        headless: chromium.headless,
+      })
+    } else {
+      // Local Environment
+      // Use standard puppeteer or local executable logic
+      const puppeteer = require('puppeteer')
+      browser = await puppeteer.launch({
+        headless: true,
+        // Keep your existing local logic or simplify
+        executablePath: join(
+          __dirname,
+          '../.chrome/chrome/mac_arm-121.0.6167.85/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing'
+        ),
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+        ],
+      })
+    }
+
     const page = await browser.newPage()
 
     // Generate HTML using the render engine
@@ -67,7 +102,7 @@ app.post('/api/print', async (req, res) => {
     res.send(pdfBuffer)
   } catch (error) {
     console.error('PDF Generation Error:', error)
-    res.status(500).send('Error generating PDF')
+    res.status(500).send('Error generating PDF: ' + error.message)
   }
 })
 
@@ -75,6 +110,12 @@ app.get('/health', (req, res) => {
   res.send('PDF Service is running')
 })
 
-app.listen(port, () => {
-  console.log(`PDF Service listening at http://localhost:${port}`)
-})
+// Only listen if running directly (not imported as module by Vercel)
+if (require.main === module) {
+  const port = 3001
+  app.listen(port, () => {
+    console.log(`PDF Service listening at http://localhost:${port}`)
+  })
+}
+
+module.exports = app
