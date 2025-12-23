@@ -1,9 +1,20 @@
 const express = require('express')
 const puppeteer = require('puppeteer')
+const { buildHtmlFromTemplate } = require('./renderEngine')
 const app = express()
 const port = 3001
 
 app.use(express.json())
+
+// Manual CORS to avoid dependency issues
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*')
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept'
+  )
+  next()
+})
 
 // Main endpoint to generate PDF
 app.post('/api/print', async (req, res) => {
@@ -16,25 +27,33 @@ app.post('/api/print', async (req, res) => {
 
     console.log('Generating PDF for template:', template.name || 'Untitled')
 
+    const { join } = require('path')
+
     // Launch puppeteer
-    const browser = await puppeteer.launch()
+    // Explicitly pointing to the installed local Chrome to bypass resolution errors
+    const browser = await puppeteer.launch({
+      headless: true,
+      executablePath: join(
+        __dirname,
+        '../.chrome/chrome/mac_arm-121.0.6167.85/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing'
+      ),
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+      ],
+    })
     const page = await browser.newPage()
 
-    // Mock HTML generation (Replace with real logic from your guide)
-    const htmlContent = `
-      <html>
-        <body>
-          <h1>${template.name || 'PDF Generation Test'}</h1>
-          <p>This is a placeholder for the generated PDF content.</p>
-          <pre>${JSON.stringify(data, null, 2)}</pre>
-        </body>
-      </html>
-    `
+    // Generate HTML using the render engine
+    const htmlContent = buildHtmlFromTemplate(template, data || {})
 
     await page.setContent(htmlContent)
 
     const pdfBuffer = await page.pdf({
-      format: 'A4',
+      width: `${template.paperWidth || 210}mm`,
+      height: `${template.paperHeight || 297}mm`,
       printBackground: true,
     })
 

@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { EditorState } from '../types/editor'
 import { getMockEditorState } from '../utils/mockData'
+import { MOCK_REAL_DATA } from '../utils/mockRealData'
 
 interface HistoryState {
   past: EditorState[]
@@ -109,11 +110,33 @@ export function useToolbar({
     setZoom((prev) => Math.max(10, prev - 10))
   }, [])
 
-  // Print preview handler
-  const handlePrintPreview = useCallback(() => {
-    console.log('Print preview clicked')
-    // TODO: Implement print preview functionality
-  }, [])
+  // Print preview handler -> Call PDF Service
+  const handlePrintPreview = useCallback(async () => {
+    console.log('Sending print request...')
+    try {
+      const response = await fetch('http://localhost:3001/api/print', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          template: editorState,
+          data: MOCK_REAL_DATA,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Print failed')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      window.open(url, '_blank')
+    } catch (error) {
+      console.error('Print error:', error)
+      alert('打印服务调用失败，请确保后台服务已启动 (pnpm dev:pdf)')
+    }
+  }, [editorState])
 
   // Save template handler
   const handleSaveAsTemplate = useCallback(() => {
