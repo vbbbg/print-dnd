@@ -106,7 +106,7 @@ app.post('/api/print', async (req, res) => {
   }
 })
 
-app.get('/health', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.send('PDF Service is running')
 })
 
