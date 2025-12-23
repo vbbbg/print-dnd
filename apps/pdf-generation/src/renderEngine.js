@@ -12,7 +12,38 @@ function buildHtmlFromTemplate(template, data) {
     bodyItems,
     footerItems,
     bodyTop,
+    titleItems,
   } = template
+
+  // --- PAGINATION LOGIC ---
+  // 1. Calculate the available maximum height for the table on a single page.
+  //    Condition: "Table area insufficient" -> Split to next page.
+  //    We need to find the Y-start of the footer to know where the table must stop.
+  //    If no footer items, assume a margin-bottom (e.g., 20mm).
+  let footerMergeY = paperHeight - 20 // Default safe bottom limit
+  if (footerItems && footerItems.length > 0) {
+    // Find the topmost item in the footer
+    const topFooterItemY = Math.min(...footerItems.map((item) => item.y))
+    footerMergeY = topFooterItemY
+  }
+
+  const availableHeightMm = footerMergeY - bodyTop
+  const ESTIMATED_ROW_HEIGHT_MM = 10 // Approximation: 10mm per row ~ 38px
+  // Safety margin to prevent overflow
+  const maxRowsPerPage = Math.floor(availableHeightMm / ESTIMATED_ROW_HEIGHT_MM)
+
+  // 2. Split the list data into chunks
+  const fullList = data.list || []
+  let rowChunks = []
+
+  if (fullList.length === 0) {
+    // Even if no data, we want at least one page
+    rowChunks = [[]]
+  } else {
+    for (let i = 0; i < fullList.length; i += maxRowsPerPage) {
+      rowChunks.push(fullList.slice(i, i + maxRowsPerPage))
+    }
+  }
 
   // CSS for A4/Custom page size
   // We use "mm" units directly as they are valid in CSS
@@ -29,11 +60,21 @@ function buildHtmlFromTemplate(template, data) {
         margin: 0;
         padding: 0;
         font-family: 'Inter', sans-serif;
+        background: #ccc; /* Visual separation for debug, usually not seen in print if margin 0 */
+      }
+
+      /* Container for each physical page */
+      .page {
         width: ${paperWidth}mm;
         height: ${paperHeight}mm;
         position: relative;
-        /* Ensure background is white */
-        background: white; 
+        overflow: hidden; 
+        background: white;
+        page-break-after: always; /* Force new page after each .page div */
+      }
+
+      .page:last-child {
+        page-break-after: auto;
       }
 
       * {
@@ -88,6 +129,37 @@ function buildHtmlFromTemplate(template, data) {
     </style>
   `
 
+  // Generate HTML for each page
+  const pagesHtml = rowChunks
+    .map((rows, pageIndex) => {
+      // Header, Title, Footer are repeated on each page
+      return `
+      <div class="page">
+        <!-- Header Items -->
+        ${renderItems(headerItems, data, 'header')}
+        
+        <!-- Document Title Items -->
+        ${renderItems(titleItems, data, 'title')}
+
+        <!-- Body (Table) Segment -->
+        <div class="print-table">
+          ${renderTable(
+            bodyItems,
+            rows,
+            pageIndex === rowChunks.length - 1 // showTotal only on last page
+          )}
+        </div>
+
+        <!-- Footer Items -->
+        ${renderItems(footerItems, data, 'footer')}
+        
+        <!-- Optional Page Number Debug -->
+        <!-- <div style="position:absolute; bottom:5mm; right:5mm; font-size:10px;">Page ${pageIndex + 1}/${rowChunks.length}</div> -->
+      </div>
+    `
+    })
+    .join('\n')
+
   return `
     <!DOCTYPE html>
     <html>
@@ -96,19 +168,7 @@ function buildHtmlFromTemplate(template, data) {
         ${style}
       </head>
       <body>
-        <!-- Header Items -->
-        ${renderItems(headerItems, data, 'header')}
-        
-        <!-- Document Title Items also exist in template but usually part of header/title region -->
-        ${renderItems(template.titleItems, data, 'title')}
-
-        <!-- Body (Table) -->
-        <div class="print-table">
-          ${renderTable(bodyItems, data.list || [])}
-        </div>
-
-        <!-- Footer Items -->
-        ${renderItems(footerItems, data, 'footer')}
+        ${pagesHtml}
       </body>
     </html>
   `
@@ -172,7 +232,7 @@ function renderItems(items, data, region) {
 /**
  * Renders the data table.
  */
-function renderTable(tableData, rows) {
+function renderTable(tableData, rows, isLastPage) {
   if (!tableData || !tableData.cols) return ''
 
   const visibleCols = tableData.cols.filter((c) => c.visible !== false)
@@ -201,10 +261,10 @@ function renderTable(tableData, rows) {
     })
     .join('')
 
-  // Subtotal / Total rows could be added here based on tableData.showSubtotal
-  // For simplicity, we skip them or add simple placeholders
+  // Subtotal / Total rows
+  // Only show Total on the last page if enabled
   let footerHtml = ''
-  if (tableData.showTotal) {
+  if (tableData.showTotal && isLastPage) {
     // Simple total row spanning all columns
     footerHtml += `
         <tr>
