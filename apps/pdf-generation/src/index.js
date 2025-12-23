@@ -59,6 +59,11 @@ app.post('/api/print', async (req, res) => {
     let browser
     if (isVercel) {
       // Vercel / Lambda Environment
+      // Load Chinese font (Noto Sans SC) - required for Chinese characters
+      await chromium.font(
+        'https://github.com/google/fonts/raw/main/ofl/notosanssc/NotoSansSC-Regular.otf'
+      )
+
       browser = await puppeteerCore.launch({
         args: chromium.args,
         defaultViewport: chromium.defaultViewport,
