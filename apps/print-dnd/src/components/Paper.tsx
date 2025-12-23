@@ -164,6 +164,7 @@ export const Paper: React.FC<PaperProps> = ({
           {bodyItems && (
             <RegionTable
               data={bodyItems}
+              rows={data.list}
               onColumnResizeStart={onColumnResizeStart}
               isSelected={selectedItemIdx?.region === 'body'}
               onClick={onTableClick}

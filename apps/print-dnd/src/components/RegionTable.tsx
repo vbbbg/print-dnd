@@ -4,6 +4,7 @@ import { pxToMm } from '../constants/units'
 
 interface RegionTableProps {
   data: TableData
+  rows?: any[]
   onColumnResizeStart?: (
     index: number,
     e: React.MouseEvent,
@@ -16,6 +17,7 @@ interface RegionTableProps {
 
 export const RegionTable: React.FC<RegionTableProps> = ({
   data,
+  rows = [],
   onColumnResizeStart,
   isSelected,
   onClick,
@@ -41,11 +43,6 @@ export const RegionTable: React.FC<RegionTableProps> = ({
       return `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
     }
 
-    // We need to get the actual DOM elements to read their content and computed styles
-    // For this, we'll temporarily create a dummy element to get the computed style
-    // or, more directly, use the ref if it's still needed for other purposes.
-    // Since the original code used contentRefs, we'll assume it's still available
-    // and populated for the elements we need to measure.
     const leftEl = document.getElementById(`header-col-${index}`)
     const rightEl = document.getElementById(`header-col-${index + 1}`)
 
@@ -70,6 +67,8 @@ export const RegionTable: React.FC<RegionTableProps> = ({
 
     onColumnResizeStart(index, e, minLeft, minRight)
   }
+
+  const displayRows = rows && rows.length > 0 ? rows.slice(0, 2) : []
 
   return (
     <div
@@ -117,11 +116,11 @@ export const RegionTable: React.FC<RegionTableProps> = ({
         })}
       </div>
 
-      {/* Table Body (Placeholder rows) */}
+      {/* Table Body */}
       <div className="flex-1 overflow-auto">
-        {[1, 2, 3].map((row) => (
+        {displayRows.map((row, rowIndex) => (
           <div
-            key={row}
+            key={rowIndex}
             className="flex border-b border-gray-200 last:border-0 min-h-[24px]"
           >
             {visibleCols.map((col, index) => {
@@ -129,11 +128,11 @@ export const RegionTable: React.FC<RegionTableProps> = ({
               const isLast = index === visibleCols.length - 1
               return (
                 <div
-                  key={`${row}-${col.colname}`}
+                  key={`${rowIndex}-${col.colname}`}
                   className={`p-1 border-r border-gray-200 text-center flex items-center justify-center ${isLast ? 'border-r-0' : ''}`}
                   style={{ width: `${widthPercent}%` }}
                 >
-                  {/* Empty cell content */}
+                  {row[col.colname]}
                 </div>
               )
             })}

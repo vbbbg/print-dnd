@@ -1,3 +1,16 @@
+const generateList = (count: number) => {
+  return Array.from({ length: count }).map((_, i) => ({
+    serialNumber: i + 1,
+    spuName: `测试商品长长长长长长长长名称 ${i + 1}`,
+    skuName: `测试规格 ${i + 1}`,
+    unitName: '个',
+    qty: 10 + i,
+    price: (100 + i * 10).toFixed(2),
+    amount: ((100 + i * 10) * (10 + i)).toFixed(2),
+    remark: i % 5 === 0 ? '加急' : '',
+  }))
+}
+
 export const MOCK_REAL_DATA: Record<string, any> = {
   // Common Fields
   title: '销售单',
@@ -14,14 +27,8 @@ export const MOCK_REAL_DATA: Record<string, any> = {
   // Footer Fields
   handlerName: '李四',
   examineUserName: '王五',
-  currentDue: '¥12,500.00',
+  currentDue: '¥999,996.00',
 
-  // Table Rows (Usually handled by RegionTable, but good to have for context)
-  serialNumber: 1,
-  spuName: '华为 Mate 60 Pro',
-  skuName: '12GB+512GB 雅川青',
-  unitName: '台',
-  qty: 2,
-  price: '6999.00',
-  amount: '13998.00',
+  // Table Data List - Generated 50 rows
+  list: generateList(50),
 }
