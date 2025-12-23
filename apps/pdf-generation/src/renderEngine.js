@@ -30,7 +30,15 @@ function buildHtmlFromTemplate(template, data) {
   const availableHeightMm = footerMergeY - bodyTop
   const ESTIMATED_ROW_HEIGHT_MM = 10 // Approximation: 10mm per row ~ 38px
   // Safety margin to prevent overflow
-  const maxRowsPerPage = Math.floor(availableHeightMm / ESTIMATED_ROW_HEIGHT_MM)
+  let maxRowsPerPage = Math.floor(availableHeightMm / ESTIMATED_ROW_HEIGHT_MM)
+
+  // If subtotal is enabled, we need to reserve space for one extra row on every page
+  if (bodyItems.showSubtotal) {
+    maxRowsPerPage -= 1
+  }
+
+  // Safety check to ensure we don't have negative or zero rows per page
+  if (maxRowsPerPage < 1) maxRowsPerPage = 1
 
   // 2. Split the list data into chunks
   const fullList = data.list || []
@@ -146,7 +154,8 @@ function buildHtmlFromTemplate(template, data) {
           ${renderTable(
             bodyItems,
             rows,
-            pageIndex === rowChunks.length - 1 // showTotal only on last page
+            pageIndex === rowChunks.length - 1, // showTotal only on last page
+            data.list || []
           )}
         </div>
 
@@ -232,7 +241,7 @@ function renderItems(items, data, region) {
 /**
  * Renders the data table.
  */
-function renderTable(tableData, rows, isLastPage) {
+function renderTable(tableData, rows, isLastPage, fullList = []) {
   if (!tableData || !tableData.cols) return ''
 
   const visibleCols = tableData.cols.filter((c) => c.visible !== false)
@@ -261,18 +270,77 @@ function renderTable(tableData, rows, isLastPage) {
     })
     .join('')
 
-  // Subtotal / Total rows
-  // Only show Total on the last page if enabled
   let footerHtml = ''
+
+  // Helper to render a summary row (Subtotal or Total)
+  const renderSummaryRow = (label, rowsToSum, backgroundColor = '#fff') => {
+    // Calculate sums for columns with keys 'quantity' or 'amount' (case-insensitive)
+    const sums = {}
+
+    // Initialize sums
+    visibleCols.forEach((col) => {
+      const key = col.colname ? col.colname.toLowerCase() : ''
+      if (key.includes('price') || key.includes('amount')) {
+        sums[col.colname] = 0
+      }
+    })
+
+    // Accumulate values
+    rowsToSum.forEach((row) => {
+      visibleCols.forEach((col) => {
+        const key = col.colname ? col.colname.toLowerCase() : ''
+        if (key.includes('price') || key.includes('amount')) {
+          const val = parseFloat(row[col.colname])
+          if (!isNaN(val)) {
+            sums[col.colname] += val
+          }
+        }
+      })
+    })
+
+    // Generate a cell for each visible column
+    const cells = visibleCols
+      .map((col, index) => {
+        // First column shows the label
+        if (index === 0) {
+          return `<td style="font-weight: bold; background-color: ${backgroundColor}; text-align: center;">${label}</td>`
+        }
+
+        // Calculable columns
+        const key = col.colname ? col.colname.toLowerCase() : ''
+        if (key.includes('price') || key.includes('amount')) {
+          let val = sums[col.colname] || 0
+          // Simple logic: if 'amount', probably 2 decimals. If 'quantity', maybe flexible.
+          // For now, let's behave like a standard financial/inventory report:
+          // Amount -> 2 decimals. Quantity -> 0 or more decimals if not integer.
+          // But to be safe and simple, we can use a basic format or toFixed(2) for amounts.
+
+          // Check if it's amount
+          if (key.includes('amount')) {
+            return `<td style="font-weight: bold; background-color: ${backgroundColor}; text-align: center;">${val.toFixed(2)}</td>`
+          }
+          // Quantity - strip trailing zeros if possible, or just stringify?
+          // strict toFixed(2) for amount, loose for quantity
+          return `<td style="font-weight: bold; background-color: ${backgroundColor}; text-align: center;">${val}</td>`
+        }
+
+        return `<td style="font-weight: bold; background-color: ${backgroundColor};"></td>`
+      })
+      .join('')
+
+    return `<tr>${cells}</tr>`
+  }
+
+  // 1. Page Subtotal (Show on every page if enabled)
+  if (tableData.showSubtotal) {
+    footerHtml += renderSummaryRow('小计', rows, '#fff')
+  }
+
+  // 2. Grand Total (Show only on the last page if enabled)
   if (tableData.showTotal && isLastPage) {
-    // Simple total row spanning all columns
-    footerHtml += `
-        <tr>
-            <td colspan="${visibleCols.length}" style="text-align: right; font-weight: bold;">
-                合计: (Calculated in Backend or passed in data)
-            </td>
-        </tr>
-      `
+    // We need the full list to calculate grand total.
+    // We now pass `fullList` as the 4th argument.
+    footerHtml += renderSummaryRow('合计', fullList, '#fff')
   }
 
   return `
