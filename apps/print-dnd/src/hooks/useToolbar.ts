@@ -133,7 +133,14 @@ export function useToolbar({
 
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
-      window.open(url, '_blank')
+
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${new Date().getTime()}_print.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
     } catch (error) {
       console.error('Print error:', error)
       alert('打印服务调用失败，请确保后台服务已启动 (pnpm dev:pdf)')
