@@ -4,6 +4,7 @@ import { ResizeHandle } from './ResizeHandle'
 import { DraggableItem } from './DraggableItem'
 import { RegionTable } from './RegionTable'
 import { mmToPx } from '../constants/units'
+import { resolveItemText, resolveTitleItemText } from '../utils/itemUtils'
 import { ResizeDirection } from './ResizeHandles'
 
 interface PaperProps {
@@ -185,7 +186,6 @@ export const Paper: React.FC<PaperProps> = ({
         <DraggableItem
           key={`title-${index}`}
           item={item}
-          data={data}
           isSelected={
             selectedItemIdx?.region === 'title' &&
             selectedItemIdx?.index === index
@@ -208,14 +208,15 @@ export const Paper: React.FC<PaperProps> = ({
                   )
               : undefined
           }
-        />
+        >
+          {resolveTitleItemText(item, data)}
+        </DraggableItem>
       ))}
 
       {headerItems?.map((item, index) => (
         <DraggableItem
           key={`header-${index}`}
           item={item}
-          data={data}
           isSelected={
             selectedItemIdx?.region === 'header' &&
             selectedItemIdx?.index === index
@@ -238,14 +239,15 @@ export const Paper: React.FC<PaperProps> = ({
                   )
               : undefined
           }
-        />
+        >
+          {resolveItemText(item, data)}
+        </DraggableItem>
       ))}
 
       {footerItems?.map((item, index) => (
         <DraggableItem
           key={`footer-${index}`}
           item={item}
-          data={data}
           isSelected={
             selectedItemIdx?.region === 'footer' &&
             selectedItemIdx?.index === index
@@ -268,7 +270,9 @@ export const Paper: React.FC<PaperProps> = ({
                   )
               : undefined
           }
-        />
+        >
+          {resolveItemText(item, data)}
+        </DraggableItem>
       ))}
 
       {/* Resize Handles */}
