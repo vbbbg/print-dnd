@@ -114,7 +114,9 @@ export function useToolbar({
   const handlePrintPreview = useCallback(async () => {
     console.log('Sending print request...')
     try {
-      const response = await fetch('http://localhost:3001/api/print', {
+      const apiUrl =
+        import.meta.env.VITE_PDF_SERVICE_URL || 'http://localhost:3001'
+      const response = await fetch(`${apiUrl}/api/print`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
