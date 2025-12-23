@@ -14,6 +14,7 @@ import { BasicSettingsCard } from './BasicSettingsCard'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { FieldSettingsPanel } from './FieldSettingsPanel'
 import { ItemSettingsPanel } from './ItemSettingsPanel'
+import { TableSettingsPanel } from './TableSettingsPanel'
 import { constrainItemsToMargins } from '../utils/itemUtils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
@@ -22,7 +23,7 @@ export const TemplateEditor: React.FC = () => {
     useSyncState<EditorState>(getMockEditorState)
 
   const [selectedItemIdx, setSelectedItemIdx] = React.useState<{
-    region: 'title' | 'header' | 'footer'
+    region: 'title' | 'header' | 'footer' | 'body'
     index: number
   } | null>({ region: 'title', index: 0 })
 
@@ -219,23 +220,29 @@ export const TemplateEditor: React.FC = () => {
   const handleItemUpdate = (updates: any) => {
     if (!selectedItemIdx) return
     const { region, index } = selectedItemIdx
-    setEditorState((prev) => {
-      let items: any[] = []
-      if (region === 'title') items = [...prev.titleItems]
-      else if (region === 'header') items = [...prev.headerItems]
-      else items = [...prev.footerItems]
 
-      items[index] = { ...items[index], ...updates }
+    setEditorState((prev) => {
+      let key: 'titleItems' | 'headerItems' | 'footerItems'
+      if (region === 'title') key = 'titleItems'
+      else if (region === 'header') key = 'headerItems'
+      else if (region === 'footer') key = 'footerItems'
+      else return prev
+
+      const newItems = [...prev[key]]
+      newItems[index] = { ...newItems[index], ...updates }
 
       return {
         ...prev,
-        [region === 'title'
-          ? 'titleItems'
-          : region === 'header'
-            ? 'headerItems'
-            : 'footerItems']: items,
+        [key]: newItems,
       }
     })
+  }
+
+  const handleTableUpdate = (updates: any) => {
+    setEditorState((prev) => ({
+      ...prev,
+      bodyItems: { ...prev.bodyItems, ...updates },
+    }))
   }
 
   return (
@@ -338,6 +345,9 @@ export const TemplateEditor: React.FC = () => {
               onColumnResizeStart={handleColumnResizeStart}
               selectedItemIdx={selectedItemIdx}
               data={MOCK_REAL_DATA}
+              onTableClick={() =>
+                setSelectedItemIdx({ region: 'body', index: 0 })
+              }
             />
           </div>
         </div>
@@ -349,7 +359,12 @@ export const TemplateEditor: React.FC = () => {
           <div
             className={`flex-1 overflow-hidden ${rightPanelOpen ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 h-full`}
           >
-            {selectedItem ? (
+            {selectedItemIdx?.region === 'body' ? (
+              <TableSettingsPanel
+                data={editorState.bodyItems}
+                onChange={handleTableUpdate}
+              />
+            ) : selectedItem ? (
               <ItemSettingsPanel
                 item={selectedItem}
                 onChange={handleItemUpdate}

@@ -36,6 +36,8 @@ export interface TableColumn {
 
 export interface TableData {
   cols: TableColumn[]
+  showSubtotal?: boolean
+  showTotal?: boolean
 }
 
 export interface EditorState {

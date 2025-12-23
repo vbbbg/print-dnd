@@ -10,20 +10,18 @@ interface RegionTableProps {
     minWidthLeft: number,
     minWidthRight: number
   ) => void
+  isSelected?: boolean
+  onClick?: () => void
 }
 
 export const RegionTable: React.FC<RegionTableProps> = ({
   data,
   onColumnResizeStart,
+  isSelected,
+  onClick,
 }) => {
-  // Calculate total width units from columns to calculate percentage widths
-  const totalWidth = data.cols.reduce(
-    (sum, col) => sum + (col.visible !== false ? col.width : 0),
-    0
-  )
-
-  // Filter visible columns to map index correctly for resizing
   const visibleCols = data.cols.filter((col) => col.visible !== false)
+  const totalWidth = visibleCols.reduce((sum, col) => sum + col.width, 0)
 
   const handleResizeStart = (index: number, e: React.MouseEvent) => {
     if (!onColumnResizeStart) return
@@ -75,10 +73,16 @@ export const RegionTable: React.FC<RegionTableProps> = ({
 
   return (
     <div
-      className="w-full h-full border border-gray-400 box-border bg-white overflow-hidden flex flex-col"
+      className={`w-full h-full border box-border bg-white overflow-hidden flex flex-col ${
+        isSelected ? 'border-blue-500 border-2' : 'border-gray-400'
+      }`}
       style={{
         // Use generic table styling
         fontSize: '12px',
+      }}
+      onClick={(e) => {
+        e.stopPropagation()
+        onClick?.()
       }}
     >
       {/* Table Header */}
@@ -135,7 +139,24 @@ export const RegionTable: React.FC<RegionTableProps> = ({
             })}
           </div>
         ))}
-        {/* Fill remaining space visual if needed */}
+      </div>
+
+      {/* Footer Rows (Subtotal & Total) */}
+      <div className="border-t border-gray-400">
+        {data.showSubtotal && (
+          <div className="flex border-b border-gray-200 min-h-[24px] bg-gray-50">
+            <div className="p-1 px-2 font-bold w-full text-right">
+              本页小计: ¥0.00
+            </div>
+          </div>
+        )}
+        {data.showTotal && (
+          <div className="flex min-h-[24px] bg-gray-100">
+            <div className="p-1 px-2 font-bold w-full text-right">
+              合计: ¥0.00
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

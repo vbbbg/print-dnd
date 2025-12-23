@@ -37,10 +37,11 @@ interface PaperProps {
   ) => void
   guides?: Guide[]
   selectedItemIdx?: {
-    region: 'title' | 'header' | 'footer'
+    region: 'title' | 'header' | 'footer' | 'body'
     index: number
   } | null
   data?: Record<string, any>
+  onTableClick?: () => void
 }
 
 export const Paper: React.FC<PaperProps> = ({
@@ -52,6 +53,7 @@ export const Paper: React.FC<PaperProps> = ({
   guides,
   selectedItemIdx,
   data = {},
+  onTableClick,
 }) => {
   const {
     headerTop,
@@ -162,6 +164,8 @@ export const Paper: React.FC<PaperProps> = ({
             <RegionTable
               data={bodyItems}
               onColumnResizeStart={onColumnResizeStart}
+              isSelected={selectedItemIdx?.region === 'body'}
+              onClick={onTableClick}
             />
           )}
         </div>
