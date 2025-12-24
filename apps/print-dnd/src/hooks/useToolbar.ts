@@ -128,7 +128,20 @@ export function useToolbar({
       })
 
       if (!response.ok) {
-        throw new Error('Print failed')
+        throw new Error(
+          `Print failed: ${response.status} ${response.statusText}`
+        )
+      }
+
+      const contentType = response.headers.get('content-type')
+      if (contentType && contentType.includes('application/json')) {
+        const json = await response.json()
+        throw new Error(`Print failed: ${json.error || JSON.stringify(json)}`)
+      }
+      if (contentType && !contentType.includes('application/pdf')) {
+        const text = await response.text()
+        console.error('Received non-PDF response:', text)
+        throw new Error('Received invalid PDF response from server')
       }
 
       const blob = await response.blob()
@@ -143,7 +156,10 @@ export function useToolbar({
       window.URL.revokeObjectURL(url)
     } catch (error) {
       console.error('Print error:', error)
-      alert('打印服务调用失败，请确保后台服务已启动 (pnpm dev:pdf)')
+      alert(
+        'Printing failed: ' +
+          (error instanceof Error ? error.message : String(error))
+      )
     }
   }, [editorState])
 

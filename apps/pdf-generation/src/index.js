@@ -110,7 +110,7 @@ app.post('/api/print', async (req, res) => {
       'Content-Length': pdfBuffer.length,
     })
 
-    res.send(pdfBuffer)
+    res.send(Buffer.from(pdfBuffer))
   } catch (error) {
     console.error('PDF Generation Error:', error)
     res.status(500).send('Error generating PDF: ' + error.message)
