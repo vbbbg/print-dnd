@@ -111,56 +111,83 @@ export function useToolbar({
   }, [])
 
   // Print preview handler -> Call PDF Service
-  const handlePrintPreview = useCallback(async () => {
-    console.log('Sending print request...')
-    try {
-      const apiUrl =
-        import.meta.env.VITE_PDF_SERVICE_URL || 'http://localhost:3001'
-      const response = await fetch(`${apiUrl}/api/print`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          template: editorState,
-          data: MOCK_REAL_DATA,
-        }),
-      })
+  // Print preview handler -> Open Client App
+  const handlePrintPreview = useCallback(() => {
+    console.log('Opening print client...')
 
-      if (!response.ok) {
-        throw new Error(
-          `Print failed: ${response.status} ${response.statusText}`
-        )
-      }
+    // URL of the print-client app
+    // In production this should be env var, for now hardcoded to dev port
+    const clientUrl = 'http://localhost:3002'
 
-      const contentType = response.headers.get('content-type')
-      if (contentType && contentType.includes('application/json')) {
-        const json = await response.json()
-        throw new Error(`Print failed: ${json.error || JSON.stringify(json)}`)
-      }
-      if (contentType && !contentType.includes('application/pdf')) {
-        const text = await response.text()
-        console.error('Received non-PDF response:', text)
-        throw new Error('Received invalid PDF response from server')
-      }
+    // Open new window
+    const printWindow = window.open(clientUrl, '_blank')
 
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `${new Date().getTime()}_print.pdf`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
-    } catch (error) {
-      console.error('Print error:', error)
-      alert(
-        'Printing failed: ' +
-          (error instanceof Error ? error.message : String(error))
-      )
+    if (!printWindow) {
+      alert('Please allow popups to open the print preview.')
+      return
     }
+
+    // Data to send
+    const printData = {
+      template: editorState,
+      data: MOCK_REAL_DATA, // Or actual data
+    }
+
+    // Fallback: Write to localStorage (domain must successfully share if on same domain,
+    // but here we are on localhost:3000 vs localhost:3002, so localStorage is NOT shared across port by default in some browsers,
+    // actually, localStorage IS isolated by origin (protocol + domain + port).
+    // So localStorage won't work cross-port.
+    //
+    // CORRECT STRATEGY for localhost debugging:
+    // If ports differ, we MUST use postMessage.
+    //
+    // START DEBUGGING:
+    // User says "Redirected but no reaction" -> likely Client App opened but didn't receive message.
+    //
+    // Possible reasons:
+    // 1. Client App loaded slower than 1000ms.
+    // 2. Client App loaded faster than event listener added (unlikely due to timeout).
+    // 3. Handshake 'PRINT_CLIENT_READY' never received.
+
+    // I will add a periodic sender retry interval instead of a single timeout.
+
+    // Interval to send data repeatedly until we get an acknowledgement or time out
+    let attempts = 0
+    const maxAttempts = 50 // 5 seconds
+    const interval = setInterval(() => {
+      if (printWindow.closed) {
+        clearInterval(interval)
+        return
+      }
+
+      attempts++
+      // Just blind send every 100ms
+      printWindow.postMessage(
+        {
+          type: 'PRINT_DATA',
+          template: printData.template,
+          data: printData.data,
+        },
+        '*'
+      )
+
+      if (attempts >= maxAttempts) {
+        clearInterval(interval)
+        console.warn('Stopped sending print data after timeout')
+      }
+    }, 100)
+
+    // Listener to stop if we hear back (optional, but good practice)
+    const messageHandler = (event: MessageEvent) => {
+      if (event.data?.type === 'PRINT_CLIENT_RECEIVED') {
+        clearInterval(interval)
+        window.removeEventListener('message', messageHandler)
+      }
+    }
+    window.addEventListener('message', messageHandler)
+
+    // Also keep the handshake logic if client supports it
+    // ...
   }, [editorState])
 
   // Save template handler
