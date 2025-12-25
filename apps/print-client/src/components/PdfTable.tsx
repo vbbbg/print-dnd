@@ -82,7 +82,7 @@ export const PdfTable: React.FC<PdfTableProps> = ({
     <View style={styles.table}>
       {/* Header */}
       <View style={[styles.row, styles.headerRow]}>
-        {colWidths.map((col, idx) => (
+        {colWidths.map((col, _idx) => (
           <Text
             key={col.colname}
             style={[
@@ -98,7 +98,7 @@ export const PdfTable: React.FC<PdfTableProps> = ({
       {/* Body */}
       {data.map((row, rIdx) => (
         <View key={rIdx} style={styles.row}>
-          {colWidths.map((col, cIdx) => (
+          {colWidths.map((col, _cIdx) => (
             <Text
               key={`${rIdx}-${col.colname}`}
               style={[styles.cell, { width: `${col.widthPercent}%` }]}

@@ -8,6 +8,12 @@ export default defineConfig({
     dedupe: ['react', 'react-dom', '@react-pdf/renderer'],
   },
   optimizeDeps: {
+    include: ['@react-pdf/renderer'],
     exclude: ['print-client'],
+  },
+  build: {
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
   },
 })
