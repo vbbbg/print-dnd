@@ -11,6 +11,7 @@ interface HistoryState {
 interface UseToolbarOptions {
   editorState: EditorState
   setEditorState: (state: EditorState) => void
+  onSave?: (state: EditorState) => void
 }
 
 interface UseToolbarReturn {
@@ -44,6 +45,7 @@ interface UseToolbarReturn {
 export function useToolbar({
   editorState,
   setEditorState,
+  onSave,
 }: UseToolbarOptions): UseToolbarReturn {
   // Manual history management using ref
   const historyRef = useRef<HistoryState>({
@@ -75,7 +77,6 @@ export function useToolbar({
   // Undo function
   const undo = useCallback(() => {
     if (historyRef.current.past.length === 0) return
-
     const previous = historyRef.current.past.pop()!
     historyRef.current.future.unshift(editorState)
     setEditorState(previous)
@@ -85,7 +86,6 @@ export function useToolbar({
   // Redo function
   const redo = useCallback(() => {
     if (historyRef.current.future.length === 0) return
-
     const next = historyRef.current.future.shift()!
     historyRef.current.past.push(editorState)
     setEditorState(next)
@@ -193,8 +193,12 @@ export function useToolbar({
   // Save template handler
   const handleSaveAsTemplate = useCallback(() => {
     console.log('Save as template clicked')
-    // TODO: Implement save template functionality
-  }, [])
+    if (onSave) {
+      onSave(editorState)
+    } else {
+      console.warn('No onSave handler provided')
+    }
+  }, [editorState, onSave])
 
   // Export JSON handler
   const handleExportJson = useCallback(() => {

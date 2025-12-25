@@ -18,9 +18,18 @@ import { TableSettingsPanel } from './TableSettingsPanel'
 import { constrainItemsToMargins } from '../utils/itemUtils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
-export const TemplateEditor: React.FC = () => {
-  const [editorState, setEditorState] =
-    useSyncState<EditorState>(getMockEditorState)
+export interface TemplateEditorProps {
+  initialState?: EditorState
+  onSave?: (state: EditorState) => void
+}
+
+export const TemplateEditor: React.FC<TemplateEditorProps> = ({
+  initialState,
+  onSave,
+}) => {
+  const [editorState, setEditorState] = useSyncState<EditorState>(
+    initialState || getMockEditorState
+  )
 
   const [selectedItemIdx, setSelectedItemIdx] = React.useState<{
     region: 'title' | 'header' | 'footer' | 'body'
@@ -43,7 +52,7 @@ export const TemplateEditor: React.FC = () => {
     handlePrintPreview,
     handleSaveAsTemplate,
     handleExportJson,
-  } = useToolbar({ editorState, setEditorState })
+  } = useToolbar({ editorState, setEditorState, onSave })
 
   // Use the custom hook for global drag handling (Regions)
   const { dragging, setDragging } = useGlobalDrag(editorRef, setEditorState)
