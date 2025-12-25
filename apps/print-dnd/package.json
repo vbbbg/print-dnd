@@ -18,7 +18,7 @@
       "import": "./dist/index.es.js",
       "require": "./dist/index.umd.js"
     },
-    "./style.css": "./dist/style.css"
+    "./style.css": "./dist/print-dnd.css"
   },
   "scripts": {
     "dev": "vite",
