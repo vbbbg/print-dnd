@@ -130,7 +130,7 @@ export function useToolbar({
     // Data to send
     const printData = {
       template: editorState,
-      data: MOCK_REAL_DATA, // Or actual data
+      data: [MOCK_REAL_DATA], // Or actual data
     }
 
     // Fallback: Write to localStorage (domain must successfully share if on same domain,
