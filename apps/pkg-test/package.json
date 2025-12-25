@@ -9,9 +9,11 @@
         "preview": "vite preview"
     },
     "dependencies": {
+        "@react-pdf/renderer": "^4.3.1",
+        "print-client": "file:../print-client/print-client-0.0.1.tgz",
+        "print-dnd": "file:../print-dnd/print-dnd-0.0.1.tgz",
         "react": "^18.3.1",
-        "react-dom": "^18.3.1",
-        "print-dnd": "file:../print-dnd/print-dnd-0.0.1.tgz"
+        "react-dom": "^18.3.1"
     },
     "devDependencies": {
         "@vitejs/plugin-react": "^4.3.1",

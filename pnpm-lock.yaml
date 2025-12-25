@@ -49,6 +49,12 @@ importers:
 
   apps/pkg-test:
     dependencies:
+      '@react-pdf/renderer':
+        specifier: ^4.3.1
+        version: 4.3.1(react@18.3.1)
+      print-client:
+        specifier: file:../print-client/print-client-0.0.1.tgz
+        version: file:apps/print-client/print-client-0.0.1.tgz(@react-pdf/renderer@4.3.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       print-dnd:
         specifier: file:../print-dnd/print-dnd-0.0.1.tgz
         version: file:apps/print-dnd/print-dnd-0.0.1.tgz(@types/node@25.0.3)(@types/react-dom@18.3.7(@types/react@18.3.27))(@types/react@18.3.27)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -72,17 +78,17 @@ importers:
   apps/print-client:
     dependencies:
       '@react-pdf/renderer':
-        specifier: ^4.3.1
+        specifier: ^4.0.0
         version: 4.3.1(react@19.2.3)
       lucide-react:
         specifier: ^0.561.0
         version: 0.561.0(react@19.2.3)
       react:
-        specifier: ^19.2.0
+        specifier: '>=18.0.0'
         version: 19.2.3
       react-dom:
-        specifier: ^19.2.0
-        version: 19.2.3(react@19.2.3)
+        specifier: '>=18.0.0'
+        version: 18.3.1(react@19.2.3)
     devDependencies:
       '@eslint/js':
         specifier: ^9.39.1
@@ -120,6 +126,9 @@ importers:
       vite:
         specifier: ^7.2.4
         version: 7.2.7(@types/node@24.10.4)(jiti@2.6.1)(lightningcss@1.30.2)
+      vite-plugin-dts:
+        specifier: ^3.9.1
+        version: 3.9.1(@types/node@24.10.4)(rollup@4.53.3)(typescript@5.9.3)(vite@7.2.7(@types/node@24.10.4)(jiti@2.6.1)(lightningcss@1.30.2))
 
   apps/print-dnd:
     dependencies:
@@ -2997,6 +3006,14 @@ packages:
     resolution: {integrity: sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ==}
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
 
+  print-client@file:apps/print-client/print-client-0.0.1.tgz:
+    resolution: {integrity: sha512-rEoQFphS7YgjaxtrYyTVUzN0DFO5UutqL8iW4tyjLuh4Xbt/vcqnJmjod1i9PgzyjRg/Mh69YIj+CZ6pYo7rqQ==, tarball: file:apps/print-client/print-client-0.0.1.tgz}
+    version: 0.0.1
+    peerDependencies:
+      '@react-pdf/renderer': ^4.0.0
+      react: '>=18.0.0'
+      react-dom: '>=18.0.0'
+
   print-dnd@file:apps/print-dnd/print-dnd-0.0.1.tgz:
     resolution: {integrity: sha512-5Ue+iidLBqpvGMjfOW3G/nH5IEbNp+N4c65+rIvb2EkyaRGD1lIMjHhbgFTrIBpM//f+Wz+hALfda0rYmi7BfA==, tarball: file:apps/print-dnd/print-dnd-0.0.1.tgz}
     version: 0.0.1
@@ -3092,11 +3109,6 @@ packages:
     peerDependencies:
       react: ^18.3.1
 
-  react-dom@19.2.3:
-    resolution: {integrity: sha512-yELu4WmLPw5Mr/lmeEpox5rw3RETacE++JgHqQzd2dg+YbJuat3jH4ingc+WPZhxaoFzdv9y33G+F7Nl5O0GBg==}
-    peerDependencies:
-      react: ^19.2.3
-
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
@@ -3191,9 +3203,6 @@ packages:
 
   scheduler@0.25.0-rc-603e6108-20241029:
     resolution: {integrity: sha512-pFwF6H1XrSdYYNLfOcGlM28/j8CGLu8IvdrxqhjWULe2bPcKiKW4CV+OWqR/9fT52mywx65l7ysNkjLKBda7eA==}
-
-  scheduler@0.27.0:
-    resolution: {integrity: sha512-eNv+WrVbKu1f3vbYJT/xtiF5syA5HPIMtf9IgY/nKg0sWqzAUEvqY/xm7OcZc/qafLx/iO9FgOmeSAp4v5ti/Q==}
 
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
@@ -4233,11 +4242,37 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
+  '@microsoft/api-extractor-model@7.28.13(@types/node@24.10.4)':
+    dependencies:
+      '@microsoft/tsdoc': 0.14.2
+      '@microsoft/tsdoc-config': 0.16.2
+      '@rushstack/node-core-library': 4.0.2(@types/node@24.10.4)
+    transitivePeerDependencies:
+      - '@types/node'
+
   '@microsoft/api-extractor-model@7.28.13(@types/node@25.0.3)':
     dependencies:
       '@microsoft/tsdoc': 0.14.2
       '@microsoft/tsdoc-config': 0.16.2
       '@rushstack/node-core-library': 4.0.2(@types/node@25.0.3)
+    transitivePeerDependencies:
+      - '@types/node'
+
+  '@microsoft/api-extractor@7.43.0(@types/node@24.10.4)':
+    dependencies:
+      '@microsoft/api-extractor-model': 7.28.13(@types/node@24.10.4)
+      '@microsoft/tsdoc': 0.14.2
+      '@microsoft/tsdoc-config': 0.16.2
+      '@rushstack/node-core-library': 4.0.2(@types/node@24.10.4)
+      '@rushstack/rig-package': 0.5.2
+      '@rushstack/terminal': 0.10.0(@types/node@24.10.4)
+      '@rushstack/ts-command-line': 4.19.1(@types/node@24.10.4)
+      lodash: 4.17.21
+      minimatch: 3.0.8
+      resolve: 1.22.11
+      semver: 7.5.4
+      source-map: 0.6.1
+      typescript: 5.4.2
     transitivePeerDependencies:
       - '@types/node'
 
@@ -4538,6 +4573,12 @@ snapshots:
 
   '@react-pdf/primitives@4.1.1': {}
 
+  '@react-pdf/reconciler@1.1.4(react@18.3.1)':
+    dependencies:
+      object-assign: 4.1.1
+      react: 18.3.1
+      scheduler: 0.25.0-rc-603e6108-20241029
+
   '@react-pdf/reconciler@1.1.4(react@19.2.3)':
     dependencies:
       object-assign: 4.1.1
@@ -4556,6 +4597,23 @@ snapshots:
       normalize-svg-path: 1.1.0
       parse-svg-path: 0.1.2
       svg-arc-to-cubic-bezier: 3.2.0
+
+  '@react-pdf/renderer@4.3.1(react@18.3.1)':
+    dependencies:
+      '@babel/runtime': 7.28.4
+      '@react-pdf/fns': 3.1.2
+      '@react-pdf/font': 4.0.3
+      '@react-pdf/layout': 4.4.1
+      '@react-pdf/pdfkit': 4.0.4
+      '@react-pdf/primitives': 4.1.1
+      '@react-pdf/reconciler': 1.1.4(react@18.3.1)
+      '@react-pdf/render': 4.3.1
+      '@react-pdf/types': 2.9.1
+      events: 3.3.0
+      object-assign: 4.1.1
+      prop-types: 15.8.1
+      queue: 6.0.2
+      react: 18.3.1
 
   '@react-pdf/renderer@4.3.1(react@19.2.3)':
     dependencies:
@@ -4674,6 +4732,17 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.53.3':
     optional: true
 
+  '@rushstack/node-core-library@4.0.2(@types/node@24.10.4)':
+    dependencies:
+      fs-extra: 7.0.1
+      import-lazy: 4.0.0
+      jju: 1.4.0
+      resolve: 1.22.11
+      semver: 7.5.4
+      z-schema: 5.0.5
+    optionalDependencies:
+      '@types/node': 24.10.4
+
   '@rushstack/node-core-library@4.0.2(@types/node@25.0.3)':
     dependencies:
       fs-extra: 7.0.1
@@ -4690,12 +4759,28 @@ snapshots:
       resolve: 1.22.11
       strip-json-comments: 3.1.1
 
+  '@rushstack/terminal@0.10.0(@types/node@24.10.4)':
+    dependencies:
+      '@rushstack/node-core-library': 4.0.2(@types/node@24.10.4)
+      supports-color: 8.1.1
+    optionalDependencies:
+      '@types/node': 24.10.4
+
   '@rushstack/terminal@0.10.0(@types/node@25.0.3)':
     dependencies:
       '@rushstack/node-core-library': 4.0.2(@types/node@25.0.3)
       supports-color: 8.1.1
     optionalDependencies:
       '@types/node': 25.0.3
+
+  '@rushstack/ts-command-line@4.19.1(@types/node@24.10.4)':
+    dependencies:
+      '@rushstack/terminal': 0.10.0(@types/node@24.10.4)
+      '@types/argparse': 1.0.38
+      argparse: 1.0.10
+      string-argv: 0.3.2
+    transitivePeerDependencies:
+      - '@types/node'
 
   '@rushstack/ts-command-line@4.19.1(@types/node@25.0.3)':
     dependencies:
@@ -6673,6 +6758,13 @@ snapshots:
       ansi-styles: 5.2.0
       react-is: 17.0.2
 
+  print-client@file:apps/print-client/print-client-0.0.1.tgz(@react-pdf/renderer@4.3.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      '@react-pdf/renderer': 4.3.1(react@18.3.1)
+      lucide-react: 0.561.0(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+
   print-dnd@file:apps/print-dnd/print-dnd-0.0.1.tgz(@types/node@25.0.3)(@types/react-dom@18.3.7(@types/react@18.3.27))(@types/react@18.3.27)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@radix-ui/react-checkbox': 1.3.3(@types/react-dom@18.3.7(@types/react@18.3.27))(@types/react@18.3.27)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -6832,10 +6924,11 @@ snapshots:
       react: 18.3.1
       scheduler: 0.23.2
 
-  react-dom@19.2.3(react@19.2.3):
+  react-dom@18.3.1(react@19.2.3):
     dependencies:
+      loose-envify: 1.4.0
       react: 19.2.3
-      scheduler: 0.27.0
+      scheduler: 0.23.2
 
   react-is@16.13.1: {}
 
@@ -6940,8 +7033,6 @@ snapshots:
       loose-envify: 1.4.0
 
   scheduler@0.25.0-rc-603e6108-20241029: {}
-
-  scheduler@0.27.0: {}
 
   semver@6.3.1: {}
 
@@ -7307,6 +7398,23 @@ snapshots:
       inherits: 2.0.4
       string_decoder: 1.3.0
       util-deprecate: 1.0.2
+
+  vite-plugin-dts@3.9.1(@types/node@24.10.4)(rollup@4.53.3)(typescript@5.9.3)(vite@7.2.7(@types/node@24.10.4)(jiti@2.6.1)(lightningcss@1.30.2)):
+    dependencies:
+      '@microsoft/api-extractor': 7.43.0(@types/node@24.10.4)
+      '@rollup/pluginutils': 5.3.0(rollup@4.53.3)
+      '@vue/language-core': 1.8.27(typescript@5.9.3)
+      debug: 4.4.3(supports-color@5.5.0)
+      kolorist: 1.8.0
+      magic-string: 0.30.21
+      typescript: 5.9.3
+      vue-tsc: 1.8.27(typescript@5.9.3)
+    optionalDependencies:
+      vite: 7.2.7(@types/node@24.10.4)(jiti@2.6.1)(lightningcss@1.30.2)
+    transitivePeerDependencies:
+      - '@types/node'
+      - rollup
+      - supports-color
 
   vite-plugin-dts@3.9.1(@types/node@25.0.3)(rollup@4.53.3)(typescript@5.9.3)(vite@7.2.7(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)):
     dependencies:

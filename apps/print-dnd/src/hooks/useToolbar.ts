@@ -117,7 +117,7 @@ export function useToolbar({
 
     // URL of the print-client app
     // In production this should be env var, for now hardcoded to dev port
-    const clientUrl = 'http://localhost:3002'
+    const clientUrl = 'http://localhost:5174/'
 
     // Open new window
     const printWindow = window.open(clientUrl, '_blank')
