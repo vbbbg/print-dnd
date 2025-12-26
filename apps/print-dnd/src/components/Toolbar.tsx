@@ -23,6 +23,7 @@ interface ToolbarProps {
   onPrintPreview: () => void
   onSaveAsTemplate: () => void
   onExportJson: () => void
+  onAddItem: (type: 'text' | 'image' | 'qrcode' | 'line') => void
 }
 
 export const Toolbar: React.FC<ToolbarProps> = ({
@@ -37,6 +38,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onPrintPreview,
   onSaveAsTemplate,
   onExportJson,
+  onAddItem,
 }) => {
   return (
     <div className="h-full flex items-center gap-2 px-2">
@@ -59,6 +61,42 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           title="重做"
         >
           <Redo className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Insert Items */}
+      <div className="flex items-center gap-1 border-r border-gray-200 pr-2 mr-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddItem('text')}
+          title="添加文本"
+        >
+          T 文本
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddItem('image')}
+          title="添加图片"
+        >
+          🖼️ 图片
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddItem('qrcode')}
+          title="添加二维码"
+        >
+          QR
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddItem('line')}
+          title="添加直线"
+        >
+          —
         </Button>
       </div>
 

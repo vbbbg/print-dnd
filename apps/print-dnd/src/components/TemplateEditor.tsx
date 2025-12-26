@@ -63,6 +63,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     handlePrintPreview,
     handleSaveAsTemplate,
     handleExportJson,
+    onAddItem,
   } = useToolbar({ editorState, setEditorState, onSave, onPrintPreview })
 
   // Use the custom hook for global drag handling (Regions)
@@ -283,6 +284,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
           onPrintPreview={handlePrintPreview}
           onSaveAsTemplate={handleSaveAsTemplate}
           onExportJson={handleExportJson}
+          onAddItem={onAddItem}
         />
       </div>
 
