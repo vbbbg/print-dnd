@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { TemplateEditor, getMockEditorState, Paper } from 'print-dnd'
-// Directly import source code for testing
-import { generatePdf } from '../../print-client/src/index'
+import { generatePdf } from 'print-client'
 import 'print-dnd/style.css'
 
 const generateList = (count: number) => {
@@ -64,14 +63,26 @@ function App() {
   }
 
   return (
-    <div
-      style={{ border: '1px solid #ccc', margin: '20px 0', height: '600px' }}
-    >
-      <TemplateEditor
-        initialState={state}
-        onSave={handleSave}
-        onPrintPreview={handleGeneratePdf}
-      />
+    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '20px',
+        }}
+      >
+        <h1>Print DND Package Test</h1>
+      </div>
+      <div
+        style={{ border: '1px solid #ccc', margin: '20px 0', height: '600px' }}
+      >
+        <TemplateEditor
+          initialState={state}
+          onSave={handleSave}
+          onPrintPreview={handleGeneratePdf}
+        />
+      </div>
     </div>
   )
 }

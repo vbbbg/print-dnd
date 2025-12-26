@@ -53,11 +53,11 @@ importers:
         specifier: ^4.3.1
         version: 4.3.1(react@18.3.1)
       print-client:
-        specifier: file:../print-client/print-client-0.0.1.tgz
-        version: file:apps/print-client/print-client-0.0.1.tgz(@react-pdf/renderer@4.3.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: workspace:*
+        version: link:../print-client
       print-dnd:
-        specifier: file:../print-dnd/print-dnd-0.0.1.tgz
-        version: file:apps/print-dnd/print-dnd-0.0.1.tgz(@types/node@25.0.3)(@types/react-dom@18.3.7(@types/react@18.3.27))(@types/react@18.3.27)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: workspace:*
+        version: link:../print-dnd
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -3005,22 +3005,6 @@ packages:
   pretty-format@27.5.1:
     resolution: {integrity: sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ==}
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
-
-  print-client@file:apps/print-client/print-client-0.0.1.tgz:
-    resolution: {integrity: sha512-2kgtf5It1EOESZ+bB3IOx3fQUDIliA8SYeK5LUhZybZFosGGGvoCJdYHsDUIvsRdvXSqeJsqJ1lqrcgxUM4xBA==, tarball: file:apps/print-client/print-client-0.0.1.tgz}
-    version: 0.0.1
-    peerDependencies:
-      '@react-pdf/renderer': ^4.0.0
-      react: '>=18.0.0'
-      react-dom: '>=18.0.0'
-
-  print-dnd@file:apps/print-dnd/print-dnd-0.0.1.tgz:
-    resolution: {integrity: sha512-LVuT8BLDzN+0kBZpuutgd/nJ9xtUxZLc6Yp7YjwhBjBBqndeTWWXtr8M8ztvUEVriRQXeJOgcfLkQrNTXYqJWw==, tarball: file:apps/print-dnd/print-dnd-0.0.1.tgz}
-    version: 0.0.1
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      react: '>=18.2.0'
-      react-dom: '>=18.2.0'
 
   progress@2.0.3:
     resolution: {integrity: sha512-7PiHtLll5LdnKIMw100I+8xJXR5gW2QwWYkT6iJva0bXitZKa/XMrSbdmg3r2Xnaidz9Qumd0VPaMrZlF9V9sA==}
@@ -6757,34 +6741,6 @@ snapshots:
       ansi-regex: 5.0.1
       ansi-styles: 5.2.0
       react-is: 17.0.2
-
-  print-client@file:apps/print-client/print-client-0.0.1.tgz(@react-pdf/renderer@4.3.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@react-pdf/renderer': 4.3.1(react@18.3.1)
-      lucide-react: 0.561.0(react@18.3.1)
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-
-  print-dnd@file:apps/print-dnd/print-dnd-0.0.1.tgz(@types/node@25.0.3)(@types/react-dom@18.3.7(@types/react@18.3.27))(@types/react@18.3.27)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@radix-ui/react-checkbox': 1.3.3(@types/react-dom@18.3.7(@types/react@18.3.27))(@types/react@18.3.27)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-scroll-area': 1.2.10(@types/react-dom@18.3.7(@types/react@18.3.27))(@types/react@18.3.27)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-slot': 1.2.4(@types/react@18.3.27)(react@18.3.1)
-      '@radix-ui/react-tabs': 1.1.13(@types/react-dom@18.3.7(@types/react@18.3.27))(@types/react@18.3.27)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      class-variance-authority: 0.7.1
-      clsx: 2.1.1
-      lucide-react: 0.561.0(react@18.3.1)
-      react: 18.3.1
-      react-dnd: 16.0.1(@types/node@25.0.3)(@types/react@18.3.27)(react@18.3.1)
-      react-dnd-html5-backend: 16.0.1
-      react-dom: 18.3.1(react@18.3.1)
-      swr: 2.3.7(react@18.3.1)
-      tailwind-merge: 3.4.0
-    transitivePeerDependencies:
-      - '@types/hoist-non-react-statics'
-      - '@types/node'
-      - '@types/react'
-      - '@types/react-dom'
 
   progress@2.0.3: {}
 
