@@ -17,6 +17,15 @@ import { ItemSettingsPanel } from './ItemSettingsPanel'
 import { TableSettingsPanel } from './TableSettingsPanel'
 import { constrainItemsToMargins } from '../utils/itemUtils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { componentRegistry } from '../core/ComponentRegistry'
+import { TextPlugin } from '../plugins/TextPlugin'
+import { ImagePlugin } from '../plugins/ImagePlugin'
+import { TablePlugin } from '../plugins/TablePlugin'
+
+// Register default plugins
+componentRegistry.register(TextPlugin)
+componentRegistry.register(ImagePlugin)
+componentRegistry.register(TablePlugin)
 
 export interface TemplateEditorProps {
   initialState?: EditorState
@@ -373,15 +382,34 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
             className={`flex-1 overflow-hidden ${rightPanelOpen ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 h-full`}
           >
             {selectedItemIdx?.region === 'body' ? (
-              <TableSettingsPanel
-                data={editorState.bodyItems}
-                onChange={handleTableUpdate}
-              />
+              (() => {
+                // Temporary adapter: treat bodyItems (TableData) as an EditorItem of type 'table'
+                // In future, bodyItems should be an EditorItem[] or a single EditorItem
+                const tableItemAdapter = {
+                  ...editorState.bodyItems,
+                  type: 'table',
+                } as any
+                const plugin = componentRegistry.get('table')
+                const SettingsPanel =
+                  plugin?.settingsPanel || TableSettingsPanel
+                return (
+                  <SettingsPanel
+                    item={tableItemAdapter}
+                    onChange={handleTableUpdate}
+                  />
+                )
+              })()
             ) : selectedItem ? (
-              <ItemSettingsPanel
-                item={selectedItem}
-                onChange={handleItemUpdate}
-              />
+              (() => {
+                const plugin = componentRegistry.get(selectedItem.type)
+                const SettingsPanel = plugin?.settingsPanel || ItemSettingsPanel
+                return (
+                  <SettingsPanel
+                    item={selectedItem}
+                    onChange={handleItemUpdate}
+                  />
+                )
+              })()
             ) : (
               <div className="flex flex-col h-full">
                 <h3 className="font-bold text-lg border-b p-4 mb-4">

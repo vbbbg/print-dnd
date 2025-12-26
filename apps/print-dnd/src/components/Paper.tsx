@@ -2,10 +2,9 @@ import React, { useRef } from 'react'
 import { EditorState, Guide } from '../types/editor'
 import { ResizeHandle } from './ResizeHandle'
 import { DraggableItem } from './DraggableItem'
-import { RegionTable } from './RegionTable'
 import { mmToPx } from '../constants/units'
-import { resolveItemText, resolveTitleItemText } from '../utils/itemUtils'
 import { ResizeDirection } from './ResizeHandles'
+import { componentRegistry } from '../core/ComponentRegistry'
 
 interface PaperProps {
   state: EditorState
@@ -160,16 +159,27 @@ export const Paper: React.FC<PaperProps> = ({
             right: mmToPx(margins?.right || 0),
           }}
         >
-          {/* Render Table */}
-          {bodyItems && (
-            <RegionTable
-              data={bodyItems}
-              rows={data.list}
-              onColumnResizeStart={onColumnResizeStart}
-              isSelected={selectedItemIdx?.region === 'body'}
-              onClick={onTableClick}
-            />
-          )}
+          {/* Render Table (via Plugin) */}
+          {bodyItems &&
+            (() => {
+              const plugin = componentRegistry.get('table')
+              const Content =
+                plugin?.render || (() => <div>Table Plugin Not Found</div>)
+              // Adapter: bodyItems is TableData, we cast it to EditorItem-like structure for the plugin
+              const tableItemAdapter = {
+                ...bodyItems,
+                type: 'table',
+                rows: data.list,
+              } as any
+
+              return (
+                <Content
+                  item={tableItemAdapter}
+                  data={data} // Pass full data context if needed
+                  isSelected={selectedItemIdx?.region === 'body'}
+                />
+              )
+            })()}
         </div>
       </div>
 
@@ -183,98 +193,131 @@ export const Paper: React.FC<PaperProps> = ({
       />
 
       {/* Render Items (Global Coordinates) */}
-      {titleItems?.map((item, index) => (
-        <DraggableItem
-          key={`title-${index}`}
-          item={item}
-          isSelected={
-            selectedItemIdx?.region === 'title' &&
-            selectedItemIdx?.index === index
-          }
-          onMouseDown={(e) =>
-            onItemDragStart(index, 'title', e, item.x, item.y)
-          }
-          onResizeStart={
-            onItemResizeStart
-              ? (direction, e) =>
-                  onItemResizeStart(
-                    index,
-                    'title',
-                    direction,
-                    e,
-                    item.x,
-                    item.y,
-                    item.width,
-                    item.height
-                  )
-              : undefined
-          }
-        >
-          {resolveTitleItemText(item, data)}
-        </DraggableItem>
-      ))}
+      {titleItems?.map((item, index) => {
+        const plugin = componentRegistry.get(item.type)
+        const Content = plugin?.render || (() => <div>Unknown</div>)
+        return (
+          <DraggableItem
+            key={`title-${index}`}
+            item={item}
+            isSelected={
+              selectedItemIdx?.region === 'title' &&
+              selectedItemIdx?.index === index
+            }
+            onMouseDown={(e) =>
+              onItemDragStart(index, 'title', e, item.x, item.y)
+            }
+            onResizeStart={
+              onItemResizeStart
+                ? (direction, e) =>
+                    onItemResizeStart(
+                      index,
+                      'title',
+                      direction,
+                      e,
+                      item.x,
+                      item.y,
+                      item.width,
+                      item.height
+                    )
+                : undefined
+            }
+          >
+            <Content
+              item={item}
+              data={data}
+              isSelected={
+                selectedItemIdx?.region === 'title' &&
+                selectedItemIdx?.index === index
+              }
+            />
+          </DraggableItem>
+        )
+      })}
 
-      {headerItems?.map((item, index) => (
-        <DraggableItem
-          key={`header-${index}`}
-          item={item}
-          isSelected={
-            selectedItemIdx?.region === 'header' &&
-            selectedItemIdx?.index === index
-          }
-          onMouseDown={(e) =>
-            onItemDragStart(index, 'header', e, item.x, item.y)
-          }
-          onResizeStart={
-            onItemResizeStart
-              ? (direction, e) =>
-                  onItemResizeStart(
-                    index,
-                    'header',
-                    direction,
-                    e,
-                    item.x,
-                    item.y,
-                    item.width,
-                    item.height
-                  )
-              : undefined
-          }
-        >
-          {resolveItemText(item, data)}
-        </DraggableItem>
-      ))}
+      {headerItems?.map((item, index) => {
+        const plugin = componentRegistry.get(item.type)
+        const Content = plugin?.render || (() => <div>Unknown</div>)
+        return (
+          <DraggableItem
+            key={`header-${index}`}
+            item={item}
+            isSelected={
+              selectedItemIdx?.region === 'header' &&
+              selectedItemIdx?.index === index
+            }
+            onMouseDown={(e) =>
+              onItemDragStart(index, 'header', e, item.x, item.y)
+            }
+            onResizeStart={
+              onItemResizeStart
+                ? (direction, e) =>
+                    onItemResizeStart(
+                      index,
+                      'header',
+                      direction,
+                      e,
+                      item.x,
+                      item.y,
+                      item.width,
+                      item.height
+                    )
+                : undefined
+            }
+          >
+            <Content
+              item={item}
+              data={data}
+              isSelected={
+                selectedItemIdx?.region === 'header' &&
+                selectedItemIdx?.index === index
+              }
+            />
+          </DraggableItem>
+        )
+      })}
 
-      {footerItems?.map((item, index) => (
-        <DraggableItem
-          key={`footer-${index}`}
-          item={item}
-          isSelected={
-            selectedItemIdx?.region === 'footer' &&
-            selectedItemIdx?.index === index
-          }
-          onMouseDown={(e) =>
-            onItemDragStart(index, 'footer', e, item.x, item.y)
-          }
-          onResizeStart={
-            onItemResizeStart
-              ? (direction, e) =>
-                  onItemResizeStart(
-                    index,
-                    'footer',
-                    direction,
-                    e,
-                    item.x,
-                    item.y,
-                    item.width,
-                    item.height
-                  )
-              : undefined
-          }
-        >
-          {resolveItemText(item, data)}
-        </DraggableItem>
-      ))}
+      {footerItems?.map((item, index) => {
+        const plugin = componentRegistry.get(item.type)
+        const Content = plugin?.render || (() => <div>Unknown</div>)
+        return (
+          <DraggableItem
+            key={`footer-${index}`}
+            item={item}
+            isSelected={
+              selectedItemIdx?.region === 'footer' &&
+              selectedItemIdx?.index === index
+            }
+            onMouseDown={(e) =>
+              onItemDragStart(index, 'footer', e, item.x, item.y)
+            }
+            onResizeStart={
+              onItemResizeStart
+                ? (direction, e) =>
+                    onItemResizeStart(
+                      index,
+                      'footer',
+                      direction,
+                      e,
+                      item.x,
+                      item.y,
+                      item.width,
+                      item.height
+                    )
+                : undefined
+            }
+          >
+            <Content
+              item={item}
+              data={data}
+              isSelected={
+                selectedItemIdx?.region === 'footer' &&
+                selectedItemIdx?.index === index
+              }
+            />
+          </DraggableItem>
+        )
+      })}
 
       {/* Resize Handles */}
       {/* Higher z-index for upper handles ensures they are clickable even if they overlap with lower handles */}
