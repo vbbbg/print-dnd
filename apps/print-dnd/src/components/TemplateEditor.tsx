@@ -1,8 +1,6 @@
 import React, { useRef, useCallback } from 'react'
 import { EditorState } from '../types/editor'
-import { getMockEditorState } from '../utils/mockData.ts'
 import { MOCK_REAL_DATA } from '../utils/mockRealData'
-import useSyncState from '../hooks/useSyncState'
 import { Paper } from './Paper'
 import { Toolbar } from './Toolbar'
 import { useGlobalDrag } from '../hooks/useGlobalDrag'
@@ -18,6 +16,7 @@ import { TableSettingsPanel } from './TableSettingsPanel'
 import { constrainItemsToMargins } from '../utils/itemUtils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { componentRegistry } from '../core/ComponentRegistry'
+import { useEditorStore } from '../store/editorStore'
 import { TextPlugin } from '../plugins/TextPlugin'
 import { ImagePlugin } from '../plugins/ImagePlugin'
 import { TablePlugin } from '../plugins/TablePlugin'
@@ -38,18 +37,44 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   onSave,
   onPrintPreview,
 }) => {
-  const [editorState, setEditorState] = useSyncState<EditorState>(
-    initialState || getMockEditorState
-  )
+  // Use store
+  const editorState = useEditorStore((state) => state)
+  const setEditorState = useEditorStore((state) => state.setEditorState)
+  const selectedItemIdx = useEditorStore((state) => state.selectedItemIdx)
+  const setSelection = useEditorStore((state) => state.setSelection)
+  const updateItem = useEditorStore((state) => state.updateItem)
+  const updateTable = useEditorStore((state) => state.updateTable)
 
-  const [selectedItemIdx, setSelectedItemIdx] = React.useState<{
-    region: 'title' | 'header' | 'footer' | 'body'
-    index: number
-  } | null>({ region: 'title', index: 0 })
+  // Initialize store with props if needed (useEffect)
+  React.useEffect(() => {
+    if (initialState) {
+      setEditorState(initialState)
+    }
+  }, [initialState, setEditorState])
 
   const editorRef = useRef<HTMLDivElement>(null)
 
+  // Adapter: The existing hooks (useItemDrag, etc.) expect a state setter that accepts a functional updater OR a value.
+  // We bridge this to the Zustand store.
+  const handleStateUpdate = useCallback(
+    (updaterOrValue: EditorState | ((prev: EditorState) => EditorState)) => {
+      if (typeof updaterOrValue === 'function') {
+        const newState = (updaterOrValue as (prev: EditorState) => EditorState)(
+          editorState
+        )
+        setEditorState(newState)
+      } else {
+        setEditorState(updaterOrValue)
+      }
+    },
+    [editorState, setEditorState]
+  )
+
+  // Adapter for old setSelectedItemIdx
+  const setSelectedItemIdx = setSelection
+
   // Use toolbar hook for all toolbar-related logic
+  // TODO: Refactor useToolbar to use store directly to avoid passing redundant props
   const {
     canUndo,
     canRedo,
@@ -67,18 +92,18 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   } = useToolbar({ editorState, setEditorState, onSave, onPrintPreview })
 
   // Use the custom hook for global drag handling (Regions)
-  const { dragging, setDragging } = useGlobalDrag(editorRef, setEditorState)
+  const { dragging, setDragging } = useGlobalDrag(editorRef, handleStateUpdate)
 
   // Use custom hook for item drag handling
   const {
     handleItemDragStart: originalHandleItemDragStart,
     dragItem,
     guides,
-  } = useItemDrag(editorRef, setEditorState)
+  } = useItemDrag(editorRef, handleStateUpdate)
 
   // Use custom hook for item resize handling
   const { handleResizeStart: originalHandleItemResizeStart, resizing } =
-    useItemResize(editorRef, setEditorState)
+    useItemResize(editorRef, handleStateUpdate)
 
   // Use custom hook for column resize handling
   const {
@@ -86,7 +111,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     handleColumnResizeMove,
     handleColumnResizeEnd,
     resizingColIndex,
-  } = useColumnResize(setEditorState)
+  } = useColumnResize(handleStateUpdate)
 
   // Wrap item drag start to save snapshot first
   // Wrap item drag start to save snapshot first
@@ -179,51 +204,51 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   const handleSettingsChange = useCallback(
     (updates: Partial<EditorState>) => {
       saveSnapshot()
-      setEditorState((prev) => {
-        // Create initial new state
-        let newState = { ...prev, ...updates }
 
-        // If margins or paper size changed, we need to re-validate all items
-        const hasMarginUpdates =
-          updates.margins !== undefined ||
-          updates.paperWidth !== undefined ||
-          updates.paperHeight !== undefined ||
-          updates.paperType !== undefined
+      const prev = editorState
+      // Create initial new state
+      let newState = { ...prev, ...updates }
 
-        if (hasMarginUpdates) {
-          const currentMargins = newState.margins || {
-            top: 0,
-            bottom: 0,
-            left: 0,
-            right: 0,
-          }
-          const w = newState.paperWidth
-          const h = newState.paperHeight
+      // If margins or paper size changed, we need to re-validate all items
+      const hasMarginUpdates =
+        updates.margins !== undefined ||
+        updates.paperWidth !== undefined ||
+        updates.paperHeight !== undefined ||
+        updates.paperType !== undefined
 
-          newState.titleItems = constrainItemsToMargins(
-            newState.titleItems,
-            currentMargins,
-            w,
-            h
-          )
-          newState.headerItems = constrainItemsToMargins(
-            newState.headerItems,
-            currentMargins,
-            w,
-            h
-          )
-          newState.footerItems = constrainItemsToMargins(
-            newState.footerItems,
-            currentMargins,
-            w,
-            h
-          )
+      if (hasMarginUpdates) {
+        const currentMargins = newState.margins || {
+          top: 0,
+          bottom: 0,
+          left: 0,
+          right: 0,
         }
+        const w = newState.paperWidth
+        const h = newState.paperHeight
 
-        return newState
-      })
+        newState.titleItems = constrainItemsToMargins(
+          newState.titleItems,
+          currentMargins,
+          w,
+          h
+        )
+        newState.headerItems = constrainItemsToMargins(
+          newState.headerItems,
+          currentMargins,
+          w,
+          h
+        )
+        newState.footerItems = constrainItemsToMargins(
+          newState.footerItems,
+          currentMargins,
+          w,
+          h
+        )
+      }
+
+      setEditorState(newState)
     },
-    [saveSnapshot, setEditorState]
+    [saveSnapshot, setEditorState, editorState]
   )
 
   const [leftPanelOpen, setLeftPanelOpen] = React.useState(true)
@@ -243,28 +268,18 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     if (!selectedItemIdx) return
     const { region, index } = selectedItemIdx
 
-    setEditorState((prev) => {
-      let key: 'titleItems' | 'headerItems' | 'footerItems'
-      if (region === 'title') key = 'titleItems'
-      else if (region === 'header') key = 'headerItems'
-      else if (region === 'footer') key = 'footerItems'
-      else return prev
+    // History snapshot managed by Toolbar/useHistory for now.
+    // Ideally this moves to zundo temporal store.
+    saveSnapshot()
 
-      const newItems = [...prev[key]]
-      newItems[index] = { ...newItems[index], ...updates }
+    if (region === 'body') return // Should be handled by handleTableUpdate if selected
 
-      return {
-        ...prev,
-        [key]: newItems,
-      }
-    })
+    updateItem(region as any, index, updates)
   }
 
   const handleTableUpdate = (updates: any) => {
-    setEditorState((prev) => ({
-      ...prev,
-      bodyItems: { ...prev.bodyItems, ...updates },
-    }))
+    saveSnapshot()
+    updateTable(updates)
   }
 
   return (
@@ -392,11 +407,20 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                   type: 'table',
                 } as any
                 const plugin = componentRegistry.get('table')
-                const SettingsPanel =
-                  plugin?.settingsPanel || TableSettingsPanel
+                const SettingsPanel = plugin?.settingsPanel
+
+                if (SettingsPanel) {
+                  return (
+                    <SettingsPanel
+                      item={tableItemAdapter}
+                      onChange={handleTableUpdate}
+                    />
+                  )
+                }
+
                 return (
-                  <SettingsPanel
-                    item={tableItemAdapter}
+                  <TableSettingsPanel
+                    data={tableItemAdapter}
                     onChange={handleTableUpdate}
                   />
                 )
