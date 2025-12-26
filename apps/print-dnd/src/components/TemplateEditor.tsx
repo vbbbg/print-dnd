@@ -258,7 +258,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-gray-100">
+    <div className="h-full flex flex-col overflow-hidden bg-gray-100">
       {/* 1. Header/Toolbar Area - Now separate or part of the flow */}
       {/* For now, let's keep the toolbar floating or move it to a top bar */}
       <div className="h-14 border-b bg-white flex items-center justify-center relative z-50 shadow-sm">
