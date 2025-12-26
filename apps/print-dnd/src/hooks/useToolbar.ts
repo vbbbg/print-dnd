@@ -16,7 +16,6 @@ interface UseToolbarReturn {
   canRedo: boolean
   undo: () => void
   redo: () => void
-  saveSnapshot: () => void
   handleResetLayout: () => void
 
   // Zoom
@@ -63,9 +62,6 @@ export function useToolbar({
   // Wrappers to match interface
   const handleUndo = useCallback(() => undo(), [undo])
   const handleRedo = useCallback(() => redo(), [redo])
-
-  // No-op for snapshot as Zundo handles it
-  const saveSnapshot = useCallback(() => {}, [])
 
   // Reset to default layout
   const handleResetLayout = useCallback(() => {
@@ -184,7 +180,6 @@ export function useToolbar({
     canRedo,
     undo: handleUndo,
     redo: handleRedo,
-    saveSnapshot,
     handleResetLayout,
     zoom,
     handleZoomIn,

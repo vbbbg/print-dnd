@@ -80,7 +80,6 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     canRedo,
     undo,
     redo,
-    saveSnapshot,
     handleResetLayout,
     zoom,
     handleZoomIn,
@@ -113,8 +112,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     resizingColIndex,
   } = useColumnResize(handleStateUpdate)
 
-  // Wrap item drag start to save snapshot first
-  // Wrap item drag start to save snapshot first
+  // Wrap item drag start
   const handleItemDragStart = useCallback(
     (
       index: number,
@@ -123,14 +121,13 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
       itemX: number,
       itemY: number
     ) => {
-      saveSnapshot() // Save state before drag starts
       setSelectedItemIdx({ region, index }) // Select item on drag/click
       originalHandleItemDragStart(index, region, e, itemX, itemY)
     },
-    [saveSnapshot, originalHandleItemDragStart]
+    [originalHandleItemDragStart, setSelectedItemIdx]
   )
 
-  // Wrap item resize start to save snapshot first
+  // Wrap item resize start
   const handleItemResizeStart = useCallback(
     (
       index: number,
@@ -142,7 +139,6 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
       itemWidth: number,
       itemHeight: number
     ) => {
-      saveSnapshot() // Save state before resize starts
       originalHandleItemResizeStart(
         index,
         region,
@@ -154,18 +150,17 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         itemHeight
       )
     },
-    [saveSnapshot, originalHandleItemResizeStart]
+    [originalHandleItemResizeStart]
   )
 
-  // Wrap region resize start to save snapshot first
+  // Wrap region resize start
   const handleRegionResizeStart = useCallback(
     (region: 'header' | 'body' | 'footer', e: React.MouseEvent) => {
       e.preventDefault()
       e.stopPropagation()
-      saveSnapshot() // Save state before region resize starts
       setDragging(region)
     },
-    [saveSnapshot, setDragging]
+    [setDragging]
   )
 
   const isDraggingAny =
@@ -203,8 +198,6 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
   const handleSettingsChange = useCallback(
     (updates: Partial<EditorState>) => {
-      saveSnapshot()
-
       const prev = editorState
       // Create initial new state
       let newState = { ...prev, ...updates }
@@ -248,7 +241,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
       setEditorState(newState)
     },
-    [saveSnapshot, setEditorState, editorState]
+    [setEditorState, editorState]
   )
 
   const [leftPanelOpen, setLeftPanelOpen] = React.useState(true)
@@ -268,17 +261,12 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     if (!selectedItemIdx) return
     const { region, index } = selectedItemIdx
 
-    // History snapshot managed by Toolbar/useHistory for now.
-    // Ideally this moves to zundo temporal store.
-    saveSnapshot()
-
     if (region === 'body') return // Should be handled by handleTableUpdate if selected
 
     updateItem(region as any, index, updates)
   }
 
   const handleTableUpdate = (updates: any) => {
-    saveSnapshot()
     updateTable(updates)
   }
 
