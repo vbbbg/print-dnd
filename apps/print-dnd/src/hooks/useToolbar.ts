@@ -12,6 +12,7 @@ interface UseToolbarOptions {
   editorState: EditorState
   setEditorState: (state: EditorState) => void
   onSave?: (state: EditorState) => void
+  onPrintPreview?: () => void
 }
 
 interface UseToolbarReturn {
@@ -46,6 +47,7 @@ export function useToolbar({
   editorState,
   setEditorState,
   onSave,
+  onPrintPreview,
 }: UseToolbarOptions): UseToolbarReturn {
   // Manual history management using ref
   const historyRef = useRef<HistoryState>({
@@ -113,6 +115,11 @@ export function useToolbar({
   // Print preview handler -> Call PDF Service
   // Print preview handler -> Open Client App
   const handlePrintPreview = useCallback(() => {
+    if (onPrintPreview) {
+      onPrintPreview()
+      return
+    }
+
     console.log('Opening print client...')
 
     // URL of the print-client app
@@ -188,7 +195,7 @@ export function useToolbar({
 
     // Also keep the handshake logic if client supports it
     // ...
-  }, [editorState])
+  }, [editorState, onPrintPreview])
 
   // Save template handler
   const handleSaveAsTemplate = useCallback(() => {

@@ -21,11 +21,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 export interface TemplateEditorProps {
   initialState?: EditorState
   onSave?: (state: EditorState) => void
+  onPrintPreview?: () => void
 }
 
 export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   initialState,
   onSave,
+  onPrintPreview,
 }) => {
   const [editorState, setEditorState] = useSyncState<EditorState>(
     initialState || getMockEditorState
@@ -52,7 +54,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     handlePrintPreview,
     handleSaveAsTemplate,
     handleExportJson,
-  } = useToolbar({ editorState, setEditorState, onSave })
+  } = useToolbar({ editorState, setEditorState, onSave, onPrintPreview })
 
   // Use the custom hook for global drag handling (Regions)
   const { dragging, setDragging } = useGlobalDrag(editorRef, setEditorState)

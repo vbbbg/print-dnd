@@ -64,34 +64,14 @@ function App() {
   }
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <h1>Print DND Package Test</h1>
-        <button
-          onClick={handleGeneratePdf}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: '#0070f3',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
-        >
-          Generate PDF
-        </button>
-      </div>
-      <div
-        style={{ border: '1px solid #ccc', margin: '20px 0', height: '600px' }}
-      >
-        <TemplateEditor initialState={state} onSave={handleSave} />
-      </div>
+    <div
+      style={{ border: '1px solid #ccc', margin: '20px 0', height: '600px' }}
+    >
+      <TemplateEditor
+        initialState={state}
+        onSave={handleSave}
+        onPrintPreview={handleGeneratePdf}
+      />
     </div>
   )
 }
