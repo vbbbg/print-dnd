@@ -6,7 +6,7 @@ export interface PaperDefinition {
 }
 
 export interface EditorItem {
-  type: 'text' | 'image' | 'table' // simplified for now
+  type: 'text' | 'image' | 'table' | 'qrcode' | 'line' // simplified for now
   x: number
   y: number
   width: number

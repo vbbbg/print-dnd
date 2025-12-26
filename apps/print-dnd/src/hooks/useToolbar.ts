@@ -33,7 +33,11 @@ interface UseToolbarReturn {
   handlePrintPreview: () => void
   handleSaveAsTemplate: () => void
   handleExportJson: () => void
+  onAddItem: (type: 'text' | 'image' | 'qrcode' | 'line') => void
 }
+
+/**
+ * Custom hook to manage all toolbar-related logic including:
 
 /**
  * Custom hook to manage all toolbar-related logic including:
@@ -239,5 +243,31 @@ export function useToolbar({
     handlePrintPreview,
     handleSaveAsTemplate,
     handleExportJson,
+    onAddItem: useCallback(
+      (type: 'text' | 'image' | 'qrcode' | 'line') => {
+        saveSnapshot()
+        setEditorState({
+          ...editorState,
+          headerItems: [
+            ...editorState.headerItems, // Default to header for now, or determining based on visible region?
+            // Actually, let's just add to header by default as a safe place
+            {
+              type,
+              x: 10,
+              y: 10,
+              width: 50,
+              height: 20,
+              value:
+                type === 'text'
+                  ? 'New Text'
+                  : type === 'qrcode'
+                    ? '123456'
+                    : '',
+            },
+          ],
+        })
+      },
+      [editorState, setEditorState, saveSnapshot]
+    ),
   }
 }

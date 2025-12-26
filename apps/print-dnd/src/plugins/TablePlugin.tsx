@@ -39,7 +39,7 @@ const TableSettingsAdapter: React.FC<SettingsPanelProps> = ({
   item,
   onChange,
 }) => {
-  return <TableSettingsPanel data={item as any} onChange={onChange} />
+  return <TableSettingsPanel data={item as any} onChange={onChange as any} />
 }
 
 export const TablePlugin: ComponentPlugin = {
