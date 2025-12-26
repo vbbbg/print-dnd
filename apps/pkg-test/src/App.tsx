@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { TemplateEditor, getMockEditorState, Paper } from 'print-dnd'
-import { generatePdf } from 'print-client'
+// Directly import source code for testing
+import { generatePdf } from '../../print-client/src/index'
 import 'print-dnd/style.css'
 
 const generateList = (count: number) => {
