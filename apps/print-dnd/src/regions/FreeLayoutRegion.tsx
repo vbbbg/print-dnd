@@ -1,0 +1,66 @@
+import React from 'react'
+import { RegionRenderProps, regionRegistry } from '../core/RegionRegistry'
+import { componentRegistry } from '../core/ComponentRegistry'
+import { DraggableItem } from '../components/DraggableItem'
+
+export const FreeLayoutRegion: React.FC<RegionRenderProps> = ({
+  region,
+  data,
+  onItemDragStart,
+  onItemDragEnd,
+  onItemResizeStart,
+  selectedItemIdx,
+}) => {
+  return (
+    <>
+      {region.items?.map((item: any, index: number) => {
+        const plugin = componentRegistry.get(item.type)
+        const Content = plugin?.render || (() => <div>Unknown</div>)
+        return (
+          <DraggableItem
+            key={`${region.id}-${index}`}
+            item={item}
+            index={index}
+            region={region.id}
+            isSelected={
+              selectedItemIdx?.region === region.id &&
+              selectedItemIdx?.index === index
+            }
+            onDragStart={onItemDragStart}
+            onDragEnd={onItemDragEnd}
+            onClick={() => onItemDragStart(index, region.id, item.x, item.y)}
+            onResizeStart={
+              onItemResizeStart
+                ? (direction, e) =>
+                    onItemResizeStart(
+                      index,
+                      region.id,
+                      direction,
+                      e,
+                      item.x,
+                      item.y,
+                      item.width,
+                      item.height
+                    )
+                : undefined
+            }
+          >
+            <Content
+              item={item}
+              data={data}
+              isSelected={
+                selectedItemIdx?.region === region.id &&
+                selectedItemIdx?.index === index
+              }
+            />
+          </DraggableItem>
+        )
+      })}
+    </>
+  )
+}
+
+regionRegistry.register({
+  type: 'free-layout',
+  render: FreeLayoutRegion,
+})

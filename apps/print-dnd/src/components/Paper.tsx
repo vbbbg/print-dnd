@@ -2,12 +2,13 @@ import React, { useRef } from 'react'
 import { useDrop } from 'react-dnd'
 import { EditorState, Guide } from '../types/editor'
 import { ResizeHandle } from './ResizeHandle'
-import { DraggableItem } from './DraggableItem'
 import { mmToPx } from '../constants/units'
 import { ResizeDirection } from './ResizeHandles'
-import { componentRegistry } from '../core/ComponentRegistry'
 import { MarginsGuide } from './MarginsGuide'
 import { AlignmentGuides } from './AlignmentGuides'
+import { regionRegistry } from '../core/RegionRegistry'
+import '../regions/TableRegion'
+import '../regions/FreeLayoutRegion'
 
 interface PaperProps {
   state: EditorState
@@ -128,88 +129,16 @@ export const Paper: React.FC<PaperProps> = ({
 
         return (
           <React.Fragment key={region.id}>
-            {region.type === 'table' ? (
-              /* Table Region needs a container for global positioning of the block */
-              <div
-                className="absolute z-0"
-                style={{
-                  top: mmToPx(region.top),
-                  height: mmToPx(region.height),
-                  left: mmToPx(margins?.left || 0),
-                  right: mmToPx(margins?.right || 0),
-                }}
-              >
-                {region.data &&
-                  (() => {
-                    const plugin = componentRegistry.get('table')
-                    const Content =
-                      plugin?.render ||
-                      (() => <div>Table Plugin Not Found</div>)
-                    const tableItemAdapter = {
-                      ...region.data,
-                      type: 'table',
-                      rows: data.list,
-                    } as any
-
-                    return (
-                      <Content
-                        item={tableItemAdapter}
-                        data={data}
-                        isSelected={isSelected}
-                      />
-                    )
-                  })()}
-              </div>
-            ) : (
-              /* Free Layout Items: Rendered directly as children of Paper (absolute positioning) */
-              <>
-                {region.items?.map((item, index) => {
-                  const plugin = componentRegistry.get(item.type)
-                  const Content = plugin?.render || (() => <div>Unknown</div>)
-                  return (
-                    <DraggableItem
-                      key={`${region.id}-${index}`}
-                      item={item} // item.y is absolute paper coordinate
-                      index={index}
-                      region={region.id as any}
-                      isSelected={
-                        selectedItemIdx?.region === region.id &&
-                        selectedItemIdx?.index === index
-                      }
-                      onDragStart={onItemDragStart}
-                      onDragEnd={onItemDragEnd}
-                      onClick={() =>
-                        onItemDragStart(index, region.id as any, item.x, item.y)
-                      }
-                      onResizeStart={
-                        onItemResizeStart
-                          ? (direction, e) =>
-                              onItemResizeStart(
-                                index,
-                                region.id as any,
-                                direction,
-                                e,
-                                item.x,
-                                item.y,
-                                item.width,
-                                item.height
-                              )
-                          : undefined
-                      }
-                    >
-                      <Content
-                        item={item}
-                        data={data}
-                        isSelected={
-                          selectedItemIdx?.region === region.id &&
-                          selectedItemIdx?.index === index
-                        }
-                      />
-                    </DraggableItem>
-                  )
-                })}
-              </>
-            )}
+            <RegionContent
+              region={region}
+              data={data}
+              margins={margins}
+              isSelected={isSelected}
+              onItemDragStart={onItemDragStart}
+              onItemDragEnd={onItemDragEnd}
+              onItemResizeStart={onItemResizeStart}
+              selectedItemIdx={selectedItemIdx}
+            />
 
             {/* Resize Handle (Bottom of region, except last one) */}
             {regionIndex < regions.length - 1 && (
@@ -226,4 +155,26 @@ export const Paper: React.FC<PaperProps> = ({
       <AlignmentGuides guides={guides} />
     </div>
   )
+}
+
+// --- Sub-components for Abstraction ---
+const RegionContent: React.FC<{
+  region: any
+  data: any
+  margins: any
+  isSelected: boolean
+  onItemDragStart: any
+  onItemDragEnd: any
+  onItemResizeStart: any
+  selectedItemIdx: any
+}> = (props) => {
+  const { region } = props
+  const plugin = regionRegistry.get(region.type)
+
+  if (plugin) {
+    const Component = plugin.render
+    return <Component {...props} />
+  }
+
+  return <div>Unknown Region Type: {region.type}</div>
 }
