@@ -118,14 +118,9 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
   // Wrap item drag start
   const handleItemDragStart = useCallback(
-    (
-      index: number,
-      region: 'title' | 'header' | 'footer',
-      itemX: number,
-      itemY: number
-    ) => {
-      setSelectedItemIdx({ region, index }) // Select item on drag/click
-      originalHandleItemDragStart(index, region, itemX, itemY)
+    (index: number, regionId: string, itemX: number, itemY: number) => {
+      setSelectedItemIdx({ region: regionId, index }) // Select item on drag/click
+      originalHandleItemDragStart(index, regionId as any, itemX, itemY)
     },
     [originalHandleItemDragStart, setSelectedItemIdx]
   )
@@ -134,7 +129,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   const handleItemResizeStart = useCallback(
     (
       index: number,
-      region: 'title' | 'header' | 'footer',
+      regionId: string,
       direction: any,
       e: React.MouseEvent,
       itemX: number,
@@ -144,7 +139,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     ) => {
       originalHandleItemResizeStart(
         index,
-        region,
+        regionId as any,
         direction,
         e,
         itemX,
@@ -158,10 +153,10 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
   // Wrap region resize start
   const handleRegionResizeStart = useCallback(
-    (region: 'header' | 'body' | 'footer', e: React.MouseEvent) => {
+    (regionId: string, e: React.MouseEvent) => {
       e.preventDefault()
       e.stopPropagation()
-      setDragging(region)
+      setDragging(regionId as any)
     },
     [setDragging]
   )
@@ -222,24 +217,21 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         const w = newState.paperWidth
         const h = newState.paperHeight
 
-        newState.titleItems = constrainItemsToMargins(
-          newState.titleItems,
-          currentMargins,
-          w,
-          h
-        )
-        newState.headerItems = constrainItemsToMargins(
-          newState.headerItems,
-          currentMargins,
-          w,
-          h
-        )
-        newState.footerItems = constrainItemsToMargins(
-          newState.footerItems,
-          currentMargins,
-          w,
-          h
-        )
+        // Update regions items
+        newState.regions = newState.regions.map((region) => {
+          if (region.items) {
+            return {
+              ...region,
+              items: constrainItemsToMargins(
+                region.items,
+                currentMargins,
+                w,
+                h
+              ),
+            }
+          }
+          return region
+        })
       }
 
       setEditorState(newState)
@@ -253,10 +245,14 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   // Derive selected item from state
   const selectedItem = React.useMemo(() => {
     if (!selectedItemIdx) return null
-    const { region, index } = selectedItemIdx
-    if (region === 'title') return editorState.titleItems[index]
-    if (region === 'header') return editorState.headerItems[index]
-    if (region === 'footer') return editorState.footerItems[index]
+    const { region: regionId, index } = selectedItemIdx
+
+    // Find region
+    const targetRegion = editorState.regions.find((r) => r.id === regionId)
+    if (targetRegion && targetRegion.items && targetRegion.items[index]) {
+      return targetRegion.items[index]
+    }
+
     return null
   }, [selectedItemIdx, editorState])
 
@@ -378,9 +374,15 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                 onColumnResizeStart={handleColumnResizeStart}
                 selectedItemIdx={selectedItemIdx}
                 data={MOCK_REAL_DATA}
-                onTableClick={() =>
-                  setSelectedItemIdx({ region: 'body', index: 0 })
-                }
+                onTableClick={() => {
+                  // Find table region
+                  const tableRegion = editorState.regions.find(
+                    (r) => r.type === 'table'
+                  )
+                  if (tableRegion) {
+                    setSelectedItemIdx({ region: tableRegion.id, index: 0 })
+                  }
+                }}
               />
             </div>
           </div>
@@ -392,72 +394,85 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
             <div
               className={`flex-1 overflow-hidden ${rightPanelOpen ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 h-full`}
             >
-              {selectedItemIdx?.region === 'body' ? (
-                (() => {
-                  // Temporary adapter: treat bodyItems (TableData) as an EditorItem of type 'table'
-                  // In future, bodyItems should be an EditorItem[] or a single EditorItem
-                  const tableItemAdapter = {
-                    ...editorState.bodyItems,
-                    type: 'table',
-                  } as any
-                  const plugin = componentRegistry.get('table')
-                  const SettingsPanel = plugin?.settingsPanel
-
-                  if (SettingsPanel) {
+              <div
+                className={`flex-1 overflow-hidden ${rightPanelOpen ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 h-full`}
+              >
+                {(() => {
+                  if (!selectedItemIdx) {
                     return (
-                      <SettingsPanel
-                        item={tableItemAdapter}
+                      <div className="flex flex-col h-full">
+                        <h3 className="font-bold text-lg border-b p-4 mb-4">
+                          组件属性
+                        </h3>
+                        <div className="text-sm text-gray-500 text-center py-10">
+                          请选择一个组件以编辑属性
+                        </div>
+                      </div>
+                    )
+                  }
+
+                  const { region: regionId } = selectedItemIdx
+                  const region = editorState.regions.find(
+                    (r) => r.id === regionId
+                  )
+
+                  if (region?.type === 'table') {
+                    // Temporary adapter: treat bodyItems (TableData) as an EditorItem of type 'table'
+                    const tableItemAdapter = {
+                      ...region.data,
+                      type: 'table',
+                    } as any
+                    const plugin = componentRegistry.get('table')
+                    const SettingsPanel = plugin?.settingsPanel
+
+                    if (SettingsPanel) {
+                      return (
+                        <SettingsPanel
+                          item={tableItemAdapter}
+                          onChange={handleTableUpdate}
+                        />
+                      )
+                    }
+                    return (
+                      <TableSettingsPanel
+                        data={tableItemAdapter}
                         onChange={handleTableUpdate}
                       />
                     )
                   }
 
-                  return (
-                    <TableSettingsPanel
-                      data={tableItemAdapter}
-                      onChange={handleTableUpdate}
-                    />
-                  )
-                })()
-              ) : selectedItem ? (
-                (() => {
-                  const plugin = componentRegistry.get(selectedItem.type)
-                  const SettingsPanel =
-                    plugin?.settingsPanel || ItemSettingsPanel
-                  return (
-                    <SettingsPanel
-                      item={selectedItem}
-                      onChange={handleItemUpdate}
-                    />
-                  )
-                })()
-              ) : (
-                <div className="flex flex-col h-full">
-                  <h3 className="font-bold text-lg border-b p-4 mb-4">
-                    组件属性
-                  </h3>
-                  <div className="text-sm text-gray-500 text-center py-10">
-                    请选择一个组件以编辑属性
-                  </div>
-                </div>
-              )}
-            </div>
+                  if (selectedItem) {
+                    const plugin = componentRegistry.get(selectedItem.type)
+                    const SettingsPanel =
+                      plugin?.settingsPanel || ItemSettingsPanel
+                    return (
+                      <SettingsPanel
+                        item={selectedItem}
+                        onChange={handleItemUpdate}
+                      />
+                    )
+                  }
 
-            {/* Toggle Button Right */}
-            <button
-              onClick={() => setRightPanelOpen(!rightPanelOpen)}
-              className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-12 bg-white border border-gray-200 rounded-l-lg shadow-sm flex items-center justify-center cursor-pointer hover:bg-gray-50 z-50 text-gray-500 hover:text-gray-700"
-              style={{
-                left: '-24px',
-              }}
-              title={rightPanelOpen ? 'Close Sidebar' : 'Open Sidebar'}
-            >
-              {rightPanelOpen ? (
-                <ChevronRight className="w-4 h-4" />
-              ) : (
-                <ChevronLeft className="w-4 h-4" />
-              )}
-            </button>
+                  return null
+                })()}
+              </div>
+
+              {/* Toggle Button Right */}
+              <button
+                onClick={() => setRightPanelOpen(!rightPanelOpen)}
+                className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-12 bg-white border border-gray-200 rounded-l-lg shadow-sm flex items-center justify-center cursor-pointer hover:bg-gray-50 z-50 text-gray-500 hover:text-gray-700"
+                style={{
+                  left: '-24px',
+                }}
+                title={rightPanelOpen ? 'Close Sidebar' : 'Open Sidebar'}
+              >
+                {rightPanelOpen ? (
+                  <ChevronRight className="w-4 h-4" />
+                ) : (
+                  <ChevronLeft className="w-4 h-4" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>

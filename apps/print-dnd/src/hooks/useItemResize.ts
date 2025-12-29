@@ -6,7 +6,7 @@ import { PhysicsEngine } from '../core/PhysicsEngine'
 
 interface ResizeState {
   index: number
-  region: 'title' | 'header' | 'footer'
+  region: string
   direction: ResizeDirection
   startX: number
   startY: number
@@ -27,7 +27,7 @@ export const useItemResize = (
   const handleResizeStart = useCallback(
     (
       index: number,
-      region: 'title' | 'header' | 'footer',
+      regionId: string,
       direction: ResizeDirection,
       e: React.MouseEvent,
       itemX: number,
@@ -40,7 +40,7 @@ export const useItemResize = (
 
       setResizing({
         index,
-        region,
+        region: regionId,
         direction,
         startX: e.clientX,
         startY: e.clientY,
@@ -64,15 +64,18 @@ export const useItemResize = (
 
       onUpdateState((prev) => {
         const newState = { ...prev }
-        let items: any[] = []
 
-        if (resizing.region === 'title') items = [...prev.titleItems]
-        else if (resizing.region === 'header') items = [...prev.headerItems]
-        else if (resizing.region === 'footer') items = [...prev.footerItems]
+        const regionIndex = newState.regions.findIndex(
+          (r) => r.id === resizing.region
+        )
+        if (regionIndex === -1) return prev
+        const region = newState.regions[regionIndex]
+        if (!region.items) return prev
+
+        const items = [...region.items]
 
         if (!items[resizing.index]) return prev
 
-        if (!items[resizing.index]) return prev
         const item = { ...items[resizing.index] }
 
         const {
@@ -102,9 +105,8 @@ export const useItemResize = (
 
         items[resizing.index] = item
 
-        if (resizing.region === 'title') newState.titleItems = items
-        else if (resizing.region === 'header') newState.headerItems = items
-        else if (resizing.region === 'footer') newState.footerItems = items
+        newState.regions = [...prev.regions]
+        newState.regions[regionIndex] = { ...region, items }
 
         return newState
       })

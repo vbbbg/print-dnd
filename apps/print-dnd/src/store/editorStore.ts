@@ -9,13 +9,13 @@ interface EditorActions {
   reset: () => void
 
   // Item Management
-  addItem: (region: 'header' | 'footer' | 'title', item: EditorItem) => void
+  addItem: (regionId: string, item: EditorItem) => void
   updateItem: (
-    region: 'header' | 'footer' | 'title',
+    regionId: string,
     index: number,
     updates: Partial<EditorItem>
   ) => void
-  removeItem: (region: 'header' | 'footer' | 'title', index: number) => void
+  removeItem: (regionId: string, index: number) => void
 
   // Table Management
   updateTable: (updates: Partial<TableData>) => void
@@ -23,7 +23,7 @@ interface EditorActions {
   // Selection
   setSelection: (
     selection: {
-      region: 'title' | 'header' | 'footer' | 'body'
+      region: string // changed to regionId
       index: number
     } | null
   ) => void
@@ -31,7 +31,7 @@ interface EditorActions {
 
 interface EditorStore extends EditorState, EditorActions {
   selectedItemIdx: {
-    region: 'title' | 'header' | 'footer' | 'body'
+    region: string // regionId
     index: number
   } | null
 }
@@ -48,39 +48,65 @@ export const useEditorStore = create<EditorStore>()(
 
       reset: () => set({ ...initialState }),
 
-      addItem: (region, item) =>
-        set((state) => ({
-          ...state,
-          [region + 'Items']: [
-            ...(state[(region + 'Items') as keyof EditorState] as EditorItem[]),
-            item,
-          ],
-        })),
-
-      updateItem: (region, index, updates) =>
+      addItem: (regionId, item) =>
         set((state) => {
-          const items = state[
-            (region + 'Items') as keyof EditorState
-          ] as EditorItem[]
-          const newItems = [...items]
-          newItems[index] = { ...newItems[index], ...updates }
-          return { [region + 'Items']: newItems }
+          const newRegions = state.regions.map((region) => {
+            if (region.id === regionId && region.items) {
+              return {
+                ...region,
+                items: [...region.items, item],
+              }
+            }
+            return region
+          })
+          return { regions: newRegions }
         }),
 
-      removeItem: (region, index) =>
+      updateItem: (regionId, index, updates) =>
         set((state) => {
-          const items = state[
-            (region + 'Items') as keyof EditorState
-          ] as EditorItem[]
-          const newItems = [...items]
-          newItems.splice(index, 1)
-          return { [region + 'Items']: newItems }
+          const newRegions = state.regions.map((region) => {
+            if (region.id === regionId && region.items) {
+              const newItems = [...region.items]
+              newItems[index] = { ...newItems[index], ...updates }
+              return {
+                ...region,
+                items: newItems,
+              }
+            }
+            return region
+          })
+          return { regions: newRegions }
+        }),
+
+      removeItem: (regionId, index) =>
+        set((state) => {
+          const newRegions = state.regions.map((region) => {
+            if (region.id === regionId && region.items) {
+              const newItems = [...region.items]
+              newItems.splice(index, 1)
+              return {
+                ...region,
+                items: newItems,
+              }
+            }
+            return region
+          })
+          return { regions: newRegions }
         }),
 
       updateTable: (updates) =>
-        set((state) => ({
-          bodyItems: { ...state.bodyItems, ...updates },
-        })),
+        set((state) => {
+          const newRegions = state.regions.map((region) => {
+            if (region.type === 'table' && region.data) {
+              return {
+                ...region,
+                data: { ...region.data, ...updates },
+              }
+            }
+            return region
+          })
+          return { regions: newRegions }
+        }),
 
       setSelection: (selection) => set({ selectedItemIdx: selection }),
     }),

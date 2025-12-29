@@ -1,20 +1,12 @@
 import { useState, useEffect, RefObject } from 'react'
-import { EditorState, EditorItem } from '../types/editor'
+import { EditorState } from '../types/editor'
 import { SCALE } from '../constants/units'
-
-// Helper to get max bottom Y of a list of items
-const getMaxBottom = (items: EditorItem[]) => {
-  if (!items || items.length === 0) return 0
-  return Math.max(...items.map((i) => i.y + i.height))
-}
 
 export const useGlobalDrag = (
   editorRef: RefObject<HTMLDivElement>,
   onUpdateState: (updater: (prev: EditorState) => EditorState) => void
 ) => {
-  const [dragging, setDragging] = useState<'header' | 'body' | 'footer' | null>(
-    null
-  )
+  const [dragging, setDragging] = useState<string | null>(null) // regionId
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -27,86 +19,110 @@ export const useGlobalDrag = (
       if (!paperElement) return
 
       const rect = paperElement.getBoundingClientRect()
-      const relativeY = (e.clientY - rect.top) / SCALE
+      const mouseRelY = (e.clientY - rect.top) / SCALE
 
       onUpdateState((prev) => {
         const newState = { ...prev }
-        const minHeight = 5
+        const minHeight = 5 // mm
 
-        if (dragging === 'header') {
-          // Resizing Title (0~headerTop) / Header (headerTop~bodyTop)
-          // 1. Min Y: Must enclose Title Items
-          const titleBottom = getMaxBottom(prev.titleItems)
-          const minTop = Math.max(minHeight, titleBottom + minHeight)
+        // Find the region associated with the resize handle
+        // The handle belongs to `dragging` region, located at its bottom.
+        // So we are effectively moving the START (top) of the NEXT region.
+        const regionIndex = newState.regions.findIndex((r) => r.id === dragging)
+        if (regionIndex === -1 || regionIndex >= newState.regions.length - 1)
+          return prev
 
-          // 2. Max Y: Must allow space for shifted Header Items
-          // If we move headerTop down, headerItems move down.
-          // We need to ensure they don't cross bodyTop.
-          // Space Available = (bodyTop - minHeight) - newHeaderTop
-          // Space Needed = HeaderContentHeight (approx)
-          // Actually simpler: The lowest item will move by Delta. NewLowest <= bodyTop.
-          // LowestY + Delta <= bodyTop.
-          // Delta = newTop - oldTop.
-          // LowestY + newTop - oldTop <= bodyTop.
-          // newTop <= bodyTop - LowestY + oldTop.
+        const currentRegion = newState.regions[regionIndex]
+        const nextRegionIndex = regionIndex + 1
+        const nextRegion = newState.regions[nextRegionIndex]
 
-          const headerContentBottom = getMaxBottom(prev.headerItems)
-          const maxShift = prev.bodyTop - minHeight - headerContentBottom
-          const maxTop = prev.headerTop + maxShift
-
-          // Clamp
-          let newTop = Math.max(minTop, Math.min(relativeY, maxTop))
-
-          // Shift Delta
-          const delta = newTop - prev.headerTop
-          if (delta !== 0) {
-            newState.headerTop = newTop
-            newState.headerItems = prev.headerItems.map((item) => ({
-              ...item,
-              y: item.y + delta,
-            }))
-          }
-        } else if (dragging === 'body') {
-          // Resizing Header (headerTop~bodyTop) / Body Table (bodyTop~footerTop)
-          // 1. Min Y: Must enclose Header Items
-          const headerBottom = getMaxBottom(prev.headerItems)
-          const minTop = Math.max(
-            prev.headerTop + minHeight,
-            headerBottom + minHeight
+        // 1. Calculate boundaries for constraints
+        // Current Region Limits (Top is fixed, Bottom is changing)
+        // Ensure newTop (which is effectively Current Region Bottom) is not ABOVE any item in Current Region
+        let minTopForCurrentRegion = currentRegion.top + minHeight
+        if (currentRegion.items) {
+          const maxItemBottom = currentRegion.items.reduce((max, item) => {
+            return Math.max(max, item.y + item.height)
+          }, currentRegion.top)
+          minTopForCurrentRegion = Math.max(
+            minTopForCurrentRegion,
+            maxItemBottom
           )
-
-          // 2. Max Y: footerTop - minHeight
-          const maxTop = prev.footerTop - minHeight
-
-          const newTop = Math.max(minTop, Math.min(relativeY, maxTop))
-          newState.bodyTop = newTop
-        } else if (dragging === 'footer') {
-          // Resizing Body (bodyTop~footerTop) / Footer (footerTop~paperHeight)
-          // 1. Min Y: bodyTop + minHeight
-          const minTop = prev.bodyTop + minHeight
-
-          // 2. Max Y: Must allow space for shifted Footer Items
-          // MaxBottom <= paperHeight
-          // LowestY + Delta <= paperHeight
-          // delta = newTop - oldTop
-          // LowestY + newTop - oldTop <= paperHeight
-          // newTop <= paperHeight - LowestY + oldTop
-
-          const footerContentBottom = getMaxBottom(prev.footerItems)
-          const maxShift = prev.paperHeight - minHeight - footerContentBottom
-          const maxTop = prev.footerTop + maxShift
-
-          const newTop = Math.max(minTop, Math.min(relativeY, maxTop))
-
-          const delta = newTop - prev.footerTop
-          if (delta !== 0) {
-            newState.footerTop = newTop
-            newState.footerItems = prev.footerItems.map((item) => ({
-              ...item,
-              y: item.y + delta,
-            }))
-          }
         }
+
+        // Next Region Limits (Top is changing, Bottom is fixed)
+        // Ensure newTop is not BELOW any item in Next Region (considering items will SHIFT)
+        // Wait, if items shift with the top, they will never collide with the top?
+        // Ah, if I move Header Top DOWN, Header Items move DOWN.
+        // They might collide with Header Bottom (which is fixed? No, Header Bottom is Body Top).
+        // If I move Header Top down, does Body Top move?
+        // Depends on the interaction model.
+        // "Standard" drag model: Resizing A vs B boundary. A grows, B shrinks. B's bottom is fixed.
+        // So B items move down. B's available height shrinks. B items might hit B bottom.
+
+        let nextRegionBottom = prev.paperHeight
+        if (nextRegionIndex < newState.regions.length - 1) {
+          nextRegionBottom = newState.regions[nextRegionIndex + 1].top
+        }
+
+        // Calculate max shift allowed for Next Region items
+        // We need to check if ANY item in Next Region will be pushed past nextRegionBottom
+        // delta = newTop - oldTop (of next region)
+        // item.y_new = item.y_old + delta
+        // item.y_new + height <= nextRegionBottom
+        // item.y_old + delta + height <= nextRegionBottom
+        // delta <= nextRegionBottom - height - item.y_old
+        // newTop - oldTop <= nextRegionBottom - height - item.y_old
+        // newTop <= nextRegionBottom - height - item.y_old + oldTop
+
+        let maxTopForNextRegion = nextRegionBottom - minHeight
+        if (nextRegion.items) {
+          const minAllowedTop = nextRegion.items.reduce((min, item) => {
+            // The highest top allowed such that this item fits
+            // maxTop = Limit - ItemHeight - (ItemYRelative)
+            // But ItemY is absolute.
+            // Relative Y = item.y - oldTop
+            // New absolute Y = newTop + Relative Y
+            // New absolute Bottom = newTop + Relative Y + Height <= nextRegionBottom
+            // newTop <= nextRegionBottom - Height - Relative Y
+            const relativeY = item.y - nextRegion.top
+            const limit = nextRegionBottom - item.height - relativeY
+            return Math.min(min, limit)
+          }, maxTopForNextRegion)
+          maxTopForNextRegion = minAllowedTop
+        }
+
+        // Apply Constraints
+        let newTop = Math.max(
+          minTopForCurrentRegion,
+          Math.min(mouseRelY, maxTopForNextRegion)
+        )
+
+        // Calculate shift delta
+        const delta = newTop - nextRegion.top
+
+        if (delta === 0) return prev
+
+        // Update NEXT region top
+        const newRegions = [...prev.regions]
+
+        // Shift items in the Next Region ONLY?
+        // Or all subsequent regions?
+        // If we are resizing A vs B (stealing space), then C, D, E don't move.
+        // So only A and B change. B's top changes. B's items shift.
+        // B's bottom (C's top) stays fixed.
+
+        const updatedNextRegion = { ...nextRegion, top: newTop }
+
+        if (nextRegion.items) {
+          updatedNextRegion.items = nextRegion.items.map((item) => ({
+            ...item,
+            y: item.y + delta,
+          }))
+        }
+
+        newRegions[nextRegionIndex] = updatedNextRegion
+        newState.regions = newRegions
 
         return newState
       })

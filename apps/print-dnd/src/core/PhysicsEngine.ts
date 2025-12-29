@@ -82,9 +82,11 @@ export class PhysicsEngine {
       })
     }
 
-    addItems(state.titleItems, 'title')
-    addItems(state.headerItems, 'header')
-    addItems(state.footerItems, 'footer')
+    state.regions.forEach((region) => {
+      if (region.items) {
+        addItems(region.items, region.id)
+      }
+    })
 
     return { xLines, yLines }
   }

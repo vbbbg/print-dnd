@@ -5,9 +5,11 @@ import { PhysicsEngine } from '../core/PhysicsEngine'
 
 interface DragState {
   index: number
-  region: 'title' | 'header' | 'footer'
+  region: string
   initialItemX: number
   initialItemY: number
+  startX: number
+  startY: number
 }
 
 export const useItemDrag = (
@@ -17,17 +19,14 @@ export const useItemDrag = (
   const [guides, setGuides] = useState<Guide[]>([])
 
   const handleDragStart = useCallback(
-    (
-      index: number,
-      region: 'title' | 'header' | 'footer',
-      itemX: number,
-      itemY: number
-    ) => {
+    (index: number, regionId: string, itemX: number, itemY: number) => {
       setDragItem({
         index,
-        region,
+        region: regionId,
         initialItemX: itemX,
         initialItemY: itemY,
+        startX: itemX,
+        startY: itemY,
       })
     },
     []
@@ -37,10 +36,6 @@ export const useItemDrag = (
     (deltaX: number, deltaY: number) => {
       if (!dragItem) return
 
-      // Convert delta to paper units
-      // Note: react-dnd delta is in pixels, we need to divide by SCALE if SCALE converts px to mm?
-      // Wait, SCALE in units.ts is usually 3.78 (px per mm).
-      // So delta / SCALE = mm.
       const mmDeltaX = deltaX / SCALE
       const mmDeltaY = deltaY / SCALE
 
@@ -48,21 +43,29 @@ export const useItemDrag = (
 
       onUpdateState((prev) => {
         const newState = { ...prev }
-        let items: any[] = []
 
-        if (dragItem.region === 'title') items = [...prev.titleItems]
-        else if (dragItem.region === 'header') items = [...prev.headerItems]
-        else if (dragItem.region === 'footer') items = [...prev.footerItems]
+        const regionIndex = newState.regions.findIndex(
+          (r) => r.id === dragItem.region
+        )
+        if (regionIndex === -1) return prev
+
+        const region = newState.regions[regionIndex]
+        if (!region.items) return prev
+
+        const items = [...region.items]
 
         if (items[dragItem.index]) {
           const item = { ...items[dragItem.index] }
 
+          // TODO: PhysicsEngine needs update to accept generic regions
           const snapData = PhysicsEngine.getSnapLines(
             prev,
             dragItem.index,
             dragItem.region
           )
 
+          // TODO: PhysicsEngine.calculateItemPosition needs update
+          // For now, we will assume bodyTop/footerTop are derived or we pass 0 for now until PhysicsEngine is updated
           const {
             x: newX,
             y: newY,
@@ -75,9 +78,9 @@ export const useItemDrag = (
             dragItem.initialItemY,
             prev.paperWidth,
             prev.paperHeight,
-            prev.bodyTop,
-            prev.footerTop,
-            false, // applyBodyConstraint - usually false during drag
+            0, // Temporary: bodyTop replacement
+            0, // Temporary: footerTop replacement
+            false,
             snapData,
             prev.margins
           )
@@ -87,12 +90,10 @@ export const useItemDrag = (
 
           calculatedGuides = newGuides
 
-          // Update the array
           items[dragItem.index] = item
 
-          if (dragItem.region === 'title') newState.titleItems = items
-          else if (dragItem.region === 'header') newState.headerItems = items
-          else if (dragItem.region === 'footer') newState.footerItems = items
+          newState.regions = [...prev.regions]
+          newState.regions[regionIndex] = { ...region, items }
         }
 
         return newState

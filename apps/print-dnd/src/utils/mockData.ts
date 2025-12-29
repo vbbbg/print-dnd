@@ -239,15 +239,32 @@ export const getMockEditorState = (): EditorState => {
     ],
   }
 
+  // Combine all "free layout" items
+  const allItems = [...titleItems, ...headerItems, ...footerItems]
+
+  // Define boundaries
+  const headerTop = 15
+  const bodyTop = 55
+  const footerTop = 130
+  const paperHeight = 148.5
+
+  // Distribute items into regions based on Y position (using absolute coordinates)
+  const newTitleItems = allItems.filter((item) => item.y < headerTop)
+
+  const newHeaderItems = allItems.filter(
+    (item) => item.y >= headerTop && item.y < bodyTop
+  )
+
+  const newFooterItems = allItems.filter((item) => item.y >= footerTop)
+
   return {
     // 210mm x 148.5mm (A4_2)
     paperType: 'A4_2',
     paperWidth: 210,
-    paperHeight: 148.5,
+    paperHeight: paperHeight,
     paperDefinitions: PAPER_DEFINITIONS,
     name: '标准销售单 (二等分)',
 
-    // Adjusted margins and region tops for smaller height
     margins: {
       top: 5,
       bottom: 5,
@@ -255,13 +272,31 @@ export const getMockEditorState = (): EditorState => {
       right: 10,
     },
 
-    headerTop: 15, // Starts after Title
-    bodyTop: 55, // Reserving ~40mm for header info
-    footerTop: 130, // Reserving ~18mm for footer
-
-    titleItems,
-    headerItems,
-    bodyItems,
-    footerItems,
+    regions: [
+      {
+        id: 'title',
+        type: 'free-layout',
+        top: 0,
+        items: newTitleItems,
+      },
+      {
+        id: 'header',
+        type: 'free-layout',
+        top: headerTop,
+        items: newHeaderItems,
+      },
+      {
+        id: 'body',
+        type: 'table',
+        top: bodyTop,
+        data: bodyItems,
+      },
+      {
+        id: 'footer',
+        type: 'free-layout',
+        top: footerTop,
+        items: newFooterItems,
+      },
+    ],
   }
 }

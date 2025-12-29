@@ -40,10 +40,18 @@ export interface TableData {
   showTotal?: boolean
 }
 
+export type RegionType = 'free-layout' | 'table' | 'custom'
+
+export interface Region {
+  id: string
+  type: RegionType
+  top: number
+  items?: EditorItem[] // For free-layout
+  data?: TableData // For table (renamed from bodyItems type)
+  isActive?: boolean // For selection/interactions but typically derived
+}
+
 export interface EditorState {
-  headerTop: number
-  bodyTop: number
-  footerTop: number
   paperHeight: number
   paperWidth: number
   paperType: 'A4' | 'A4_2' | 'A4_3' | 'custom'
@@ -55,10 +63,7 @@ export interface EditorState {
     left: number
     right: number
   }
-  titleItems: EditorItem[]
-  headerItems: EditorItem[]
-  bodyItems: TableData
-  footerItems: EditorItem[]
+  regions: Region[]
 }
 
 export interface Guide {

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { EditorState } from '../types/editor'
+import { EditorState, TableColumn } from '../types/editor'
 
 export const useColumnResize = (
   setEditorState: React.Dispatch<React.SetStateAction<EditorState>>
@@ -11,6 +11,15 @@ export const useColumnResize = (
     left: 8,
     right: 8,
   })
+
+  // Helper to get body/table columns
+  const getBodyCols = (state: EditorState) => {
+    const region = state.regions.find((r) => r.id === 'body')
+    if (region && region.type === 'table' && region.data && region.data.cols) {
+      return region.data.cols
+    }
+    return []
+  }
 
   const handleColumnResizeStart = useCallback(
     (
@@ -28,10 +37,9 @@ export const useColumnResize = (
 
       // Capture current widths of all visible columns to use as base
       setEditorState((prevState) => {
-        const visibleCols = prevState.bodyItems.cols.filter(
-          (c) => c.visible !== false
-        )
-        const widths = visibleCols.map((c) => c.width)
+        const cols = getBodyCols(prevState)
+        const visibleCols = cols.filter((c: TableColumn) => c.visible !== false)
+        const widths = visibleCols.map((c: TableColumn) => c.width)
         setStartWidths(widths)
         return prevState
       })
@@ -45,7 +53,9 @@ export const useColumnResize = (
 
       // Find the visible columns again to match index
       const visibleColIndices: number[] = []
-      currentState.bodyItems.cols.forEach((col, idx) => {
+      const cols = getBodyCols(currentState)
+
+      cols.forEach((col: TableColumn, idx: number) => {
         if (col.visible !== false) visibleColIndices.push(idx)
       })
 
@@ -58,12 +68,7 @@ export const useColumnResize = (
 
       const deltaX = e.clientX - startX
 
-      // Calculate delta in "width units" approximate
-      // Since widths are generic units, we need a scale factor.
-      // Ideally we map pixels to these units.
-      // For now, let's assume 1 unit ~= 1mm ~= 3.78px (approx) or simpler:
-      // Just scale by zoom? Or relative to table width?
-      // Simple approach: Use a sensitivity factor, e.g. 0.5 unit per pixel
+      // Sensitivity factor
       const sensitivity = 0.2
       const deltaUnits = deltaX * sensitivity
 
@@ -82,16 +87,33 @@ export const useColumnResize = (
 
       // Update state
       setEditorState((prev) => {
-        const newCols = [...prev.bodyItems.cols]
-        newCols[leftColIdx] = { ...newCols[leftColIdx], width: newLeftWidth }
-        newCols[rightColIdx] = { ...newCols[rightColIdx], width: newRightWidth }
+        const bodyRegionIdx = prev.regions.findIndex((r) => r.id === 'body')
+        if (bodyRegionIdx === -1) return prev
+        const bodyRegion = prev.regions[bodyRegionIdx]
+        if (!bodyRegion.data) return prev
+
+        const newCols = [...(bodyRegion.data.cols || [])]
+
+        if (newCols[leftColIdx])
+          newCols[leftColIdx] = { ...newCols[leftColIdx], width: newLeftWidth }
+        if (newCols[rightColIdx])
+          newCols[rightColIdx] = {
+            ...newCols[rightColIdx],
+            width: newRightWidth,
+          }
+
+        const newRegions = [...prev.regions]
+        newRegions[bodyRegionIdx] = {
+          ...bodyRegion,
+          data: {
+            ...bodyRegion.data,
+            cols: newCols,
+          },
+        }
 
         return {
           ...prev,
-          bodyItems: {
-            ...prev.bodyItems,
-            cols: newCols,
-          },
+          regions: newRegions,
         }
       })
     },
