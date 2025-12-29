@@ -12,14 +12,14 @@ export interface SettingsPanelProps {
   onChange: (updates: Partial<EditorItem>) => void
 }
 
-export interface ComponentPlugin {
+export interface ComponentPlugin<T = any> {
   type: string
   name: string
   defaultWidth: number
   defaultHeight: number
   render: React.FC<ComponentRenderProps>
   settingsPanel?: React.FC<SettingsPanelProps>
-  defaultData?: Partial<EditorItem>
+  defaultData?: T
 }
 
 class Registry {

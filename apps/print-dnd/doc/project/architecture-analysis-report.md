@@ -137,14 +137,18 @@
 
 假设投入 1 名高级前端工程师，预计总耗时约 **3 周 (15 人天)**。
 
-| 阶段       | 任务模块                    | 详细任务                                                                                                                                    | 预估工时 | 产出物                                       |
-| :--------- | :-------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------ | :------- | :------------------------------------------- |
-| **Week 1** | **基础架构解耦 (组件化)**   | 1. 定义 `IComponentPlugin` 接口<br>2. 实现 `PluginRegistry` 类<br>3. 重构 `Paper.tsx` 使用动态组件<br>4. 封装 `TextPlugin` 和 `ImagePlugin` | 3 Days   | 组件注册中心代码<br>Paper 渲染逻辑轻量化     |
-| **Week 1** | **组件库扩充 (验证扩展性)** | 1. 新增 `QRCode` 二维码插件<br>2. 新增 `Line` 线条插件<br>3. 验证插件是否能在不改核心代码下工作                                             | 2 Days   | 新增 2 个插件<br>验证报告                    |
-| **Week 2** | **状态管理重构**            | 1. 引入 `Zustand`<br>2. 迁移 `EditorState` 到 Store<br>3. 重构 Undo/Redo 中间件<br>4. 优化 `DraggableItem` 的渲染性能                       | 4 Days   | 新的 Store 文件<br>React DevTools 性能对比图 |
-| **Week 2** | **单元测试建设**            | 1. 配置 Vitest 环境<br>2. 为 `EditorState` 逻辑添加测试                                                                                     | 1 Day    | 测试覆盖率报告 (Core Logic)                  |
-| **Week 3** | **交互层优化**              | 1. 抽离 `useItemDrag` 中的计算逻辑为纯函数<br>2. 为吸附算法编写单元测试<br>3. 修复现有的 Z-Index 和多选交互缺失问题                         | 3 Days   | `Physics/Snapping.ts`<br>支持 Z-index 调整   |
-| **Week 3** | **验收与文档**              | 1. 编写《插件开发指南》文档<br>2. 整体回归测试                                                                                              | 2 Days   | 文档、重构后的发布包                         |
+| 阶段       | 任务模块                    | 详细任务                                                                                                                                                                     | 预估工时 | 产出物                                       |
+| :--------- | :-------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- | :------------------------------------------- |
+| **Week 1** | **基础架构解耦 (组件化)**   | 1. 定义 `IComponentPlugin` 接口<br>2. 实现 `PluginRegistry` 类<br>3. 重构 `Paper.tsx` 使用动态组件<br>4. 封装 `TextPlugin` 和 `ImagePlugin`                                  | 3 Days   | 组件注册中心代码<br>Paper 渲染逻辑轻量化     |
+| **Week 1** | **组件库扩充 (验证扩展性)** | 1. 新增 `QRCode` 二维码插件<br>2. 新增 `Line` 线条插件<br>3. 验证插件是否能在不改核心代码下工作                                                                              | 2 Days   | 新增 2 个插件<br>验证报告                    |
+| **Week 2** | **状态管理重构**            | 1. 引入 `Zustand`<br>2. 迁移 `EditorState` 到 Store<br>3. 重构 Undo/Redo 中间件<br>4. 优化 `DraggableItem` 的渲染性能                                                        | 4 Days   | 新的 Store 文件<br>React DevTools 性能对比图 |
+| **Week 2** | **单元测试建设**            | 1. 配置 Vitest 环境<br>2. 为 `EditorState` 逻辑添加测试                                                                                                                      | 1 Day    | 测试覆盖率报告 (Core Logic)                  |
+| **Week 3** | **交互层优化**              | 1. 抽离 `useItemDrag` 中的计算逻辑为纯函数 (✅ DONE: `src/core/PhysicsEngine.ts`)<br>2. 为吸附算法编写单元测试 (TODO)<br>3. 修复现有的 Z-Index 和多选交互缺失问题 (DEFERRED) | 3 Days   | `PhysicsEngine.ts`<br>交互逻辑解耦           |
+| **Week 3** | **验收与文档**              | 1. 编写《插件开发指南》文档<br>2. 整体回归测试                                                                                                                               | 2 Days   | 文档、重构后的发布包                         |
+
+### 5. 已完成重构 (Completed Refactors)
+
+- **Physics Engine Extraction**: 已完成 `src/core/PhysicsEngine.ts` 的创建，将 `useItemDrag` 和 `useItemResize` 中的几何计算、吸附逻辑、边界限制全部抽离为纯函数。降低了 Hook 复杂度，提升了可维护性。
 
 ### 4. 立即执行建议 (Immediate Actions)
 

@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { useStore } from 'zustand'
 import { EditorState, EditorItem } from '../types/editor'
 import { MOCK_REAL_DATA } from '../utils/mockRealData'
 import { useEditorStore } from '../store/editorStore'
@@ -30,14 +31,6 @@ interface UseToolbarReturn {
   onAddItem: (type: 'text' | 'image' | 'qrcode' | 'line') => void
 }
 
-/**
- * Custom hook to manage all toolbar-related logic including:
- * - History management (undo/redo via zundo)
- * - Zoom controls
- * - Layout reset
- * - Print preview
- * - Save template
- */
 export function useToolbar({
   editorState,
   onSave,
@@ -49,15 +42,16 @@ export function useToolbar({
 
   // Temporal (History) access
   // Cast to any to avoid "Not callable" TS error if zundo type augmentation isn't working perfectly
-  const temporal = useEditorStore.temporal as any
-  const { undo, redo } = temporal.getState()
+  const temporal = (useEditorStore as any).temporal
 
-  // We use selectors to subscribe to history length changes to update UI
-  const pastLength = temporal((state: any) => state.pastStates.length)
-  const futureLength = temporal((state: any) => state.futureStates.length)
+  // Use useStore to subscribe to temporal state changes
+  const { undo, redo, pastStates, futureStates } = useStore(
+    temporal,
+    (state: any) => state
+  )
 
-  const canUndo = pastLength > 0
-  const canRedo = futureLength > 0
+  const canUndo = pastStates.length > 0
+  const canRedo = futureStates.length > 0
 
   // Wrappers to match interface
   const handleUndo = useCallback(() => undo(), [undo])
