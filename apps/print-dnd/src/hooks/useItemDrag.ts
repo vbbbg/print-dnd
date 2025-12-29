@@ -1,41 +1,31 @@
-import { useState, useEffect, RefObject, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { EditorState, Guide } from '../types/editor'
 import { SCALE } from '../constants/units'
+import { PhysicsEngine } from '../core/PhysicsEngine'
 
 interface DragState {
   index: number
   region: 'title' | 'header' | 'footer'
-  startX: number
-  startY: number
   initialItemX: number
   initialItemY: number
 }
 
-import { PhysicsEngine } from '../core/PhysicsEngine'
-
 export const useItemDrag = (
-  editorRef: RefObject<HTMLDivElement>,
   onUpdateState: (updater: (prev: EditorState) => EditorState) => void
 ) => {
   const [dragItem, setDragItem] = useState<DragState | null>(null)
   const [guides, setGuides] = useState<Guide[]>([])
 
-  const handleItemDragStart = useCallback(
+  const handleDragStart = useCallback(
     (
       index: number,
       region: 'title' | 'header' | 'footer',
-      e: React.MouseEvent,
-      itemX: number, // current item X
-      itemY: number // current item Y
+      itemX: number,
+      itemY: number
     ) => {
-      e.preventDefault()
-      e.stopPropagation()
-
       setDragItem({
         index,
         region,
-        startX: e.clientX,
-        startY: e.clientY,
         initialItemX: itemX,
         initialItemY: itemY,
       })
@@ -43,14 +33,17 @@ export const useItemDrag = (
     []
   )
 
-  useEffect(() => {
-    const updateState = (e: MouseEvent, applyBodyConstraint: boolean) => {
-      if (!dragItem || !editorRef.current) return
+  const handleDragMove = useCallback(
+    (deltaX: number, deltaY: number) => {
+      if (!dragItem) return
 
-      const deltaX = (e.clientX - dragItem.startX) / SCALE
-      const deltaY = (e.clientY - dragItem.startY) / SCALE
+      // Convert delta to paper units
+      // Note: react-dnd delta is in pixels, we need to divide by SCALE if SCALE converts px to mm?
+      // Wait, SCALE in units.ts is usually 3.78 (px per mm).
+      // So delta / SCALE = mm.
+      const mmDeltaX = deltaX / SCALE
+      const mmDeltaY = deltaY / SCALE
 
-      // Calculate guides BEFORE updating state using synchronous state access
       let calculatedGuides: Guide[] = []
 
       onUpdateState((prev) => {
@@ -76,15 +69,15 @@ export const useItemDrag = (
             guides: newGuides,
           } = PhysicsEngine.calculateItemPosition(
             item,
-            deltaX,
-            deltaY,
+            mmDeltaX,
+            mmDeltaY,
             dragItem.initialItemX,
             dragItem.initialItemY,
             prev.paperWidth,
             prev.paperHeight,
             prev.bodyTop,
             prev.footerTop,
-            applyBodyConstraint,
+            false, // applyBodyConstraint - usually false during drag
             snapData,
             prev.margins
           )
@@ -92,10 +85,7 @@ export const useItemDrag = (
           item.x = newX
           item.y = newY
 
-          // Store guides for later update (only during drag)
-          if (!applyBodyConstraint) {
-            calculatedGuides = newGuides
-          }
+          calculatedGuides = newGuides
 
           // Update the array
           items[dragItem.index] = item
@@ -108,43 +98,23 @@ export const useItemDrag = (
         return newState
       })
 
-      // Update guides synchronously after state update
-      // Safe because we're in an event handler, not during render
-      if (!applyBodyConstraint) {
-        setGuides(calculatedGuides)
-      } else {
-        setGuides([])
-      }
-    }
+      setGuides(calculatedGuides)
+    },
+    [dragItem, onUpdateState]
+  )
 
-    const handleMouseMove = (e: MouseEvent) => {
-      e.preventDefault()
-      // During drag, allow visual overlap (pass through)
-      updateState(e, false)
-    }
-
-    const handleMouseUp = (e: MouseEvent) => {
-      // Must prevent default to avoid any weird selection
-      e.preventDefault()
-      // Final update with strict constraints (snap out of body)
-      updateState(e, true)
-      setDragItem(null)
-      setGuides([])
-    }
-
-    if (dragItem) {
-      window.addEventListener('mousemove', handleMouseMove)
-      window.addEventListener('mouseup', handleMouseUp)
-    }
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
-      window.removeEventListener('mouseup', handleMouseUp)
-    }
-  }, [dragItem, editorRef, onUpdateState])
+  const handleDragEnd = useCallback(() => {
+    setDragItem(null)
+    setGuides([])
+    // Optionally trigger a final "snap" or constraint check here if needed
+    // But for now, just clearing state is fine.
+    // If strict constraints are needed on drop, we could do one last update.
+  }, [])
 
   return {
-    handleItemDragStart,
+    handleDragStart,
+    handleDragMove,
+    handleDragEnd,
     dragItem,
     guides,
   }

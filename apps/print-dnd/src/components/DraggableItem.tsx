@@ -1,25 +1,58 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useDrag } from 'react-dnd'
+import { getEmptyImage } from 'react-dnd-html5-backend'
 import { EditorItem } from '../types/editor'
 import { mmToPx } from '../constants/units'
 import { ResizeHandles, ResizeDirection } from './ResizeHandles'
 
 interface DraggableItemProps {
   item: EditorItem
+  index: number
+  region: 'title' | 'header' | 'footer'
   isSelected?: boolean
-  onMouseDown?: (e: React.MouseEvent) => void
   onClick?: () => void
   onResizeStart?: (direction: ResizeDirection, e: React.MouseEvent) => void
+  onDragStart?: (
+    index: number,
+    region: 'title' | 'header' | 'footer',
+    x: number,
+    y: number
+  ) => void
+  onDragEnd?: () => void
   children?: React.ReactNode
 }
 
 export const DraggableItem: React.FC<DraggableItemProps> = ({
   item,
+  index,
+  region,
   isSelected,
-  onMouseDown,
+  onClick,
   onResizeStart,
+  onDragStart,
+  onDragEnd,
   children,
 }) => {
   const [isHovered, setIsHovered] = useState(false)
+
+  const [{ isDragging }, dragRef, preview] = useDrag({
+    type: 'DRAGGABLE_ITEM',
+    item: () => {
+      // Trigger the start handler to set initial state/guides
+      onDragStart?.(index, region, item.x, item.y)
+      return { type: 'DRAGGABLE_ITEM', index, region }
+    },
+    end: () => {
+      onDragEnd?.()
+    },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  })
+
+  useEffect(() => {
+    preview(getEmptyImage(), { captureDraggingState: true })
+  }, [preview])
 
   // Style based on item properties
   const style: React.CSSProperties = {
@@ -39,12 +72,17 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
     cursor: 'move',
   }
 
-  const showHandles = (isHovered || isSelected) && onResizeStart
+  const showHandles = (isHovered || isSelected) && onResizeStart && !isDragging
 
   return (
     <div
+      ref={dragRef}
       style={style}
-      onMouseDown={onMouseDown}
+      // Remove onMouseDown as drag handles it.
+      // Keep onClick for selection?
+      // useDrag handles mouse down.
+      // We can add onClick to handle selection if drag didn't occur.
+      onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className={`border border-blue-200 hover:border-blue-400 border-dashed box-border flex items-center ${

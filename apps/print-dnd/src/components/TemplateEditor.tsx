@@ -19,6 +19,8 @@ import { componentRegistry } from '../core/ComponentRegistry'
 import { useEditorStore } from '../store/editorStore'
 import { TextPlugin } from '../plugins/TextPlugin'
 import { ImagePlugin } from '../plugins/ImagePlugin'
+import { DndProvider } from 'react-dnd'
+import { HTML5Backend } from 'react-dnd-html5-backend'
 import { TablePlugin } from '../plugins/TablePlugin'
 
 // Register default plugins
@@ -95,10 +97,12 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
   // Use custom hook for item drag handling
   const {
-    handleItemDragStart: originalHandleItemDragStart,
+    handleDragStart: originalHandleItemDragStart,
+    handleDragMove,
+    handleDragEnd,
     dragItem,
     guides,
-  } = useItemDrag(editorRef, handleStateUpdate)
+  } = useItemDrag(handleStateUpdate)
 
   // Use custom hook for item resize handling
   const { handleResizeStart: originalHandleItemResizeStart, resizing } =
@@ -117,12 +121,11 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     (
       index: number,
       region: 'title' | 'header' | 'footer',
-      e: React.MouseEvent,
       itemX: number,
       itemY: number
     ) => {
       setSelectedItemIdx({ region, index }) // Select item on drag/click
-      originalHandleItemDragStart(index, region, e, itemX, itemY)
+      originalHandleItemDragStart(index, region, itemX, itemY)
     },
     [originalHandleItemDragStart, setSelectedItemIdx]
   )
@@ -271,188 +274,193 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   }
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-gray-100">
-      {/* 1. Header/Toolbar Area - Now separate or part of the flow */}
-      {/* For now, let's keep the toolbar floating or move it to a top bar */}
-      <div className="h-14 border-b bg-white flex items-center justify-center relative z-50 shadow-sm">
-        <Toolbar
-          zoom={zoom}
-          onZoomIn={handleZoomIn}
-          onZoomOut={handleZoomOut}
-          canUndo={canUndo}
-          canRedo={canRedo}
-          onUndo={undo}
-          onRedo={redo}
-          onResetLayout={handleResetLayout}
-          onPrintPreview={handlePrintPreview}
-          onSaveAsTemplate={handleSaveAsTemplate}
-          onExportJson={handleExportJson}
-          onAddItem={onAddItem}
-        />
-      </div>
+    <DndProvider backend={HTML5Backend}>
+      <div className="h-full flex flex-col overflow-hidden bg-gray-100">
+        {/* 1. Header/Toolbar Area - Now separate or part of the flow */}
+        {/* For now, let's keep the toolbar floating or move it to a top bar */}
+        <div className="h-14 border-b bg-white flex items-center justify-center relative z-50 shadow-sm">
+          <Toolbar
+            zoom={zoom}
+            onZoomIn={handleZoomIn}
+            onZoomOut={handleZoomOut}
+            canUndo={canUndo}
+            canRedo={canRedo}
+            onUndo={undo}
+            onRedo={redo}
+            onResetLayout={handleResetLayout}
+            onPrintPreview={handlePrintPreview}
+            onSaveAsTemplate={handleSaveAsTemplate}
+            onExportJson={handleExportJson}
+            onAddItem={onAddItem}
+          />
+        </div>
 
-      {/* 2. Main Content Area */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Sidebar */}
-        <div
-          className={`${leftPanelOpen ? 'w-72' : 'w-0'} bg-white border-r transition-all duration-300 relative flex flex-col`}
-        >
+        {/* 2. Main Content Area */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Left Sidebar */}
           <div
-            className={`flex-1 overflow-hidden ${leftPanelOpen ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 flex flex-col`}
+            className={`${leftPanelOpen ? 'w-72' : 'w-0'} bg-white border-r transition-all duration-300 relative flex flex-col`}
           >
-            <Tabs
-              defaultValue="settings"
-              className="flex-1 flex flex-col overflow-hidden"
+            <div
+              className={`flex-1 overflow-hidden ${leftPanelOpen ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 flex flex-col`}
             >
-              <div className="px-4 pt-2 border-b">
-                <TabsList className="w-full grid grid-cols-2">
-                  <TabsTrigger value="settings">基础设置</TabsTrigger>
-                  <TabsTrigger value="fields">字段设置</TabsTrigger>
-                </TabsList>
-              </div>
-
-              <TabsContent
-                value="settings"
-                className="flex-1 overflow-hidden p-0 m-0 data-[state=inactive]:hidden"
+              <Tabs
+                defaultValue="settings"
+                className="flex-1 flex flex-col overflow-hidden"
               >
-                <BasicSettingsCard
-                  state={editorState}
-                  onChange={handleSettingsChange}
-                />
-              </TabsContent>
+                <div className="px-4 pt-2 border-b">
+                  <TabsList className="w-full grid grid-cols-2">
+                    <TabsTrigger value="settings">基础设置</TabsTrigger>
+                    <TabsTrigger value="fields">字段设置</TabsTrigger>
+                  </TabsList>
+                </div>
 
-              <TabsContent
-                value="fields"
-                className="flex-1 overflow-hidden p-0 m-0 data-[state=inactive]:hidden"
-              >
-                <FieldSettingsPanel
-                  state={editorState}
-                  onChange={handleSettingsChange}
-                />
-              </TabsContent>
-            </Tabs>
+                <TabsContent
+                  value="settings"
+                  className="flex-1 overflow-hidden p-0 m-0 data-[state=inactive]:hidden"
+                >
+                  <BasicSettingsCard
+                    state={editorState}
+                    onChange={handleSettingsChange}
+                  />
+                </TabsContent>
+
+                <TabsContent
+                  value="fields"
+                  className="flex-1 overflow-hidden p-0 m-0 data-[state=inactive]:hidden"
+                >
+                  <FieldSettingsPanel
+                    state={editorState}
+                    onChange={handleSettingsChange}
+                  />
+                </TabsContent>
+              </Tabs>
+            </div>
+
+            {/* Toggle Button Left */}
+            <button
+              onClick={() => setLeftPanelOpen(!leftPanelOpen)}
+              className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-12 bg-white border border-gray-200 rounded-r-lg shadow-sm flex items-center justify-center cursor-pointer hover:bg-gray-50 z-50 text-gray-500 hover:text-gray-700"
+              style={{
+                right: '-24px',
+              }}
+              title={leftPanelOpen ? 'Close Sidebar' : 'Open Sidebar'}
+            >
+              {leftPanelOpen ? (
+                <ChevronLeft className="w-4 h-4" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
+            </button>
           </div>
 
-          {/* Toggle Button Left */}
-          <button
-            onClick={() => setLeftPanelOpen(!leftPanelOpen)}
-            className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-12 bg-white border border-gray-200 rounded-r-lg shadow-sm flex items-center justify-center cursor-pointer hover:bg-gray-50 z-50 text-gray-500 hover:text-gray-700"
-            style={{
-              right: '-24px',
-            }}
-            title={leftPanelOpen ? 'Close Sidebar' : 'Open Sidebar'}
-          >
-            {leftPanelOpen ? (
-              <ChevronLeft className="w-4 h-4" />
-            ) : (
-              <ChevronRight className="w-4 h-4" />
-            )}
-          </button>
-        </div>
-
-        {/* Center Canvas */}
-        <div
-          className="flex-1 overflow-auto p-10 relative flex bg-gray-100/50"
-          ref={editorRef}
-        >
+          {/* Center Canvas */}
           <div
-            className={`m-auto ${isDraggingAny ? 'select-none' : ''} ${dragging ? 'cursor-ns-resize' : ''}`}
-            style={{
-              transform: `scale(${zoom / 100})`,
-              transformOrigin: 'top center',
-              transition: 'transform 0.1s ease-out',
-            }}
+            className="flex-1 overflow-auto p-10 relative flex bg-gray-100/50"
+            ref={editorRef}
           >
-            <Paper
-              state={editorState}
-              guides={guides}
-              onResizeStart={handleRegionResizeStart}
-              onItemDragStart={handleItemDragStart}
-              onItemResizeStart={handleItemResizeStart}
-              onColumnResizeStart={handleColumnResizeStart}
-              selectedItemIdx={selectedItemIdx}
-              data={MOCK_REAL_DATA}
-              onTableClick={() =>
-                setSelectedItemIdx({ region: 'body', index: 0 })
-              }
-            />
+            <div
+              className={`m-auto ${isDraggingAny ? 'select-none' : ''} ${dragging ? 'cursor-ns-resize' : ''}`}
+              style={{
+                transform: `scale(${zoom / 100})`,
+                transformOrigin: 'top center',
+                transition: 'transform 0.1s ease-out',
+              }}
+            >
+              <Paper
+                state={editorState}
+                guides={guides}
+                onResizeStart={handleRegionResizeStart}
+                onItemDragStart={handleItemDragStart}
+                onItemDragMove={handleDragMove}
+                onItemDragEnd={handleDragEnd}
+                onItemResizeStart={handleItemResizeStart}
+                onColumnResizeStart={handleColumnResizeStart}
+                selectedItemIdx={selectedItemIdx}
+                data={MOCK_REAL_DATA}
+                onTableClick={() =>
+                  setSelectedItemIdx({ region: 'body', index: 0 })
+                }
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Right Sidebar */}
-        <div
-          className={`${rightPanelOpen ? 'w-72' : 'w-0'} bg-white transition-all duration-300 relative flex flex-col`}
-        >
+          {/* Right Sidebar */}
           <div
-            className={`flex-1 overflow-hidden ${rightPanelOpen ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 h-full`}
+            className={`${rightPanelOpen ? 'w-72' : 'w-0'} bg-white transition-all duration-300 relative flex flex-col`}
           >
-            {selectedItemIdx?.region === 'body' ? (
-              (() => {
-                // Temporary adapter: treat bodyItems (TableData) as an EditorItem of type 'table'
-                // In future, bodyItems should be an EditorItem[] or a single EditorItem
-                const tableItemAdapter = {
-                  ...editorState.bodyItems,
-                  type: 'table',
-                } as any
-                const plugin = componentRegistry.get('table')
-                const SettingsPanel = plugin?.settingsPanel
+            <div
+              className={`flex-1 overflow-hidden ${rightPanelOpen ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 h-full`}
+            >
+              {selectedItemIdx?.region === 'body' ? (
+                (() => {
+                  // Temporary adapter: treat bodyItems (TableData) as an EditorItem of type 'table'
+                  // In future, bodyItems should be an EditorItem[] or a single EditorItem
+                  const tableItemAdapter = {
+                    ...editorState.bodyItems,
+                    type: 'table',
+                  } as any
+                  const plugin = componentRegistry.get('table')
+                  const SettingsPanel = plugin?.settingsPanel
 
-                if (SettingsPanel) {
+                  if (SettingsPanel) {
+                    return (
+                      <SettingsPanel
+                        item={tableItemAdapter}
+                        onChange={handleTableUpdate}
+                      />
+                    )
+                  }
+
                   return (
-                    <SettingsPanel
-                      item={tableItemAdapter}
+                    <TableSettingsPanel
+                      data={tableItemAdapter}
                       onChange={handleTableUpdate}
                     />
                   )
-                }
-
-                return (
-                  <TableSettingsPanel
-                    data={tableItemAdapter}
-                    onChange={handleTableUpdate}
-                  />
-                )
-              })()
-            ) : selectedItem ? (
-              (() => {
-                const plugin = componentRegistry.get(selectedItem.type)
-                const SettingsPanel = plugin?.settingsPanel || ItemSettingsPanel
-                return (
-                  <SettingsPanel
-                    item={selectedItem}
-                    onChange={handleItemUpdate}
-                  />
-                )
-              })()
-            ) : (
-              <div className="flex flex-col h-full">
-                <h3 className="font-bold text-lg border-b p-4 mb-4">
-                  组件属性
-                </h3>
-                <div className="text-sm text-gray-500 text-center py-10">
-                  请选择一个组件以编辑属性
+                })()
+              ) : selectedItem ? (
+                (() => {
+                  const plugin = componentRegistry.get(selectedItem.type)
+                  const SettingsPanel =
+                    plugin?.settingsPanel || ItemSettingsPanel
+                  return (
+                    <SettingsPanel
+                      item={selectedItem}
+                      onChange={handleItemUpdate}
+                    />
+                  )
+                })()
+              ) : (
+                <div className="flex flex-col h-full">
+                  <h3 className="font-bold text-lg border-b p-4 mb-4">
+                    组件属性
+                  </h3>
+                  <div className="text-sm text-gray-500 text-center py-10">
+                    请选择一个组件以编辑属性
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
 
-          {/* Toggle Button Right */}
-          <button
-            onClick={() => setRightPanelOpen(!rightPanelOpen)}
-            className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-12 bg-white border border-gray-200 rounded-l-lg shadow-sm flex items-center justify-center cursor-pointer hover:bg-gray-50 z-50 text-gray-500 hover:text-gray-700"
-            style={{
-              left: '-24px',
-            }}
-            title={rightPanelOpen ? 'Close Sidebar' : 'Open Sidebar'}
-          >
-            {rightPanelOpen ? (
-              <ChevronRight className="w-4 h-4" />
-            ) : (
-              <ChevronLeft className="w-4 h-4" />
-            )}
-          </button>
+            {/* Toggle Button Right */}
+            <button
+              onClick={() => setRightPanelOpen(!rightPanelOpen)}
+              className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-12 bg-white border border-gray-200 rounded-l-lg shadow-sm flex items-center justify-center cursor-pointer hover:bg-gray-50 z-50 text-gray-500 hover:text-gray-700"
+              style={{
+                left: '-24px',
+              }}
+              title={rightPanelOpen ? 'Close Sidebar' : 'Open Sidebar'}
+            >
+              {rightPanelOpen ? (
+                <ChevronRight className="w-4 h-4" />
+              ) : (
+                <ChevronLeft className="w-4 h-4" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </DndProvider>
   )
 }

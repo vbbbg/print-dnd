@@ -1,4 +1,5 @@
 import React, { useRef } from 'react'
+import { useDrop } from 'react-dnd'
 import { EditorState, Guide } from '../types/editor'
 import { ResizeHandle } from './ResizeHandle'
 import { DraggableItem } from './DraggableItem'
@@ -15,10 +16,11 @@ interface PaperProps {
   onItemDragStart: (
     index: number,
     region: 'title' | 'header' | 'footer',
-    e: React.MouseEvent,
     itemX: number,
     itemY: number
   ) => void
+  onItemDragMove?: (deltaX: number, deltaY: number) => void
+  onItemDragEnd?: () => void
   onItemResizeStart?: (
     index: number,
     region: 'title' | 'header' | 'footer',
@@ -48,12 +50,12 @@ export const Paper: React.FC<PaperProps> = ({
   state,
   onResizeStart,
   onItemDragStart,
+  onItemDragMove,
+  onItemDragEnd,
   onItemResizeStart,
-  onColumnResizeStart,
   guides,
   selectedItemIdx,
   data = {},
-  onTableClick,
 }) => {
   const {
     headerTop,
@@ -68,11 +70,32 @@ export const Paper: React.FC<PaperProps> = ({
     margins,
   } = state
 
-  const paperRef = useRef<HTMLDivElement>(null)
+  const paperRef = useRef<HTMLDivElement | null>(null)
+
+  const [, dropRef] = useDrop({
+    accept: 'DRAGGABLE_ITEM',
+    hover: (_item, monitor) => {
+      const delta = monitor.getDifferenceFromInitialOffset()
+      if (delta && onItemDragMove) {
+        onItemDragMove(delta.x, delta.y)
+      }
+    },
+    drop: () => {
+      if (onItemDragEnd) {
+        onItemDragEnd()
+      }
+    },
+  })
+
+  // Combine refs
+  const setRefs = (element: HTMLDivElement | null) => {
+    paperRef.current = element
+    dropRef(element)
+  }
 
   return (
     <div
-      ref={paperRef}
+      ref={setRefs}
       data-paper-root="true"
       className="relative bg-white shadow-xl mx-auto"
       style={{
@@ -200,13 +223,15 @@ export const Paper: React.FC<PaperProps> = ({
           <DraggableItem
             key={`title-${index}`}
             item={item}
+            index={index}
+            region="title"
             isSelected={
               selectedItemIdx?.region === 'title' &&
               selectedItemIdx?.index === index
             }
-            onMouseDown={(e) =>
-              onItemDragStart(index, 'title', e, item.x, item.y)
-            }
+            onDragStart={onItemDragStart}
+            onDragEnd={onItemDragEnd}
+            onClick={() => onItemDragStart(index, 'title', item.x, item.y)}
             onResizeStart={
               onItemResizeStart
                 ? (direction, e) =>
@@ -242,13 +267,15 @@ export const Paper: React.FC<PaperProps> = ({
           <DraggableItem
             key={`header-${index}`}
             item={item}
+            index={index}
+            region="header"
             isSelected={
               selectedItemIdx?.region === 'header' &&
               selectedItemIdx?.index === index
             }
-            onMouseDown={(e) =>
-              onItemDragStart(index, 'header', e, item.x, item.y)
-            }
+            onDragStart={onItemDragStart}
+            onDragEnd={onItemDragEnd}
+            onClick={() => onItemDragStart(index, 'header', item.x, item.y)}
             onResizeStart={
               onItemResizeStart
                 ? (direction, e) =>
@@ -284,13 +311,15 @@ export const Paper: React.FC<PaperProps> = ({
           <DraggableItem
             key={`footer-${index}`}
             item={item}
+            index={index}
+            region="footer"
             isSelected={
               selectedItemIdx?.region === 'footer' &&
               selectedItemIdx?.index === index
             }
-            onMouseDown={(e) =>
-              onItemDragStart(index, 'footer', e, item.x, item.y)
-            }
+            onDragStart={onItemDragStart}
+            onDragEnd={onItemDragEnd}
+            onClick={() => onItemDragStart(index, 'footer', item.x, item.y)}
             onResizeStart={
               onItemResizeStart
                 ? (direction, e) =>
