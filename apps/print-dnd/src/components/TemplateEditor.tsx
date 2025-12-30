@@ -79,7 +79,6 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   const setSelectedItemIdx = setSelection
 
   // Use toolbar hook for all toolbar-related logic
-  // TODO: Refactor useToolbar to use store directly to avoid passing redundant props
   const {
     canUndo,
     canRedo,
@@ -93,7 +92,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     handleSaveAsTemplate,
     handleExportJson,
     onAddItem,
-  } = useToolbar({ editorState, setEditorState, onSave, onPrintPreview })
+  } = useToolbar({ onSave, onPrintPreview })
 
   // Use the custom hook for global drag handling (Regions)
   const { dragging, setDragging } = useGlobalDrag(editorRef, handleStateUpdate)

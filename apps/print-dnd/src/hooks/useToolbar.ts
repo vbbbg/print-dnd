@@ -5,8 +5,6 @@ import { MOCK_REAL_DATA } from '../utils/mockRealData'
 import { useEditorStore } from '../store/editorStore'
 
 interface UseToolbarOptions {
-  editorState: EditorState // Still used for export/print reading
-  setEditorState: (state: EditorState) => void // Kept for interface compatibility but might be unused if we fully switch to store actions
   onSave?: (state: EditorState) => void
   onPrintPreview?: () => void
 }
@@ -32,11 +30,11 @@ interface UseToolbarReturn {
 }
 
 export function useToolbar({
-  editorState,
   onSave,
   onPrintPreview,
 }: UseToolbarOptions): UseToolbarReturn {
   // Store actions
+  const editorState = useEditorStore((state) => state)
   const resetStore = useEditorStore((state) => state.reset)
   const addItem = useEditorStore((state) => state.addItem)
 
