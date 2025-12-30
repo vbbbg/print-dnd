@@ -1,13 +1,10 @@
 import { useState, useCallback } from 'react'
 import { useStore } from 'zustand'
-import { EditorState, EditorItem } from '../types/editor'
+import { EditorItem } from '../types/editor'
 import { MOCK_REAL_DATA } from '../utils/mockRealData'
 import { useEditorStore } from '../store/editorStore'
 
-interface UseToolbarOptions {
-  onSave?: (state: EditorState) => void
-  onPrintPreview?: () => void
-}
+interface UseToolbarOptions {}
 
 interface UseToolbarReturn {
   // History
@@ -29,10 +26,7 @@ interface UseToolbarReturn {
   onAddItem: (type: 'text' | 'image' | 'qrcode' | 'line') => void
 }
 
-export function useToolbar({
-  onSave,
-  onPrintPreview,
-}: UseToolbarOptions): UseToolbarReturn {
+export function useToolbar(_options: UseToolbarOptions = {}): UseToolbarReturn {
   // Store actions
   const editorState = useEditorStore((state) => state)
   const resetStore = useEditorStore((state) => state.reset)
@@ -73,13 +67,7 @@ export function useToolbar({
 
   // Print preview handler
   const handlePrintPreview = useCallback(() => {
-    if (onPrintPreview) {
-      onPrintPreview()
-      return
-    }
-
     // Default implementation
-    // ... (Keep existing print logic)
     console.log('Opening print client...')
     const clientUrl = 'http://localhost:5174/'
     const printWindow = window.open(clientUrl, '_blank')
@@ -125,16 +113,12 @@ export function useToolbar({
       }
     }
     window.addEventListener('message', messageHandler)
-  }, [editorState, onPrintPreview])
+  }, [editorState])
 
   // Save template handler
   const handleSaveAsTemplate = useCallback(() => {
-    if (onSave) {
-      onSave(editorState)
-    } else {
-      console.warn('No onSave handler provided')
-    }
-  }, [editorState, onSave])
+    console.warn('Save is not implemented in internal toolbar hook')
+  }, [])
 
   // Export JSON handler
   const handleExportJson = useCallback(() => {
