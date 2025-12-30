@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React from 'react'
 import { useDrop } from 'react-dnd'
 import { EditorState, Guide } from '../types/editor'
 import { ResizeHandle } from './ResizeHandle'
@@ -9,6 +9,7 @@ import { AlignmentGuides } from './AlignmentGuides'
 import { regionRegistry } from '../core/RegionRegistry'
 import '../regions/TableRegion'
 import '../regions/FreeLayoutRegion'
+import { RegionGuide } from './RegionGuide'
 
 interface PaperProps {
   state: EditorState
@@ -31,19 +32,13 @@ interface PaperProps {
     itemWidth: number,
     itemHeight: number
   ) => void
-  onColumnResizeStart?: (
-    index: number,
-    e: React.MouseEvent,
-    minWidthLeft: number,
-    minWidthRight: number
-  ) => void
+
   guides?: Guide[]
   selectedItemIdx?: {
     region: string
     index: number
   } | null
   data?: Record<string, any>
-  onTableClick?: () => void
 }
 
 export const Paper: React.FC<PaperProps> = ({
@@ -58,8 +53,6 @@ export const Paper: React.FC<PaperProps> = ({
   data = {},
 }) => {
   const { paperHeight, paperWidth, margins, regions } = state
-
-  const paperRef = useRef<HTMLDivElement | null>(null)
 
   const [, dropRef] = useDrop({
     accept: 'DRAGGABLE_ITEM',
@@ -76,12 +69,6 @@ export const Paper: React.FC<PaperProps> = ({
     },
   })
 
-  // Combine refs
-  const setRefs = (element: HTMLDivElement | null) => {
-    paperRef.current = element
-    dropRef(element)
-  }
-
   // Calculate region positions
   const regionRenderData = regions.map((region, idx) => {
     let height = 0
@@ -95,7 +82,7 @@ export const Paper: React.FC<PaperProps> = ({
 
   return (
     <div
-      ref={setRefs}
+      ref={dropRef}
       data-paper-root="true"
       className="relative bg-white shadow-xl mx-auto"
       style={{
@@ -105,23 +92,7 @@ export const Paper: React.FC<PaperProps> = ({
     >
       <MarginsGuide margins={margins} />
 
-      {/* Region Visual Boundaries - Separated from content to avoid positioning issues */}
-      {regionRenderData.map((region) => (
-        <div
-          key={`guide-${region.id}`}
-          className={`absolute w-full box-border pointer-events-none ${
-            region.type === 'table'
-              ? 'border-b border-dashed border-gray-300'
-              : region.id !== regions[regions.length - 1].id
-                ? 'border-b border-dashed border-gray-300'
-                : ''
-          }`}
-          style={{
-            top: mmToPx(region.top),
-            height: mmToPx(region.height),
-          }}
-        />
-      ))}
+      <RegionGuide regions={regionRenderData} />
 
       {/* Region Content */}
       {regionRenderData.map((region, regionIndex) => {
