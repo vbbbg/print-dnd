@@ -9,135 +9,238 @@ import {
   Printer,
   Save,
   FileJson,
+  LucideIcon,
 } from 'lucide-react'
 
-interface ToolbarProps {
-  zoom: number
-  onZoomIn: () => void
-  onZoomOut: () => void
-  canUndo: boolean
-  canRedo: boolean
-  onUndo: () => void
-  onRedo: () => void
-  onResetLayout: () => void
-  onPrintPreview: () => void
-  onSaveAsTemplate: () => void
-  onExportJson: () => void
-  onAddItem: (type: 'text' | 'image' | 'qrcode' | 'line') => void
+export interface ToolbarItem {
+  id: string
+  type?: 'button' | 'custom'
+  label?: React.ReactNode
+  icon?: LucideIcon
+  action?: string
+  onClick?: () => void
+  disabled?: boolean
+  title?: string
+  variant?:
+    | 'default'
+    | 'destructive'
+    | 'outline'
+    | 'secondary'
+    | 'ghost'
+    | 'link'
+  size?: 'default' | 'sm' | 'lg' | 'icon'
+  className?: string
+  content?: React.ReactNode
+  render?: (item: ToolbarItem) => React.ReactNode
+}
+
+export interface ToolbarGroup {
+  id: string
+  items: ToolbarItem[]
+}
+
+export interface ToolbarProps {
+  groups: ToolbarGroup[]
+  className?: string
+  style?: React.CSSProperties
 }
 
 export const Toolbar: React.FC<ToolbarProps> = ({
-  zoom,
-  onZoomIn,
-  onZoomOut,
-  canUndo,
-  canRedo,
-  onUndo,
-  onRedo,
-  onResetLayout,
-  onPrintPreview,
-  onSaveAsTemplate,
-  onExportJson,
-  onAddItem,
+  groups,
+  className,
+  style,
 }) => {
   return (
-    <div className="h-full flex items-center gap-2 px-2">
-      {/* Undo/Redo */}
-      <div className="flex items-center gap-1 border-r border-gray-200 pr-2 mr-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onUndo}
-          disabled={!canUndo}
-          title="撤回"
-        >
-          <Undo className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onRedo}
-          disabled={!canRedo}
-          title="重做"
-        >
-          <Redo className="h-4 w-4" />
-        </Button>
-      </div>
+    <div
+      className={`h-full flex items-center gap-2 px-2 ${className || ''}`}
+      style={style}
+    >
+      {groups.map((group, groupIndex) => (
+        <React.Fragment key={group.id}>
+          <div className="flex items-center gap-1">
+            {group.items.map((item) => {
+              if (item.type === 'custom') {
+                return (
+                  <React.Fragment key={item.id}>{item.content}</React.Fragment>
+                )
+              }
 
-      {/* Insert Items */}
-      <div className="flex items-center gap-1 border-r border-gray-200 pr-2 mr-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onAddItem('text')}
-          title="添加文本"
-        >
-          T 文本
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onAddItem('image')}
-          title="添加图片"
-        >
-          🖼️ 图片
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onAddItem('qrcode')}
-          title="添加二维码"
-        >
-          QR
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onAddItem('line')}
-          title="添加直线"
-        >
-          —
-        </Button>
-      </div>
+              if (item.render) {
+                return (
+                  <React.Fragment key={item.id}>
+                    {item.render(item)}
+                  </React.Fragment>
+                )
+              }
 
-      {/* Zoom Controls */}
-      <div className="flex items-center gap-1 border-r border-gray-200 pr-2 mr-2">
-        <span className="text-sm text-gray-500 font-medium px-2">{zoom}%</span>
-        <Button variant="ghost" size="icon" onClick={onZoomOut} title="缩小">
-          <ZoomOut className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" onClick={onZoomIn} title="放大">
-          <ZoomIn className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Reset Layout */}
-      <div className="flex items-center gap-1 border-r border-gray-200 pr-2 mr-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onResetLayout}
-          title="恢复默认布局"
-        >
-          <RotateCcw className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center gap-2">
-        <Button variant="outline" onClick={onPrintPreview} className="gap-2">
-          <Printer className="h-4 w-4" />
-          打印预览
-        </Button>
-        <Button onClick={onSaveAsTemplate} className="gap-2">
-          <Save className="h-4 w-4" />
-          另存为模板
-        </Button>
-        <Button onClick={onExportJson} className="gap-2" variant="outline">
-          <FileJson className="h-4 w-4" />
-          导出JSON
-        </Button>
-      </div>
+              const Icon = item.icon
+              return (
+                <Button
+                  key={item.id}
+                  variant={item.variant || 'ghost'}
+                  size={item.size || 'icon'}
+                  onClick={item.onClick}
+                  disabled={item.disabled}
+                  title={item.title}
+                  className={item.className}
+                >
+                  {Icon && <Icon className="h-4 w-4 mr-1" />}
+                  {item.label}
+                </Button>
+              )
+            })}
+          </div>
+          {/* Add separator if not the last group */}
+          {groupIndex < groups.length - 1 && (
+            <div className="w-[1px] h-6 bg-gray-200 mx-1" />
+          )}
+        </React.Fragment>
+      ))}
     </div>
   )
+}
+
+export interface ToolbarState {
+  zoom: number
+  canUndo: boolean
+  canRedo: boolean
+}
+
+export const createDefaultToolbarGroups = ({
+  zoom,
+  canUndo,
+  canRedo,
+}: ToolbarState): ToolbarGroup[] => {
+  return [
+    // History
+    {
+      id: 'history',
+      items: [
+        {
+          id: 'undo',
+          action: 'undo',
+          icon: Undo,
+          disabled: !canUndo,
+          title: '撤回',
+        },
+        {
+          id: 'redo',
+          action: 'redo',
+          icon: Redo,
+          disabled: !canRedo,
+          title: '重做',
+        },
+      ],
+    },
+    // Insert
+    {
+      id: 'insert',
+      items: [
+        {
+          id: 'add-text',
+          action: 'add-text',
+          label: '文本',
+          title: '添加文本',
+          size: 'sm',
+          className: 'gap-1',
+        },
+        {
+          id: 'add-image',
+          action: 'add-image',
+          label: '图片',
+          title: '添加图片',
+          size: 'sm',
+          className: 'gap-1',
+        },
+        {
+          id: 'add-qrcode',
+          action: 'add-qrcode',
+          label: 'QR',
+          title: '添加二维码',
+          size: 'sm',
+          className: 'gap-1',
+        },
+        {
+          id: 'add-line',
+          action: 'add-line',
+          label: '—',
+          title: '添加直线',
+          size: 'sm',
+          className: 'gap-1',
+        },
+      ],
+    },
+    // Zoom
+    {
+      id: 'zoom',
+      items: [
+        {
+          id: 'zoom-text',
+          type: 'custom',
+          content: (
+            <span className="text-sm text-gray-500 font-medium px-2">
+              {zoom}%
+            </span>
+          ),
+        },
+        {
+          id: 'zoom-out',
+          action: 'zoom-out',
+          icon: ZoomOut,
+          title: '缩小',
+        },
+        {
+          id: 'zoom-in',
+          action: 'zoom-in',
+          icon: ZoomIn,
+          title: '放大',
+        },
+      ],
+    },
+    // Tools
+    {
+      id: 'tools',
+      items: [
+        {
+          id: 'reset',
+          action: 'reset',
+          icon: RotateCcw,
+          title: '恢复默认布局',
+        },
+      ],
+    },
+    // Actions
+    {
+      id: 'actions',
+      items: [
+        {
+          id: 'print',
+          action: 'print',
+          label: '打印预览',
+          icon: Printer,
+          variant: 'outline',
+          className: 'gap-2',
+          size: 'sm',
+        },
+        {
+          id: 'save',
+          action: 'save',
+          label: '另存为模板',
+          icon: Save,
+          variant: 'default',
+          className: 'gap-2',
+          size: 'sm',
+        },
+        {
+          id: 'export',
+          action: 'export',
+          label: '导出JSON',
+          icon: FileJson,
+          variant: 'outline',
+          className: 'gap-2',
+          size: 'sm',
+        },
+      ],
+    },
+  ]
 }
