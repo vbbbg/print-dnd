@@ -34,6 +34,8 @@ export interface TemplateEditorProps {
   onSave?: (state: EditorState) => void
   onPrintPreview?: () => void
   toolbar?: EditorToolbarConfig
+  className?: string
+  style?: React.CSSProperties
 }
 
 export const TemplateEditor: React.FC<TemplateEditorProps> = ({
@@ -41,6 +43,8 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   onSave,
   onPrintPreview,
   toolbar,
+  className,
+  style,
 }) => {
   // Use store
   const editorState = useEditorStore((state) => state)
@@ -269,7 +273,10 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="h-full max-h-screen flex flex-col overflow-hidden bg-gray-100">
+      <div
+        className={`h-screen flex flex-col overflow-hidden bg-gray-100 ${className || ''}`}
+        style={style}
+      >
         {/* 1. Header/Toolbar Area */}
         <EditorToolbar
           config={toolbar}
@@ -383,85 +390,81 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
             <div
               className={`flex-1 overflow-hidden ${rightPanelOpen ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 h-full`}
             >
-              <div
-                className={`flex-1 overflow-hidden ${rightPanelOpen ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 h-full`}
-              >
-                {(() => {
-                  if (!selectedItemIdx) {
-                    return (
-                      <div className="flex flex-col h-full">
-                        <h3 className="font-bold text-lg border-b p-4 mb-4">
-                          组件属性
-                        </h3>
-                        <div className="text-sm text-gray-500 text-center py-10">
-                          请选择一个组件以编辑属性
-                        </div>
+              {(() => {
+                if (!selectedItemIdx) {
+                  return (
+                    <div className="flex flex-col h-full">
+                      <h3 className="font-bold text-lg border-b p-4 mb-4">
+                        组件属性
+                      </h3>
+                      <div className="text-sm text-gray-500 text-center py-10">
+                        请选择一个组件以编辑属性
                       </div>
-                    )
-                  }
-
-                  const { region: regionId } = selectedItemIdx
-                  const region = editorState.regions.find(
-                    (r) => r.id === regionId
+                    </div>
                   )
+                }
 
-                  if (region?.type === 'table') {
-                    // Temporary adapter: treat bodyItems (TableData) as an EditorItem of type 'table'
-                    const tableItemAdapter = {
-                      ...region.data,
-                      type: 'table',
-                    } as any
-                    const plugin = componentRegistry.get('table')
-                    const SettingsPanel = plugin?.settingsPanel
+                const { region: regionId } = selectedItemIdx
+                const region = editorState.regions.find(
+                  (r) => r.id === regionId
+                )
 
-                    if (SettingsPanel) {
-                      return (
-                        <SettingsPanel
-                          item={tableItemAdapter}
-                          onChange={handleTableUpdate}
-                        />
-                      )
-                    }
+                if (region?.type === 'table') {
+                  // Temporary adapter: treat bodyItems (TableData) as an EditorItem of type 'table'
+                  const tableItemAdapter = {
+                    ...region.data,
+                    type: 'table',
+                  } as any
+                  const plugin = componentRegistry.get('table')
+                  const SettingsPanel = plugin?.settingsPanel
+
+                  if (SettingsPanel) {
                     return (
-                      <TableSettingsPanel
-                        data={tableItemAdapter}
+                      <SettingsPanel
+                        item={tableItemAdapter}
                         onChange={handleTableUpdate}
                       />
                     )
                   }
+                  return (
+                    <TableSettingsPanel
+                      data={tableItemAdapter}
+                      onChange={handleTableUpdate}
+                    />
+                  )
+                }
 
-                  if (selectedItem) {
-                    const plugin = componentRegistry.get(selectedItem.type)
-                    const SettingsPanel =
-                      plugin?.settingsPanel || ItemSettingsPanel
-                    return (
-                      <SettingsPanel
-                        item={selectedItem}
-                        onChange={handleItemUpdate}
-                      />
-                    )
-                  }
+                if (selectedItem) {
+                  const plugin = componentRegistry.get(selectedItem.type)
+                  const SettingsPanel =
+                    plugin?.settingsPanel || ItemSettingsPanel
+                  return (
+                    <SettingsPanel
+                      item={selectedItem}
+                      onChange={handleItemUpdate}
+                    />
+                  )
+                }
 
-                  return null
-                })()}
-              </div>
-
-              {/* Toggle Button Right */}
-              <button
-                onClick={() => setRightPanelOpen(!rightPanelOpen)}
-                className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-12 bg-white border border-gray-200 rounded-l-lg shadow-sm flex items-center justify-center cursor-pointer hover:bg-gray-50 z-50 text-gray-500 hover:text-gray-700"
-                style={{
-                  left: '-24px',
-                }}
-                title={rightPanelOpen ? 'Close Sidebar' : 'Open Sidebar'}
-              >
-                {rightPanelOpen ? (
-                  <ChevronRight className="w-4 h-4" />
-                ) : (
-                  <ChevronLeft className="w-4 h-4" />
-                )}
-              </button>
+                return null
+              })()}
             </div>
+
+            {/* Toggle Button Right */}
+            <button
+              onClick={() => setRightPanelOpen(!rightPanelOpen)}
+              className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-12 bg-white border border-gray-200 rounded-l-lg shadow-sm flex items-center justify-center cursor-pointer hover:bg-gray-50 z-50 text-gray-500 hover:text-gray-700"
+              style={{
+                left: '-24px',
+              }}
+              title={rightPanelOpen ? 'Close Sidebar' : 'Open Sidebar'}
+            >
+              {rightPanelOpen ? (
+                <ChevronRight className="w-4 h-4" />
+              ) : (
+                <ChevronLeft className="w-4 h-4" />
+              )}
+            </button>
           </div>
         </div>
       </div>
