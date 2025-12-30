@@ -2,13 +2,8 @@ import React, { useRef, useCallback } from 'react'
 import { EditorState } from '../types/editor'
 import { MOCK_REAL_DATA } from '../utils/mockRealData'
 import { Paper } from './Paper'
-import {
-  Toolbar,
-  ToolbarProps,
-  createDefaultToolbarGroups,
-  ToolbarGroup,
-  ToolbarState,
-} from './Toolbar'
+// Toolbar imports removed as they are encapsulated in EditorToolbar
+import { EditorToolbar, EditorToolbarConfig } from './EditorToolbar'
 import { useGlobalDrag } from '../hooks/useGlobalDrag'
 import { useItemDrag } from '../hooks/useItemDrag'
 import { useItemResize } from '../hooks/useItemResize'
@@ -38,14 +33,7 @@ export interface TemplateEditorProps {
   initialState?: EditorState
   onSave?: (state: EditorState) => void
   onPrintPreview?: () => void
-  toolbar?: {
-    render?: (props: ToolbarProps) => React.ReactNode
-    groups?: ToolbarGroup[] | ((state: ToolbarState) => ToolbarGroup[])
-    className?: string
-    style?: React.CSSProperties
-    wrapperClassName?: string
-    wrapperStyle?: React.CSSProperties
-  }
+  toolbar?: EditorToolbarConfig
 }
 
 export const TemplateEditor: React.FC<TemplateEditorProps> = ({
@@ -283,11 +271,11 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="h-full max-h-screen flex flex-col overflow-hidden bg-gray-100">
-        {/* 1. Header/Toolbar Area - Now separate or part of the flow */}
-        {/* For now, let's keep the toolbar floating or move it to a top bar */}
-        {(() => {
-          // Action handler mapping
-          const handlers: Record<string, () => void> = {
+        {/* 1. Header/Toolbar Area */}
+        <EditorToolbar
+          config={toolbar}
+          state={{ zoom, canUndo, canRedo }}
+          handlers={{
             undo: undo,
             redo: redo,
             'add-text': () => onAddItem('text'),
@@ -300,62 +288,8 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
             print: handlePrintPreview,
             save: handleSaveAsTemplate,
             export: handleExportJson,
-          }
-
-          // Group Construction
-          const currentState: ToolbarState = { zoom, canUndo, canRedo }
-          let baseGroups: ToolbarGroup[] = []
-
-          if (toolbar?.groups) {
-            if (typeof toolbar.groups === 'function') {
-              baseGroups = toolbar.groups(currentState)
-            } else {
-              baseGroups = toolbar.groups
-            }
-          } else {
-            baseGroups = createDefaultToolbarGroups(currentState)
-          }
-
-          // Bind actions to handlers
-          const groups = baseGroups.map((group) => ({
-            ...group,
-            items: group.items.map((item) => {
-              const newItem = { ...item }
-              if (item.action && handlers[item.action]) {
-                const internalHandler = handlers[item.action]
-                const userHandler = item.onClick
-                newItem.onClick = () => {
-                  internalHandler()
-                  if (userHandler) userHandler()
-                }
-              }
-              return newItem
-            }),
-          }))
-
-          if (groups.length === 0 && !toolbar?.render) {
-            return null
-          }
-
-          const toolbarProps: ToolbarProps = {
-            groups,
-            className: toolbar?.className,
-            style: toolbar?.style,
-          }
-
-          return (
-            <div
-              className={`h-14 border-b bg-white flex items-center justify-center relative z-50 shadow-sm ${toolbar?.wrapperClassName || ''}`}
-              style={toolbar?.wrapperStyle}
-            >
-              {toolbar?.render ? (
-                toolbar.render(toolbarProps)
-              ) : (
-                <Toolbar {...toolbarProps} />
-              )}
-            </div>
-          )
-        })()}
+          }}
+        />
 
         {/* 2. Main Content Area */}
         <div className="flex-1 flex overflow-hidden">
