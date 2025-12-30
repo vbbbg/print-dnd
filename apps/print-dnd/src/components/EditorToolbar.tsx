@@ -50,7 +50,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
         const userHandler = item.onClick
         newItem.onClick = () => {
           internalHandler()
-          if (userHandler) userHandler()
+          if (userHandler) userHandler(state.editorState)
         }
       }
       return newItem

@@ -11,6 +11,7 @@ import {
   FileJson,
   LucideIcon,
 } from 'lucide-react'
+import { EditorState } from '../types/editor'
 
 export interface ToolbarItem {
   id: string
@@ -18,7 +19,7 @@ export interface ToolbarItem {
   label?: React.ReactNode
   icon?: LucideIcon
   action?: string
-  onClick?: () => void
+  onClick?: (state?: EditorState) => void
   disabled?: boolean
   title?: string
   variant?:
@@ -79,7 +80,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                   key={item.id}
                   variant={item.variant || 'ghost'}
                   size={item.size || 'icon'}
-                  onClick={item.onClick}
+                  onClick={() => item.onClick?.()}
                   disabled={item.disabled}
                   title={item.title}
                   className={item.className}
@@ -104,6 +105,7 @@ export interface ToolbarState {
   zoom: number
   canUndo: boolean
   canRedo: boolean
+  editorState?: EditorState
 }
 
 export const createDefaultToolbarGroups = ({

@@ -269,7 +269,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         {/* 1. Header/Toolbar Area */}
         <EditorToolbar
           config={toolbar}
-          state={{ zoom, canUndo, canRedo }}
+          state={{ zoom, canUndo, canRedo, editorState }}
           handlers={{
             undo: undo,
             redo: redo,
