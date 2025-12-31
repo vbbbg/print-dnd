@@ -22,6 +22,24 @@ export const getMockEditorState = (): EditorState => {
       alias: '标题',
       field: 'title',
     },
+    {
+      value: '',
+      x: 0,
+      y: 5,
+      width: 210,
+      height: 10,
+      fontSize: 16,
+      bold: true,
+      fontFamily: 'SimHei',
+      fontColor: '#000000',
+      verticalAlignment: 'center',
+      horizontalAlignment: 'center',
+      visible: true,
+      type: 'image',
+      name: 'image',
+      alias: '二维码',
+      field: 'image',
+    },
   ]
 
   // Header Items - Reasonable layout for A4_2 (High density)

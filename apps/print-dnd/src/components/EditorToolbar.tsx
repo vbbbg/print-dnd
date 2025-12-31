@@ -1,11 +1,5 @@
 import React from 'react'
-import {
-  Toolbar,
-  ToolbarProps,
-  createDefaultToolbarGroups,
-  ToolbarGroup,
-  ToolbarState,
-} from './Toolbar'
+import { Toolbar, ToolbarProps, ToolbarGroup, ToolbarState } from './Toolbar'
 
 export interface EditorToolbarConfig {
   render?: (props: ToolbarProps) => React.ReactNode
@@ -36,8 +30,6 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
     } else {
       baseGroups = config.groups
     }
-  } else {
-    baseGroups = createDefaultToolbarGroups(state)
   }
 
   // Bind actions to handlers
