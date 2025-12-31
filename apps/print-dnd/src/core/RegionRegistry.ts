@@ -8,6 +8,7 @@ export interface RegionRenderProps {
   onItemDragStart: any
   onItemDragEnd: any
   onItemResizeStart: any
+  onColumnResizeStart?: any
   selectedItemIdx: any
 }
 

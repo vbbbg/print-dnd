@@ -121,8 +121,12 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     useItemResize(editorRef, handleStateUpdate)
 
   // Use custom hook for column resize handling
-  const { handleColumnResizeMove, handleColumnResizeEnd, resizingColIndex } =
-    useColumnResize(handleStateUpdate)
+  const {
+    handleColumnResizeStart,
+    handleColumnResizeMove,
+    handleColumnResizeEnd,
+    resizingColIndex,
+  } = useColumnResize(handleStateUpdate)
 
   // Wrap item drag start
   const handleItemDragStart = useCallback(
@@ -197,6 +201,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     }
   }, [
     resizingColIndex,
+    handleColumnResizeStart,
     handleColumnResizeMove,
     handleColumnResizeEnd,
     editorState,
@@ -322,6 +327,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                 onItemDragMove={handleDragMove}
                 onItemDragEnd={handleDragEnd}
                 onItemResizeStart={handleItemResizeStart}
+                onColumnResizeStart={handleColumnResizeStart}
                 selectedItemIdx={selectedItemIdx}
                 data={MOCK_REAL_DATA}
               />

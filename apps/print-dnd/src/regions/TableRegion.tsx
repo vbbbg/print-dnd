@@ -8,7 +8,16 @@ export const TableRegion: React.FC<RegionRenderProps> = ({
   data,
   margins,
   isSelected,
+  onColumnResizeStart,
+  onItemDragStart,
 }) => {
+  const handleTableClick = React.useCallback(() => {
+    // Select the table region (index 0 is dummy but unused for table region)
+    if (onItemDragStart) {
+      onItemDragStart(0, region.id, 0, 0)
+    }
+  }, [onItemDragStart, region.id])
+
   return (
     <div
       className="absolute z-0"
@@ -36,6 +45,8 @@ export const TableRegion: React.FC<RegionRenderProps> = ({
               item={tableItemAdapter}
               data={data}
               isSelected={isSelected}
+              onColumnResizeStart={onColumnResizeStart}
+              onClick={handleTableClick}
             />
           )
         })()}

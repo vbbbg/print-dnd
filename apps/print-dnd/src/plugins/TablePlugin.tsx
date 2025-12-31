@@ -7,7 +7,12 @@ import {
 import { RegionTable } from '../components/RegionTable'
 import { TableSettingsPanel } from '../components/TableSettingsPanel'
 
-const TableRender: React.FC<ComponentRenderProps> = ({ item, isSelected }) => {
+const TableRender: React.FC<ComponentRenderProps> = ({
+  item,
+  isSelected,
+  onColumnResizeStart,
+  onClick,
+}) => {
   // We assume item (EditorItem) has been augmented or we cast it to what RegionTable expects
   // For now, the "value" or specific table props might need to be stored in "item" or "data"
   // Since TableData was separate in EditorState, we need to bridge this.
@@ -31,6 +36,8 @@ const TableRender: React.FC<ComponentRenderProps> = ({ item, isSelected }) => {
       // In the real app, this comes from 'data' prop passed to Paper -> Content
       // RenderEngine passes { list: [...] }
       rows={(item as any).rows || []} // dynamic data rows usually come from external 'data'
+      onColumnResizeStart={onColumnResizeStart}
+      onClick={onClick}
     />
   )
 }

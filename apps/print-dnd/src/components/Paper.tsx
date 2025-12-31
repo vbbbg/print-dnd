@@ -32,6 +32,7 @@ interface PaperProps {
     itemWidth: number,
     itemHeight: number
   ) => void
+  onColumnResizeStart?: any
 
   guides?: Guide[]
   selectedItemIdx?: {
@@ -48,6 +49,7 @@ export const Paper: React.FC<PaperProps> = ({
   onItemDragMove,
   onItemDragEnd,
   onItemResizeStart,
+  onColumnResizeStart,
   guides,
   selectedItemIdx,
   data = {},
@@ -108,6 +110,7 @@ export const Paper: React.FC<PaperProps> = ({
               onItemDragStart={onItemDragStart}
               onItemDragEnd={onItemDragEnd}
               onItemResizeStart={onItemResizeStart}
+              onColumnResizeStart={onColumnResizeStart}
               selectedItemIdx={selectedItemIdx}
             />
 
@@ -137,6 +140,7 @@ const RegionContent: React.FC<{
   onItemDragStart: any
   onItemDragEnd: any
   onItemResizeStart: any
+  onColumnResizeStart?: any
   selectedItemIdx: any
 }> = (props) => {
   const { region } = props

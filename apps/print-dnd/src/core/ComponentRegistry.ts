@@ -5,6 +5,8 @@ export interface ComponentRenderProps {
   item: EditorItem
   data?: any
   isSelected?: boolean
+  onColumnResizeStart?: any
+  onClick?: () => void
 }
 
 export interface SettingsPanelProps {
