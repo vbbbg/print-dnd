@@ -34,7 +34,7 @@ export interface TableColumn {
   alias?: string
 }
 
-export interface TableData {
+export interface TableItem extends EditorItem {
   cols: TableColumn[]
   showSubtotal?: boolean
   showTotal?: boolean
@@ -42,14 +42,28 @@ export interface TableData {
 
 export type RegionType = 'free-layout' | 'table' | 'custom'
 
-export interface Region {
+export interface RegionBase {
   id: string
-  type: RegionType
   top: number
-  items?: EditorItem[] // For free-layout
-  data?: TableData // For table (renamed from bodyItems type)
   isActive?: boolean // For selection/interactions but typically derived
 }
+
+export interface FreeLayoutRegion extends RegionBase {
+  type: 'free-layout'
+  data: EditorItem[]
+}
+
+export interface TableRegion extends RegionBase {
+  type: 'table'
+  data: TableItem[]
+}
+
+export interface CustomRegion extends RegionBase {
+  type: 'custom'
+  data: any
+}
+
+export type Region = FreeLayoutRegion | TableRegion | CustomRegion
 
 export interface EditorState {
   paperHeight: number

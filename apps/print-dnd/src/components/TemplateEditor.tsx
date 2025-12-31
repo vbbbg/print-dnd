@@ -1,5 +1,5 @@
 import React, { useRef, useCallback } from 'react'
-import { EditorState, EditorItem, TableData } from '../types/editor'
+import { EditorState, EditorItem, TableItem } from '../types/editor'
 import { Paper } from './Paper'
 // Toolbar imports removed as they are encapsulated in EditorToolbar
 import { EditorToolbar, EditorToolbarConfig } from './EditorToolbar'
@@ -28,7 +28,6 @@ export interface TemplateEditorProps {
     selectedItemIdx: { region: string; index: number } | null
     editorState: EditorState
     onItemUpdate: (updates: Partial<EditorItem>) => void
-    onTableUpdate: (updates: Partial<TableData>) => void
   }) => React.ReactNode
 }
 
@@ -47,7 +46,6 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   const selectedItemIdx = useEditorStore((state) => state.selectedItemIdx)
   const setSelection = useEditorStore((state) => state.setSelection)
   const updateItem = useEditorStore((state) => state.updateItem)
-  const updateTable = useEditorStore((state) => state.updateTable)
 
   // Initialize store with props if needed (useEffect)
   React.useEffect(() => {
@@ -221,15 +219,15 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
         // Update regions items
         newState.regions = newState.regions.map((region) => {
-          if (region.items) {
+          if (Array.isArray(region.data)) {
             return {
               ...region,
-              items: constrainItemsToMargins(
-                region.items,
+              data: constrainItemsToMargins(
+                region.data,
                 currentMargins,
                 w,
                 h
-              ),
+              ) as any,
             }
           }
           return region
@@ -245,13 +243,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     if (!selectedItemIdx) return
     const { region, index } = selectedItemIdx
 
-    if (region === 'body') return // Should be handled by handleTableUpdate if selected
-
     updateItem(region as any, index, updates)
-  }
-
-  const handleTableUpdate = (updates: any) => {
-    updateTable(updates)
   }
 
   return (
@@ -321,7 +313,6 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
             selectedItemIdx,
             editorState,
             onItemUpdate: handleItemUpdate,
-            onTableUpdate: handleTableUpdate,
           })}
         </div>
       </div>

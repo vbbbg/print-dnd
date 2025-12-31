@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { temporal } from 'zundo'
-import { EditorState, EditorItem, TableData } from '../types/editor'
+import { EditorState, EditorItem } from '../types/editor'
 import { getMockEditorState } from '../utils/mockData'
 
 interface EditorActions {
@@ -16,9 +16,6 @@ interface EditorActions {
     updates: Partial<EditorItem>
   ) => void
   removeItem: (regionId: string, index: number) => void
-
-  // Table Management
-  updateTable: (updates: Partial<TableData>) => void
 
   // Selection
   setSelection: (
@@ -51,10 +48,10 @@ export const useEditorStore = create<EditorStore>()(
       addItem: (regionId, item) =>
         set((state) => {
           const newRegions = state.regions.map((region) => {
-            if (region.id === regionId && region.items) {
+            if (region.id === regionId && Array.isArray(region.data)) {
               return {
                 ...region,
-                items: [...region.items, item],
+                data: [...region.data, item],
               }
             }
             return region
@@ -65,12 +62,14 @@ export const useEditorStore = create<EditorStore>()(
       updateItem: (regionId, index, updates) =>
         set((state) => {
           const newRegions = state.regions.map((region) => {
-            if (region.id === regionId && region.items) {
-              const newItems = [...region.items]
-              newItems[index] = { ...newItems[index], ...updates }
+            if (region.id === regionId && Array.isArray(region.data)) {
+              const newItems = [...region.data]
+              if (newItems[index]) {
+                newItems[index] = { ...newItems[index], ...updates }
+              }
               return {
                 ...region,
-                items: newItems,
+                data: newItems,
               }
             }
             return region
@@ -81,26 +80,12 @@ export const useEditorStore = create<EditorStore>()(
       removeItem: (regionId, index) =>
         set((state) => {
           const newRegions = state.regions.map((region) => {
-            if (region.id === regionId && region.items) {
-              const newItems = [...region.items]
+            if (region.id === regionId && Array.isArray(region.data)) {
+              const newItems = [...region.data]
               newItems.splice(index, 1)
               return {
                 ...region,
-                items: newItems,
-              }
-            }
-            return region
-          })
-          return { regions: newRegions }
-        }),
-
-      updateTable: (updates) =>
-        set((state) => {
-          const newRegions = state.regions.map((region) => {
-            if (region.type === 'table' && region.data) {
-              return {
-                ...region,
-                data: { ...region.data, ...updates },
+                data: newItems,
               }
             }
             return region

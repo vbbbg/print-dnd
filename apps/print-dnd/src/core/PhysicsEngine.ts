@@ -83,8 +83,8 @@ export class PhysicsEngine {
     }
 
     state.regions.forEach((region) => {
-      if (region.items) {
-        addItems(region.items, region.id)
+      if (Array.isArray(region.data)) {
+        addItems(region.data, region.id)
       }
     })
 

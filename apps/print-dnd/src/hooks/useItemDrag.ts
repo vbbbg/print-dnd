@@ -50,9 +50,9 @@ export const useItemDrag = (
         if (regionIndex === -1) return prev
 
         const region = newState.regions[regionIndex]
-        if (!region.items) return prev
+        if (!Array.isArray(region.data)) return prev
 
-        const items = [...region.items]
+        const items = [...region.data]
 
         if (items[dragItem.index]) {
           const item = { ...items[dragItem.index] }
@@ -93,7 +93,7 @@ export const useItemDrag = (
           items[dragItem.index] = item
 
           newState.regions = [...prev.regions]
-          newState.regions[regionIndex] = { ...region, items }
+          newState.regions[regionIndex] = { ...region, data: items }
         }
 
         return newState

@@ -1,4 +1,4 @@
-import { EditorState, EditorItem, TableData } from '../types/editor'
+import { EditorState, EditorItem, TableItem } from '../types/editor'
 import { PAPER_DEFINITIONS } from '../constants/paper'
 
 export const getMockEditorState = (): EditorState => {
@@ -203,7 +203,12 @@ export const getMockEditorState = (): EditorState => {
   ]
 
   // Body Columns - Standard sales columns
-  const bodyItems: TableData = {
+  const bodyItems: TableItem = {
+    type: 'table',
+    x: 10, // Match left margin
+    y: 0, // Relative to top of region
+    width: 190, // 210 - 10 - 10
+    height: 75, // 130 - 55
     cols: [
       {
         alias: '行号',
@@ -295,25 +300,25 @@ export const getMockEditorState = (): EditorState => {
         id: 'title',
         type: 'free-layout',
         top: 0,
-        items: newTitleItems,
+        data: newTitleItems,
       },
       {
         id: 'header',
         type: 'free-layout',
         top: headerTop,
-        items: newHeaderItems,
+        data: newHeaderItems,
       },
       {
         id: 'body',
         type: 'table',
         top: bodyTop,
-        data: bodyItems,
+        data: [bodyItems],
       },
       {
         id: 'footer',
         type: 'free-layout',
         top: footerTop,
-        items: newFooterItems,
+        data: newFooterItems,
       },
     ],
   }

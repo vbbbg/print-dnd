@@ -13,7 +13,7 @@ export const FreeLayoutRegion: React.FC<RegionRenderProps> = ({
 }) => {
   return (
     <>
-      {region.items?.map((item: any, index: number) => {
+      {region.data?.map((item: any, index: number) => {
         const plugin = componentRegistry.get(item.type)
         const Content = plugin?.render || (() => <div>Unknown</div>)
         return (

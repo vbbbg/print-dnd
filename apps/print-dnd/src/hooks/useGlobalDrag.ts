@@ -40,10 +40,17 @@ export const useGlobalDrag = (
         // Current Region Limits (Top is fixed, Bottom is changing)
         // Ensure newTop (which is effectively Current Region Bottom) is not ABOVE any item in Current Region
         let minTopForCurrentRegion = currentRegion.top + minHeight
-        if (currentRegion.items) {
-          const maxItemBottom = currentRegion.items.reduce((max, item) => {
-            return Math.max(max, item.y + item.height)
+        if (Array.isArray(currentRegion.data)) {
+          // If Table, items are relative (y=0). Absolute Bottom = region.top + item.y + item.height
+          const isRelativeItems = currentRegion.type === 'table'
+
+          const maxItemBottom = currentRegion.data.reduce((max, item) => {
+            const itemAbsBottom = isRelativeItems
+              ? currentRegion.top + item.y + item.height
+              : item.y + item.height
+            return Math.max(max, itemAbsBottom)
           }, currentRegion.top)
+
           minTopForCurrentRegion = Math.max(
             minTopForCurrentRegion,
             maxItemBottom
@@ -76,17 +83,30 @@ export const useGlobalDrag = (
         // newTop <= nextRegionBottom - height - item.y_old + oldTop
 
         let maxTopForNextRegion = nextRegionBottom - minHeight
-        if (nextRegion.items) {
-          const minAllowedTop = nextRegion.items.reduce((min, item) => {
-            // The highest top allowed such that this item fits
-            // maxTop = Limit - ItemHeight - (ItemYRelative)
-            // But ItemY is absolute.
-            // Relative Y = item.y - oldTop
-            // New absolute Y = newTop + Relative Y
-            // New absolute Bottom = newTop + Relative Y + Height <= nextRegionBottom
-            // newTop <= nextRegionBottom - Height - Relative Y
-            const relativeY = item.y - nextRegion.top
-            const limit = nextRegionBottom - item.height - relativeY
+        if (Array.isArray(nextRegion.data)) {
+          const isRelativeItems = nextRegion.type === 'table'
+
+          const minAllowedTop = nextRegion.data.reduce((min, item) => {
+            // For Relative Items (Table):
+            // item.y is relative to New Top.
+            // Item Abs Bottom = newTop + item.y + item.height <= nextRegionBottom
+            // newTop <= nextRegionBottom - item.y - item.height
+
+            // For Absolute Items (FreeLayout):
+            // We shift item.y by delta (newTop - oldTop).
+            // item.y_new = item.y_old + (newTop - oldTop)
+            // item.y_new + height <= nextRegionBottom
+            // newTop <= nextRegionBottom - height - item.y_old + oldTop hiding in math
+            // Actually: relativeY = item.y_old - oldTop
+            // limit = nextRegionBottom - height - relativeY
+
+            let limit
+            if (isRelativeItems) {
+              limit = nextRegionBottom - item.height - item.y
+            } else {
+              const relativeY = item.y - nextRegion.top
+              limit = nextRegionBottom - item.height - relativeY
+            }
             return Math.min(min, limit)
           }, maxTopForNextRegion)
           maxTopForNextRegion = minAllowedTop
@@ -114,11 +134,13 @@ export const useGlobalDrag = (
 
         const updatedNextRegion = { ...nextRegion, top: newTop }
 
-        if (nextRegion.items) {
-          updatedNextRegion.items = nextRegion.items.map((item) => ({
+        // Only shift items if they are ABSOLUTE (Free Layout).
+        // Table Items (Relative) stay properties y=0 relative to the new top, so no update needed.
+        if (Array.isArray(nextRegion.data) && nextRegion.type !== 'table') {
+          updatedNextRegion.data = nextRegion.data.map((item) => ({
             ...item,
             y: item.y + delta,
-          }))
+          })) as any
         }
 
         newRegions[nextRegionIndex] = updatedNextRegion

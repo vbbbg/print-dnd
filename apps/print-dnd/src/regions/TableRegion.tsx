@@ -11,6 +11,9 @@ export const TableRegion: React.FC<RegionRenderProps> = ({
   onColumnResizeStart,
   onItemDragStart,
 }) => {
+  if (region.type !== 'table') return null
+  if (!region.data || region.data.length === 0) return null
+
   const handleTableClick = React.useCallback(() => {
     // Select the table region (index 0 is dummy but unused for table region)
     if (onItemDragStart) {
@@ -23,7 +26,7 @@ export const TableRegion: React.FC<RegionRenderProps> = ({
       className="absolute z-0"
       style={{
         top: mmToPx(region.top),
-        height: mmToPx(region.height),
+        height: mmToPx(region.data[0].height),
         left: mmToPx(margins?.left || 0),
         right: mmToPx(margins?.right || 0),
       }}
@@ -34,9 +37,9 @@ export const TableRegion: React.FC<RegionRenderProps> = ({
           const Content =
             plugin?.render || (() => <div>Table Plugin Not Found</div>)
           // Adapter: table data casting
+          const tableItem = region.data[0]
           const tableItemAdapter = {
-            ...region.data,
-            type: 'table',
+            ...tableItem,
             rows: data.list,
           } as any
 

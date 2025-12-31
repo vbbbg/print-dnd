@@ -18,7 +18,7 @@ export const useFieldSettings = ({
   // --- Common Logic for Free Layout Regions ---
   const getRegionItems = (regionId: string): EditorItem[] => {
     const region = state.regions.find((r) => r.id === regionId)
-    if (region && region.items) return region.items
+    if (region && Array.isArray(region.data)) return region.data
     return []
   }
 
@@ -67,9 +67,12 @@ export const useFieldSettings = ({
     const idx = state.regions.findIndex((r) => r.id === regionId)
     if (idx === -1) return
 
-    const newRegions = [...state.regions]
-    newRegions[idx] = { ...newRegions[idx], items: newItems }
-    onChange({ regions: newRegions })
+    const region = state.regions[idx]
+    if (Array.isArray(region.data)) {
+      const newRegions = [...state.regions]
+      newRegions[idx] = { ...region, data: newItems as any }
+      onChange({ regions: newRegions })
+    }
   }
 
   // --- Header Fields Logic ---
@@ -90,16 +93,16 @@ export const useFieldSettings = ({
 
   const getBodyData = () => {
     const region = state.regions.find((r) => r.id === 'body')
-    // Treat data as TableData if region type is table
-    if (region && region.type === 'table' && region.data) return region.data
-    return { cols: [] } // fallback
+    // Treat data as TableItem if region type is table
+    if (region && region.type === 'table') return region.data[0]
+    return { cols: [] } as any // fallback
   }
 
   const isBodyFieldActive = (fieldValue: string) => {
     const data = getBodyData()
     if (!data.cols) return false
     return data.cols.some(
-      (col) => col.colname === fieldValue && col.visible !== false
+      (col: any) => col.colname === fieldValue && col.visible !== false
     )
   }
 
@@ -142,12 +145,19 @@ export const useFieldSettings = ({
     // Update body region
     const idx = state.regions.findIndex((r) => r.id === 'body')
     if (idx !== -1) {
-      const newRegions = [...state.regions]
-      newRegions[idx] = {
-        ...newRegions[idx],
-        data: { ...newRegions[idx].data, cols: newCols },
+      const region = state.regions[idx]
+      if (region.type === 'table') {
+        const newRegions = [...state.regions]
+        // region.data is TableItem[]
+        const newTableItems = [...region.data]
+        newTableItems[0] = { ...newTableItems[0], cols: newCols }
+
+        newRegions[idx] = {
+          ...region,
+          data: newTableItems,
+        }
+        onChange({ regions: newRegions })
       }
-      onChange({ regions: newRegions })
     }
   }
 

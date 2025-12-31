@@ -12,7 +12,6 @@ export interface EditorRightSidebarProps {
   // But wait, TemplateEditor has logic to derive selectedItem and handleTableUpdate/handleItemUpdate.
   // We should pass the update handlers.
   onItemUpdate: (updates: any) => void
-  onTableUpdate: (updates: any) => void
   width?: string
   className?: string
   style?: React.CSSProperties
@@ -22,7 +21,6 @@ export const EditorRightSidebar: React.FC<EditorRightSidebarProps> = ({
   selectedItemIdx,
   editorState,
   onItemUpdate,
-  onTableUpdate,
   width = 'w-72',
   className,
   style,
@@ -36,9 +34,13 @@ export const EditorRightSidebar: React.FC<EditorRightSidebarProps> = ({
 
     // Find region
     const targetRegion = editorState.regions.find((r) => r.id === regionId)
-    // index is number, items[index]
-    if (targetRegion && targetRegion.items && targetRegion.items[index]) {
-      return targetRegion.items[index]
+    // index is number, data[index]
+    if (
+      targetRegion &&
+      Array.isArray(targetRegion.data) &&
+      targetRegion.data[index]
+    ) {
+      return targetRegion.data[index]
     }
 
     return null
@@ -72,7 +74,7 @@ export const EditorRightSidebar: React.FC<EditorRightSidebarProps> = ({
           if (region?.type === 'table') {
             // Temporary adapter: treat bodyItems (TableData) as an EditorItem of type 'table'
             const tableItemAdapter = {
-              ...region.data,
+              ...(region.data && region.data[0] ? region.data[0] : {}),
               type: 'table',
             } as any
             const plugin = componentRegistry.get('table')
@@ -82,14 +84,14 @@ export const EditorRightSidebar: React.FC<EditorRightSidebarProps> = ({
               return (
                 <SettingsPanel
                   item={tableItemAdapter}
-                  onChange={onTableUpdate}
+                  onChange={onItemUpdate}
                 />
               )
             }
             return (
               <TableSettingsPanel
                 data={tableItemAdapter}
-                onChange={onTableUpdate}
+                onChange={onItemUpdate}
               />
             )
           }
