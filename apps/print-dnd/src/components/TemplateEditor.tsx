@@ -1,6 +1,5 @@
 import React, { useRef, useCallback } from 'react'
-import { EditorState } from '../types/editor'
-import { MOCK_REAL_DATA } from '../utils/mockRealData'
+import { EditorState, EditorItem, TableData } from '../types/editor'
 import { Paper } from './Paper'
 // Toolbar imports removed as they are encapsulated in EditorToolbar
 import { EditorToolbar, EditorToolbarConfig } from './EditorToolbar'
@@ -10,28 +9,17 @@ import { useItemResize } from '../hooks/useItemResize'
 import { useColumnResize } from '../hooks/useColumnResize'
 import { useToolbar } from '../hooks/useToolbar'
 
-import { EditorRightSidebar } from './EditorRightSidebar'
-import { EditorLeftSidebar } from './EditorLeftSidebar'
-
 import { constrainItemsToMargins } from '../utils/itemUtils'
-import { componentRegistry } from '../core/ComponentRegistry'
 import { useEditorStore } from '../store/editorStore'
-import { TextPlugin } from '../plugins/TextPlugin'
-import { ImagePlugin } from '../plugins/ImagePlugin'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
-import { TablePlugin } from '../plugins/TablePlugin'
-
-// Register default plugins
-componentRegistry.register(TextPlugin)
-componentRegistry.register(ImagePlugin)
-componentRegistry.register(TablePlugin)
 
 export interface TemplateEditorProps {
   initialState?: EditorState
   toolbar?: EditorToolbarConfig
   className?: string
   style?: React.CSSProperties
+  previewData?: Record<string, any>
   renderLeftPanel?: (props: {
     state: EditorState
     onChange: (updates: Partial<EditorState>) => void
@@ -39,8 +27,8 @@ export interface TemplateEditorProps {
   renderRightPanel?: (props: {
     selectedItemIdx: { region: string; index: number } | null
     editorState: EditorState
-    onItemUpdate: (updates: any) => void
-    onTableUpdate: (updates: any) => void
+    onItemUpdate: (updates: Partial<EditorItem>) => void
+    onTableUpdate: (updates: Partial<TableData>) => void
   }) => React.ReactNode
 }
 
@@ -49,6 +37,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   toolbar,
   className,
   style,
+  previewData,
   renderLeftPanel,
   renderRightPanel,
 }) => {
@@ -294,17 +283,10 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         {/* 2. Main Content Area */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Sidebar */}
-          {renderLeftPanel ? (
-            renderLeftPanel({
-              state: editorState,
-              onChange: handleSettingsChange,
-            })
-          ) : (
-            <EditorLeftSidebar
-              state={editorState}
-              onChange={handleSettingsChange}
-            />
-          )}
+          {renderLeftPanel?.({
+            state: editorState,
+            onChange: handleSettingsChange,
+          })}
 
           {/* Center Canvas */}
           <div
@@ -329,27 +311,18 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                 onItemResizeStart={handleItemResizeStart}
                 onColumnResizeStart={handleColumnResizeStart}
                 selectedItemIdx={selectedItemIdx}
-                data={MOCK_REAL_DATA}
+                data={previewData}
               />
             </div>
           </div>
 
           {/* Right Sidebar */}
-          {renderRightPanel ? (
-            renderRightPanel({
-              selectedItemIdx,
-              editorState,
-              onItemUpdate: handleItemUpdate,
-              onTableUpdate: handleTableUpdate,
-            })
-          ) : (
-            <EditorRightSidebar
-              selectedItemIdx={selectedItemIdx}
-              editorState={editorState}
-              onItemUpdate={handleItemUpdate}
-              onTableUpdate={handleTableUpdate}
-            />
-          )}
+          {renderRightPanel?.({
+            selectedItemIdx,
+            editorState,
+            onItemUpdate: handleItemUpdate,
+            onTableUpdate: handleTableUpdate,
+          })}
         </div>
       </div>
     </DndProvider>

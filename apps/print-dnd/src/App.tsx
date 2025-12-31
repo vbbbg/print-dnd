@@ -1,6 +1,19 @@
 import { TemplateEditor } from './components/TemplateEditor'
+import { EditorLeftSidebar } from './components/EditorLeftSidebar'
+import { EditorRightSidebar } from './components/EditorRightSidebar'
 import { ToolbarState, ToolbarGroup } from './components/Toolbar'
 import { Undo, Redo, ZoomIn, ZoomOut, RotateCcw, Printer } from 'lucide-react'
+import { componentRegistry } from './core/ComponentRegistry'
+import { TextPlugin } from './plugins/TextPlugin'
+import { ImagePlugin } from './plugins/ImagePlugin'
+import { TablePlugin } from './plugins/TablePlugin'
+
+import { MOCK_REAL_DATA } from './utils/mockRealData'
+
+// Register default plugins
+componentRegistry.register(TextPlugin)
+componentRegistry.register(ImagePlugin)
+componentRegistry.register(TablePlugin)
 
 function App() {
   const customToolbar = (state: ToolbarState): ToolbarGroup[] => [
@@ -74,7 +87,14 @@ function App() {
     },
   ]
 
-  return <TemplateEditor toolbar={{ groups: customToolbar }} />
+  return (
+    <TemplateEditor
+      previewData={MOCK_REAL_DATA}
+      toolbar={{ groups: customToolbar }}
+      renderLeftPanel={(props) => <EditorLeftSidebar {...props} />}
+      renderRightPanel={(props) => <EditorRightSidebar {...props} />}
+    />
+  )
 }
 
 export default App

@@ -4,6 +4,8 @@ export {
   type TemplateEditorProps,
 } from './components/TemplateEditor'
 export { Paper } from './components/Paper'
+export { EditorLeftSidebar } from './components/EditorLeftSidebar'
+export { EditorRightSidebar } from './components/EditorRightSidebar'
 export { getMockEditorState } from './utils/mockData'
 
 export type {
