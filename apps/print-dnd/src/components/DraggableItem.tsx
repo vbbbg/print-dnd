@@ -68,6 +68,7 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
     textAlign: item.horizontalAlignment,
     lineHeight: '1.2', // default
     cursor: 'move',
+    zIndex: isDragging ? 100 : 10,
   }
 
   const showHandles = (isHovered || isSelected) && !isDragging

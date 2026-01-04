@@ -76,20 +76,8 @@ export const useItemDrag = () => {
           currentDragItem.region
         )
 
-        // Calculate Exclusion Zones (Generic)
-        // Iterate through regions to find "table" regions (or others) that should be excluded
-        const exclusionZones: { top: number; bottom: number }[] = []
-        newState.regions.forEach((r, idx) => {
-          if (r.type === 'table') {
-            const top = r.top
-            // Calculate bottom based on next region's top or paper height
-            const bottom =
-              idx < newState.regions.length - 1
-                ? newState.regions[idx + 1].top
-                : newState.paperHeight
-            exclusionZones.push({ top, bottom })
-          }
-        })
+        // During drag, we do NOT apply exclusion zones (tables) so that the user can visually drag "over" them.
+        // The exclusion constraint is applied on drag end.
 
         const {
           x: newX,
@@ -103,7 +91,7 @@ export const useItemDrag = () => {
           currentDragItem.initialItemY,
           prev.paperWidth,
           prev.paperHeight,
-          exclusionZones,
+          [], // exclusionZones: empty during drag
           snapData,
           prev.margins
         )
