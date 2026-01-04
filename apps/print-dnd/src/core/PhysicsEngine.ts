@@ -28,32 +28,41 @@ export class PhysicsEngine {
   }
 
   /**
-   * Constrain to avoid Body Region (Table)
+   * Constrain to avoid specific regions (e.g. Table)
    * Returns the adjusted Y coordinate
    */
-  static constrainToAvoidBody(
+  static constrainToAvoidRegions(
     y: number,
     itemHeight: number,
-    bodyTop: number,
-    footerTop: number
+    exclusionZones: { top: number; bottom: number }[]
   ) {
+    let constrainedY = y
     const itemBottom = y + itemHeight
-    // Check if entering Body Region
-    if (y < footerTop && itemBottom > bodyTop) {
-      // "Snap to closest edge" logic allows jumping over the body
-      const validTopY = bodyTop - itemHeight
-      const validBottomY = footerTop
 
-      const distToTop = Math.abs(y - validTopY)
-      const distToBottom = Math.abs(y - validBottomY)
+    for (const zone of exclusionZones) {
+      if (y < zone.bottom && itemBottom > zone.top) {
+        // "Snap to closest edge" logic allows jumping over the zone
+        // If we are closer to the top of the zone, snap to above it
+        // If we are closer to the bottom of the zone, snap to below it
 
-      if (distToTop < distToBottom) {
-        return validTopY
-      } else {
-        return validBottomY
+        const validTopY = zone.top - itemHeight
+        const validBottomY = zone.bottom
+
+        const distToTop = Math.abs(y - validTopY)
+        const distToBottom = Math.abs(y - validBottomY)
+
+        if (distToTop < distToBottom) {
+          constrainedY = validTopY
+        } else {
+          constrainedY = validBottomY
+        }
+
+        // Once we hit one exclusion zone, we break.
+        // Handling overlapping multiple exclusion zones is complex and rare for this use case.
+        break
       }
     }
-    return y
+    return constrainedY
   }
 
   /**
@@ -222,9 +231,7 @@ export class PhysicsEngine {
     initialY: number,
     paperWidth: number,
     paperHeight: number,
-    bodyTop: number,
-    footerTop: number,
-    applyBodyConstraint: boolean,
+    exclusionZones: { top: number; bottom: number }[] = [],
     snapData?: { xLines: number[]; yLines: number[] },
     margins?: { top: number; bottom: number; left: number; right: number }
   ) {
@@ -260,9 +267,9 @@ export class PhysicsEngine {
     newX = bounded.x
     newY = bounded.y
 
-    // 2. Apply Body Avoidance (Only if requested, e.g., on drop)
-    if (applyBodyConstraint) {
-      newY = this.constrainToAvoidBody(newY, item.height, bodyTop, footerTop)
+    // 2. Apply Exclusion Zones (e.g. Table regions)
+    if (exclusionZones.length > 0) {
+      newY = this.constrainToAvoidRegions(newY, item.height, exclusionZones)
     }
 
     return { x: newX, y: newY, guides }

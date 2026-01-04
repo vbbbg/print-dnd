@@ -22,44 +22,10 @@ export const getMockEditorState = (): EditorState => {
       alias: '标题',
       field: 'title',
     },
-    {
-      value: '',
-      x: 0,
-      y: 5,
-      width: 210,
-      height: 10,
-      fontSize: 16,
-      bold: true,
-      fontFamily: 'SimHei',
-      fontColor: '#000000',
-      verticalAlignment: 'center',
-      horizontalAlignment: 'center',
-      visible: true,
-      type: 'image',
-      name: 'image',
-      alias: '二维码',
-      field: 'image',
-    },
   ]
 
   // Header Items - Reasonable layout for A4_2 (High density)
   const headerItems: EditorItem[] = [
-    {
-      alias: '单号',
-      field: 'billNo',
-      name: '单号',
-      type: 'text',
-      x: 140, // Top Right
-      y: 5,
-      width: 60,
-      height: 7,
-      value: '单号: {billNo}',
-      visible: true,
-      fontSize: 10,
-      fontFamily: 'SimHei',
-      fontColor: '#000000',
-      horizontalAlignment: 'right',
-    },
     {
       alias: '客户名称',
       field: 'customerName',
