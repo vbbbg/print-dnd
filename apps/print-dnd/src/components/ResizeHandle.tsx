@@ -30,16 +30,17 @@ interface ResizeHandleProps {
 export const ResizeHandle: React.FC<ResizeHandleProps> = ({
   top,
   regionId,
+  initialNextRegionTop,
   className,
 }) => {
-  const [{ isDragging }, dragRef, preview] = useDrag({
+  const [_, dragRef, preview] = useDrag({
     type: 'RESIZE_REGION_HANDLE',
     item: () => {
       // We capture the initial 'top' (which corresponds to next region top)
       return {
         type: 'RESIZE_REGION_HANDLE',
         regionId, // This is the ID of the region ABOVE the handle
-        initialNextRegionTop: top, // Visual top IS the boundary line
+        initialNextRegionTop, // Visual top IS the boundary line
       }
     },
     collect: (monitor) => ({
@@ -55,7 +56,7 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
     <div
       ref={dragRef}
       className={`${className} absolute right-0 w-8 h-6 -mr-8 -mt-3 cursor-ns-resize z-50 flex items-center justify-center`}
-      style={{ top: top, opacity: isDragging ? 0 : 1 }}
+      style={{ top: top }}
       onClick={(e) => e.stopPropagation()}
     >
       <div className="w-6 h-6 bg-orange-100 rounded shadow-sm border border-orange-200 flex items-center justify-center text-orange-500 hover:bg-orange-200 transition-colors">
