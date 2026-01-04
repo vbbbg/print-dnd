@@ -195,31 +195,31 @@ const TemplateEditorContent: React.FC<TemplateEditorProps> = ({
   )
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <EditorLayout
-        className={className}
-        style={style}
-        toolbar={toolbar}
-        editorState={editorState}
-        zoom={zoom}
-        previewData={previewData}
-        guides={guides}
-        handlers={handlers}
-        toolbarActions={toolbarActions}
-        renderLeftPanel={renderLeftPanel}
-        renderRightPanel={renderRightPanel}
-        handleSettingsChange={handleSettingsChange}
-        selectedItemIdx={selectedItemIdx}
-        handleItemUpdate={handleItemUpdate}
-      />
-    </DndProvider>
+    <EditorLayout
+      className={className}
+      style={style}
+      toolbar={toolbar}
+      editorState={editorState}
+      zoom={zoom}
+      previewData={previewData}
+      guides={guides}
+      handlers={handlers}
+      toolbarActions={toolbarActions}
+      renderLeftPanel={renderLeftPanel}
+      renderRightPanel={renderRightPanel}
+      handleSettingsChange={handleSettingsChange}
+      selectedItemIdx={selectedItemIdx}
+      handleItemUpdate={handleItemUpdate}
+    />
   )
 }
 
 export const TemplateEditor: React.FC<TemplateEditorProps> = (props) => {
   return (
-    <EditorStoreProvider initialState={props.initialState}>
-      <TemplateEditorContent {...props} />
-    </EditorStoreProvider>
+    <DndProvider backend={HTML5Backend}>
+      <EditorStoreProvider initialState={props.initialState}>
+        <TemplateEditorContent {...props} />
+      </EditorStoreProvider>
+    </DndProvider>
   )
 }
