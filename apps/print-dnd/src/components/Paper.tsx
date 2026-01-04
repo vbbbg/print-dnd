@@ -1,5 +1,4 @@
 import React from 'react'
-import { useDrop } from 'react-dnd'
 import { ResizeHandle } from './ResizeHandle'
 import { mmToPx } from '../constants/units'
 import { MarginsGuide } from './MarginsGuide'
@@ -16,65 +15,7 @@ export const Paper: React.FC = () => {
   const selectedItemIdx = useEditorStore((state) => state.selectedItemIdx)
   const { paperHeight, paperWidth, margins, regions } = state
 
-  const { handlers, guides } = useEditorContext()
-  const {
-    onItemDragMove,
-    onItemDragEnd,
-    onItemResizeMove,
-    onColumnResizeMove,
-    onRegionResizeMove,
-  } = handlers
-
-  const [, dropRef] = useDrop({
-    accept: [
-      'DRAGGABLE_ITEM',
-      'RESIZE_HANDLE',
-      'RESIZE_COLUMN_HANDLE',
-      'RESIZE_REGION_HANDLE',
-    ],
-    hover: (item: any, monitor) => {
-      const delta = monitor.getDifferenceFromInitialOffset()
-      const itemType = monitor.getItemType()
-
-      if (!delta) return
-
-      if (itemType === 'RESIZE_HANDLE' && onItemResizeMove) {
-        onItemResizeMove(
-          item.index,
-          item.regionId,
-          item.direction,
-          delta.x,
-          delta.y,
-          {
-            initialX: item.initialX,
-            initialY: item.initialY,
-            initialWidth: item.initialWidth,
-            initialHeight: item.initialHeight,
-          }
-        )
-      } else if (itemType === 'RESIZE_COLUMN_HANDLE' && onColumnResizeMove) {
-        onColumnResizeMove(
-          item.colIndex,
-          delta.x,
-          item.initialWidths,
-          item.minWidths
-        )
-      } else if (itemType === 'RESIZE_REGION_HANDLE' && onRegionResizeMove) {
-        onRegionResizeMove(
-          item.regionId,
-          delta.y,
-          item.initialNextRegionTop // This was passed as handle's top
-        )
-      } else if (itemType === 'DRAGGABLE_ITEM' && onItemDragMove) {
-        onItemDragMove(delta.x, delta.y)
-      }
-    },
-    drop: () => {
-      if (onItemDragEnd) {
-        onItemDragEnd()
-      }
-    },
-  })
+  const { guides } = useEditorContext()
 
   // Calculate region positions
   const regionRenderData = regions.map((region, idx) => {
@@ -89,7 +30,6 @@ export const Paper: React.FC = () => {
 
   return (
     <div
-      ref={dropRef}
       data-paper-root="true"
       className="relative bg-white shadow-xl mx-auto"
       style={{

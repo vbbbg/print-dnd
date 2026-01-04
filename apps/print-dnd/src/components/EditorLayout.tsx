@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React from 'react'
 import { useDrop } from 'react-dnd'
 import { EditorState, EditorItem } from '../types/editor'
 import { Paper } from './Paper'
@@ -76,8 +76,6 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   selectedItemIdx,
   handleItemUpdate,
 }) => {
-  const editorRef = useRef<HTMLDivElement>(null)
-
   const {
     onItemDragMove,
     onItemDragEnd,
@@ -142,16 +140,6 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     drop: handleDropDrop,
   })
 
-  // Memoize the ref callback to prevent detaching/attaching on every render
-  const setRefs = React.useCallback(
-    (node: HTMLDivElement | null) => {
-      // @ts-ignore
-      editorRef.current = node
-      dropRef(node)
-    },
-    [dropRef] // dropRef is stable from useDrop
-  )
-
   return (
     <div
       className={`h-screen flex flex-col overflow-hidden bg-gray-100 ${className || ''}`}
@@ -192,7 +180,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
 
         {/* Center Canvas */}
         <div
-          ref={setRefs}
+          ref={dropRef}
           className="flex-1 overflow-auto p-10 relative flex bg-gray-100/50"
         >
           <div
