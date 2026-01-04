@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react'
-import { EditorState, Guide } from '../types/editor'
+import { Guide } from '../types/editor'
 import { SCALE } from '../constants/units'
 import { PhysicsEngine } from '../core/PhysicsEngine'
+import { useEditorStoreApi } from '../store/editorStore'
 
 interface DragState {
   index: number
@@ -12,9 +13,8 @@ interface DragState {
   startY: number
 }
 
-export const useItemDrag = (
-  onUpdateState: (updater: (prev: EditorState) => EditorState) => void
-) => {
+export const useItemDrag = () => {
+  const store = useEditorStoreApi()
   const [dragItem, setDragItem] = useState<DragState | null>(null)
   const dragItemRef = React.useRef<DragState | null>(null)
   const [guides, setGuides] = useState<Guide[]>([])
@@ -41,87 +41,84 @@ export const useItemDrag = (
     []
   )
 
-  const handleDragMove = useCallback(
-    (deltaX: number, deltaY: number) => {
-      const currentDragItem = dragItemRef.current
-      if (!currentDragItem) {
-        console.log('useItemDrag: No drag item in ref during move')
-        return
+  const handleDragMove = useCallback((deltaX: number, deltaY: number) => {
+    const currentDragItem = dragItemRef.current
+    if (!currentDragItem) {
+      console.log('useItemDrag: No drag item in ref during move')
+      return
+    }
+
+    const mmDeltaX = deltaX / SCALE
+    const mmDeltaY = deltaY / SCALE
+
+    let calculatedGuides: Guide[] = []
+
+    store.setState((prev) => {
+      const newState = { ...prev }
+
+      const regionIndex = newState.regions.findIndex(
+        (r) => r.id === currentDragItem.region
+      )
+      if (regionIndex === -1) return prev
+
+      const region = newState.regions[regionIndex]
+      if (!Array.isArray(region.data)) return prev
+
+      const items = [...region.data]
+
+      if (items[currentDragItem.index]) {
+        const item = { ...items[currentDragItem.index] }
+
+        // TODO: PhysicsEngine needs update to accept generic regions
+        const snapData = PhysicsEngine.getSnapLines(
+          prev,
+          currentDragItem.index,
+          currentDragItem.region
+        )
+
+        // TODO: PhysicsEngine.calculateItemPosition needs update
+        // For now, we will assume bodyTop/footerTop are derived or we pass 0 for now until PhysicsEngine is updated
+        const {
+          x: newX,
+          y: newY,
+          guides: newGuides,
+        } = PhysicsEngine.calculateItemPosition(
+          item,
+          mmDeltaX,
+          mmDeltaY,
+          currentDragItem.initialItemX,
+          currentDragItem.initialItemY,
+          prev.paperWidth,
+          prev.paperHeight,
+          0, // Temporary: bodyTop replacement
+          0, // Temporary: footerTop replacement
+          false,
+          snapData,
+          prev.margins
+        )
+
+        item.x = newX
+        item.y = newY
+
+        calculatedGuides = newGuides
+
+        items[currentDragItem.index] = item
+
+        newState.regions = [...prev.regions]
+        newState.regions[regionIndex] = { ...region, data: items }
       }
 
-      const mmDeltaX = deltaX / SCALE
-      const mmDeltaY = deltaY / SCALE
+      return newState
+    })
 
-      let calculatedGuides: Guide[] = []
-
-      onUpdateState((prev) => {
-        const newState = { ...prev }
-
-        const regionIndex = newState.regions.findIndex(
-          (r) => r.id === currentDragItem.region
-        )
-        if (regionIndex === -1) return prev
-
-        const region = newState.regions[regionIndex]
-        if (!Array.isArray(region.data)) return prev
-
-        const items = [...region.data]
-
-        if (items[currentDragItem.index]) {
-          const item = { ...items[currentDragItem.index] }
-
-          // TODO: PhysicsEngine needs update to accept generic regions
-          const snapData = PhysicsEngine.getSnapLines(
-            prev,
-            currentDragItem.index,
-            currentDragItem.region
-          )
-
-          // TODO: PhysicsEngine.calculateItemPosition needs update
-          // For now, we will assume bodyTop/footerTop are derived or we pass 0 for now until PhysicsEngine is updated
-          const {
-            x: newX,
-            y: newY,
-            guides: newGuides,
-          } = PhysicsEngine.calculateItemPosition(
-            item,
-            mmDeltaX,
-            mmDeltaY,
-            currentDragItem.initialItemX,
-            currentDragItem.initialItemY,
-            prev.paperWidth,
-            prev.paperHeight,
-            0, // Temporary: bodyTop replacement
-            0, // Temporary: footerTop replacement
-            false,
-            snapData,
-            prev.margins
-          )
-
-          item.x = newX
-          item.y = newY
-
-          calculatedGuides = newGuides
-
-          items[currentDragItem.index] = item
-
-          newState.regions = [...prev.regions]
-          newState.regions[regionIndex] = { ...region, data: items }
-        }
-
-        return newState
-      })
-
-      setGuides(calculatedGuides)
-    },
-    [onUpdateState]
-  )
+    setGuides(calculatedGuides)
+  }, [])
 
   const handleDragEnd = useCallback(() => {
     const currentDragItem = dragItemRef.current
     if (!currentDragItem) return
 
-    onUpdateState((prev) => {
+    store.setState((prev) => {
       const newState = { ...prev }
 
       // Find the dragged item
@@ -202,7 +199,7 @@ export const useItemDrag = (
     setDragItem(null)
     dragItemRef.current = null
     setGuides([])
-  }, [onUpdateState])
+  }, [])
 
   return {
     handleDragStart,

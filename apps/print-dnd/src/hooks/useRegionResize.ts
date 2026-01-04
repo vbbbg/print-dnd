@@ -1,13 +1,12 @@
 import { useCallback } from 'react'
-import { EditorState } from '../types/editor'
 import { SCALE } from '../constants/units'
+import { useEditorStoreApi } from '../store/editorStore'
 
-export const useRegionResize = (
-  onUpdateState: (updater: (prev: EditorState) => EditorState) => void
-) => {
+export const useRegionResize = () => {
+  const store = useEditorStoreApi()
   const handleRegionResizeMove = useCallback(
     (regionId: string, deltaY: number, initialNextRegionTop: number) => {
-      onUpdateState((prev) => {
+      store.setState((prev) => {
         const newState = { ...prev }
         const minHeight = 5 // mm
 
@@ -61,6 +60,9 @@ export const useRegionResize = (
         // The original logic shifted item.y by 'delta'.
         // Here we are setting absolute 'top'.
         // If we set 'top' to X, the shift is X - prev.nextRegion.top.
+        // The original logic shifted item.y by 'delta'.
+        // Here we are setting absolute 'top'.
+        // If we set 'top' to X, the shift is X - prev.nextRegion.top.
 
         // Let's refine the constraint calculation to be simpler:
         // We just clamp 'newTop'.
@@ -107,7 +109,7 @@ export const useRegionResize = (
         return newState
       })
     },
-    [onUpdateState]
+    []
   )
 
   return {

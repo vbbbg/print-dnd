@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { useStore } from 'zustand'
 import { EditorItem } from '../types/editor'
 import { MOCK_REAL_DATA } from '../utils/mockRealData'
-import { useEditorStore } from '../store/editorStore'
+import { useEditorStore, useEditorStoreApi } from '../store/editorStore'
 
 interface UseToolbarOptions {}
 
@@ -32,9 +32,12 @@ export function useToolbar(_options: UseToolbarOptions = {}): UseToolbarReturn {
   const resetStore = useEditorStore((state) => state.reset)
   const addItem = useEditorStore((state) => state.addItem)
 
+  // Get store instance to access temporal
+  const store = useEditorStoreApi()
+
   // Temporal (History) access
   // Cast to any to avoid "Not callable" TS error if zundo type augmentation isn't working perfectly
-  const temporal = (useEditorStore as any).temporal
+  const temporal = (store as any).temporal
 
   // Use useStore to subscribe to temporal state changes
   const { undo, redo, pastStates, futureStates } = useStore(

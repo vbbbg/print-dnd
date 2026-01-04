@@ -7,7 +7,7 @@ import { useItemResize } from '../hooks/useItemResize'
 import { useColumnResize } from '../hooks/useColumnResize'
 import { useToolbar } from '../hooks/useToolbar'
 import { constrainItemsToMargins } from '../utils/itemUtils'
-import { useEditorStore } from '../store/editorStore'
+import { useEditorStore, EditorStoreProvider } from '../store/editorStore'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { EditorLayout } from './EditorLayout'
@@ -29,8 +29,7 @@ export interface TemplateEditorProps {
   }) => React.ReactNode
 }
 
-export const TemplateEditor: React.FC<TemplateEditorProps> = ({
-  initialState,
+const TemplateEditorContent: React.FC<TemplateEditorProps> = ({
   toolbar,
   className,
   style,
@@ -44,36 +43,6 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   const selectedItemIdx = useEditorStore((state) => state.selectedItemIdx)
   const setSelection = useEditorStore((state) => state.setSelection)
   const updateItem = useEditorStore((state) => state.updateItem)
-
-  // Initialize store with props if needed (useEffect)
-  React.useEffect(() => {
-    if (initialState) {
-      setEditorState(initialState)
-    }
-  }, [initialState, setEditorState])
-
-  // Adapter: The existing hooks (useItemDrag, etc.) expect a state setter that accepts a functional updater OR a value.
-  // We bridge this to the Zustand store.
-  // Adapter: The existing hooks (useItemDrag, etc.) expect a state setter that accepts a functional updater OR a value.
-  // We bridge this to the Zustand store.
-  const handleStateUpdate = useCallback(
-    (updaterOrValue: EditorState | ((prev: EditorState) => EditorState)) => {
-      if (typeof updaterOrValue === 'function') {
-        // Use getState() to access current state without adding a dependency
-        const currentState = useEditorStore.getState()
-        const newState = (updaterOrValue as (prev: EditorState) => EditorState)(
-          currentState
-        )
-        setEditorState(newState)
-      } else {
-        setEditorState(updaterOrValue)
-      }
-    },
-    [setEditorState]
-  )
-
-  // Adapter for old setSelectedItemIdx
-  const setSelectedItemIdx = setSelection
 
   // Use toolbar hook for all toolbar-related logic
   const {
@@ -89,10 +58,10 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     handleSaveAsTemplate,
     handleExportJson,
     onAddItem,
-  } = useToolbar()
+  } = useToolbar({})
 
   // Use the custom hook for global drag handling (Regions)
-  const { handleRegionResizeMove } = useRegionResize(handleStateUpdate)
+  const { handleRegionResizeMove } = useRegionResize()
 
   // Use custom hook for item drag handling
   const {
@@ -101,13 +70,13 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     handleDragEnd,
     dragItem,
     guides,
-  } = useItemDrag(handleStateUpdate)
+  } = useItemDrag()
 
   // Use custom hook for item resize handling
-  const { handleItemResizeMove } = useItemResize(handleStateUpdate)
+  const { handleItemResizeMove } = useItemResize()
 
   // Use custom hook for column resize handling
-  const { handleColumnResizeMove } = useColumnResize(handleStateUpdate)
+  const { handleColumnResizeMove } = useColumnResize()
 
   // Wrap item drag start
   const handleItemDragStart = useCallback(
@@ -117,11 +86,11 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         selectedItemIdx?.region !== regionId ||
         selectedItemIdx?.index !== index
       ) {
-        setSelectedItemIdx({ region: regionId, index })
+        setSelection({ region: regionId, index })
       }
       originalHandleItemDragStart(index, regionId as any, itemX, itemY)
     },
-    [originalHandleItemDragStart, setSelectedItemIdx, selectedItemIdx]
+    [originalHandleItemDragStart, setSelection, selectedItemIdx]
   )
 
   const isDraggingAny = dragItem !== null
@@ -248,5 +217,13 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         handleItemUpdate={handleItemUpdate}
       />
     </DndProvider>
+  )
+}
+
+export const TemplateEditor: React.FC<TemplateEditorProps> = (props) => {
+  return (
+    <EditorStoreProvider initialState={props.initialState}>
+      <TemplateEditorContent {...props} />
+    </EditorStoreProvider>
   )
 }

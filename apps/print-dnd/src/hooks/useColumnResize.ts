@@ -1,9 +1,9 @@
 import { useCallback } from 'react'
-import { EditorState, TableColumn } from '../types/editor'
+import { TableColumn } from '../types/editor'
+import { useEditorStoreApi } from '../store/editorStore'
 
-export const useColumnResize = (
-  setEditorState: React.Dispatch<React.SetStateAction<EditorState>>
-) => {
+export const useColumnResize = () => {
+  const store = useEditorStoreApi()
   const handleColumnResizeMove = useCallback(
     (
       colIndex: number,
@@ -34,7 +34,7 @@ export const useColumnResize = (
       const newLeftWidth = startLeft + validDelta
       const newRightWidth = startRight - validDelta
 
-      setEditorState((prev) => {
+      store.setState((prev) => {
         // Find visible columns to map index correctly
         const bodyRegionIdx = prev.regions.findIndex((r) => r.id === 'body')
         if (bodyRegionIdx === -1) return prev
@@ -78,7 +78,7 @@ export const useColumnResize = (
         }
       })
     },
-    [setEditorState]
+    []
   )
 
   return {

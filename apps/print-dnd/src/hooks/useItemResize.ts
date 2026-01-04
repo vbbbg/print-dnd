@@ -1,14 +1,13 @@
 import { useCallback } from 'react'
-import { EditorState } from '../types/editor'
 import { SCALE } from '../constants/units'
 import { ResizeDirection } from '../components/ResizeHandles'
 import { PhysicsEngine } from '../core/PhysicsEngine'
+import { useEditorStoreApi } from '../store/editorStore'
 
 const MIN_SIZE_MM = 5 // Minimum item size in mm
 
-export const useItemResize = (
-  onUpdateState: (updater: (prev: EditorState) => EditorState) => void
-) => {
+export const useItemResize = () => {
+  const store = useEditorStoreApi()
   const handleItemResizeMove = useCallback(
     (
       index: number,
@@ -22,7 +21,7 @@ export const useItemResize = (
       const scaleDeltaX = deltaX / SCALE
       const scaleDeltaY = deltaY / SCALE
 
-      onUpdateState((prev) => {
+      store.setState((prev) => {
         const newState = { ...prev }
 
         const regionIndex = newState.regions.findIndex((r) => r.id === regionId)
@@ -69,7 +68,7 @@ export const useItemResize = (
         return newState
       })
     },
-    [onUpdateState]
+    []
   )
 
   return {
