@@ -1,19 +1,16 @@
-import React, { useRef, useCallback } from 'react'
+import React, { useCallback } from 'react'
 import { EditorState, EditorItem } from '../types/editor'
-import { Paper } from './Paper'
-// Toolbar imports removed as they are encapsulated in EditorToolbar
-import { EditorToolbar, EditorToolbarConfig } from './EditorToolbar'
-import { EditorProvider } from '../contexts/EditorContext'
+import { EditorToolbarConfig } from './EditorToolbar'
 import { useRegionResize } from '../hooks/useRegionResize'
 import { useItemDrag } from '../hooks/useItemDrag'
 import { useItemResize } from '../hooks/useItemResize'
 import { useColumnResize } from '../hooks/useColumnResize'
 import { useToolbar } from '../hooks/useToolbar'
-
 import { constrainItemsToMargins } from '../utils/itemUtils'
 import { useEditorStore } from '../store/editorStore'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
+import { EditorLayout } from './EditorLayout'
 
 export interface TemplateEditorProps {
   initialState?: EditorState
@@ -55,22 +52,24 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     }
   }, [initialState, setEditorState])
 
-  const editorRef = useRef<HTMLDivElement>(null)
-
+  // Adapter: The existing hooks (useItemDrag, etc.) expect a state setter that accepts a functional updater OR a value.
+  // We bridge this to the Zustand store.
   // Adapter: The existing hooks (useItemDrag, etc.) expect a state setter that accepts a functional updater OR a value.
   // We bridge this to the Zustand store.
   const handleStateUpdate = useCallback(
     (updaterOrValue: EditorState | ((prev: EditorState) => EditorState)) => {
       if (typeof updaterOrValue === 'function') {
+        // Use getState() to access current state without adding a dependency
+        const currentState = useEditorStore.getState()
         const newState = (updaterOrValue as (prev: EditorState) => EditorState)(
-          editorState
+          currentState
         )
         setEditorState(newState)
       } else {
         setEditorState(updaterOrValue)
       }
     },
-    [editorState, setEditorState]
+    [setEditorState]
   )
 
   // Adapter for old setSelectedItemIdx
@@ -108,16 +107,21 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   const { handleItemResizeMove } = useItemResize(handleStateUpdate)
 
   // Use custom hook for column resize handling
-  // Use custom hook for column resize handling
   const { handleColumnResizeMove } = useColumnResize(handleStateUpdate)
 
   // Wrap item drag start
   const handleItemDragStart = useCallback(
     (index: number, regionId: string, itemX: number, itemY: number) => {
-      setSelectedItemIdx({ region: regionId, index }) // Select item on drag/click
+      // Only update selection if changed to avoid unnecessary re-renders that might interrupt drag
+      if (
+        selectedItemIdx?.region !== regionId ||
+        selectedItemIdx?.index !== index
+      ) {
+        setSelectedItemIdx({ region: regionId, index })
+      }
       originalHandleItemDragStart(index, regionId as any, itemX, itemY)
     },
-    [originalHandleItemDragStart, setSelectedItemIdx]
+    [originalHandleItemDragStart, setSelectedItemIdx, selectedItemIdx]
   )
 
   const isDraggingAny = dragItem !== null
@@ -174,80 +178,75 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     updateItem(region as any, index, updates)
   }
 
+  // Combine handlers
+  const handlers = React.useMemo(
+    () => ({
+      onItemDragStart: handleItemDragStart,
+      onItemDragMove: handleDragMove,
+      onItemDragEnd: handleDragEnd,
+      onItemResizeMove: handleItemResizeMove,
+      onColumnResizeMove: handleColumnResizeMove,
+      onRegionResizeMove: handleRegionResizeMove,
+    }),
+    [
+      handleItemDragStart,
+      handleDragMove,
+      handleDragEnd,
+      handleItemResizeMove,
+      handleColumnResizeMove,
+      handleRegionResizeMove,
+    ]
+  )
+
+  // Combine toolbar actions
+  const toolbarActions = React.useMemo(
+    () => ({
+      canUndo,
+      canRedo,
+      undo,
+      redo,
+      onAddItem,
+      handleZoomOut,
+      handleZoomIn,
+      handleResetLayout,
+      handlePrintPreview,
+      handleSaveAsTemplate,
+      handleExportJson,
+    }),
+    [
+      canUndo,
+      canRedo,
+      undo,
+      redo,
+      onAddItem,
+      handleZoomOut,
+      handleZoomIn,
+      handleResetLayout,
+      handlePrintPreview,
+      handleSaveAsTemplate,
+      handleExportJson,
+    ]
+  )
+
   return (
     <DndProvider backend={HTML5Backend}>
-      <div
-        className={`h-screen flex flex-col overflow-hidden bg-gray-100 ${className || ''}`}
+      <EditorLayout
+        className={className}
         style={style}
-      >
-        {/* 1. Header/Toolbar Area */}
-        <EditorToolbar
-          config={toolbar}
-          state={{ zoom, canUndo, canRedo, editorState }}
-          handlers={{
-            undo: undo,
-            redo: redo,
-            'add-text': () => onAddItem('text'),
-            'add-image': () => onAddItem('image'),
-            'add-qrcode': () => onAddItem('qrcode'),
-            'add-line': () => onAddItem('line'),
-            'zoom-out': handleZoomOut,
-            'zoom-in': handleZoomIn,
-            reset: handleResetLayout,
-            print: handlePrintPreview,
-            save: handleSaveAsTemplate,
-            export: handleExportJson,
-          }}
-        />
-
-        {/* 2. Main Content Area */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Left Sidebar */}
-          {renderLeftPanel?.({
-            state: editorState,
-            onChange: handleSettingsChange,
-          })}
-
-          {/* Center Canvas */}
-          <div
-            className="flex-1 overflow-auto p-10 relative flex bg-gray-100/50"
-            ref={editorRef}
-          >
-            <div
-              className={`m-auto ${isDraggingAny ? 'select-none' : ''}`}
-              style={{
-                transform: `scale(${zoom / 100})`,
-                transformOrigin: 'top center',
-                transition: 'transform 0.1s ease-out',
-              }}
-            >
-              <EditorProvider
-                value={{
-                  handlers: {
-                    onItemDragStart: handleItemDragStart,
-                    onItemDragMove: handleDragMove,
-                    onItemDragEnd: handleDragEnd,
-                    onItemResizeMove: handleItemResizeMove,
-                    onColumnResizeMove: handleColumnResizeMove,
-                    onRegionResizeMove: handleRegionResizeMove,
-                  },
-                  data: previewData || {},
-                  guides: guides,
-                }}
-              >
-                <Paper />
-              </EditorProvider>
-            </div>
-          </div>
-
-          {/* Right Sidebar */}
-          {renderRightPanel?.({
-            selectedItemIdx,
-            editorState,
-            onItemUpdate: handleItemUpdate,
-          })}
-        </div>
-      </div>
+        toolbar={toolbar}
+        editorState={editorState}
+        zoom={zoom}
+        isDraggingAny={isDraggingAny}
+        previewData={previewData}
+        guides={guides}
+        handlers={handlers}
+        toolbarActions={toolbarActions}
+        renderLeftPanel={renderLeftPanel}
+        renderRightPanel={renderRightPanel}
+        handleSettingsChange={handleSettingsChange}
+        selectedItemIdx={selectedItemIdx}
+        handleItemUpdate={handleItemUpdate}
+      />
     </DndProvider>
   )
 }

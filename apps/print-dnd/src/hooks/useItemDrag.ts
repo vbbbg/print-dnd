@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import React, { useState, useCallback } from 'react'
 import { EditorState, Guide } from '../types/editor'
 import { SCALE } from '../constants/units'
 import { PhysicsEngine } from '../core/PhysicsEngine'
@@ -16,6 +16,7 @@ export const useItemDrag = (
   onUpdateState: (updater: (prev: EditorState) => EditorState) => void
 ) => {
   const [dragItem, setDragItem] = useState<DragState | null>(null)
+  const dragItemRef = React.useRef<DragState | null>(null)
   const [guides, setGuides] = useState<Guide[]>([])
 
   const handleDragStart = useCallback(
@@ -28,13 +29,25 @@ export const useItemDrag = (
         startX: itemX,
         startY: itemY,
       })
+      dragItemRef.current = {
+        index,
+        region: regionId,
+        initialItemX: itemX,
+        initialItemY: itemY,
+        startX: itemX,
+        startY: itemY,
+      }
     },
     []
   )
 
   const handleDragMove = useCallback(
     (deltaX: number, deltaY: number) => {
-      if (!dragItem) return
+      const currentDragItem = dragItemRef.current
+      if (!currentDragItem) {
+        console.log('useItemDrag: No drag item in ref during move')
+        return
+      }
 
       const mmDeltaX = deltaX / SCALE
       const mmDeltaY = deltaY / SCALE
@@ -45,7 +58,7 @@ export const useItemDrag = (
         const newState = { ...prev }
 
         const regionIndex = newState.regions.findIndex(
-          (r) => r.id === dragItem.region
+          (r) => r.id === currentDragItem.region
         )
         if (regionIndex === -1) return prev
 
@@ -54,14 +67,14 @@ export const useItemDrag = (
 
         const items = [...region.data]
 
-        if (items[dragItem.index]) {
-          const item = { ...items[dragItem.index] }
+        if (items[currentDragItem.index]) {
+          const item = { ...items[currentDragItem.index] }
 
           // TODO: PhysicsEngine needs update to accept generic regions
           const snapData = PhysicsEngine.getSnapLines(
             prev,
-            dragItem.index,
-            dragItem.region
+            currentDragItem.index,
+            currentDragItem.region
           )
 
           // TODO: PhysicsEngine.calculateItemPosition needs update
@@ -74,8 +87,8 @@ export const useItemDrag = (
             item,
             mmDeltaX,
             mmDeltaY,
-            dragItem.initialItemX,
-            dragItem.initialItemY,
+            currentDragItem.initialItemX,
+            currentDragItem.initialItemY,
             prev.paperWidth,
             prev.paperHeight,
             0, // Temporary: bodyTop replacement
@@ -90,7 +103,7 @@ export const useItemDrag = (
 
           calculatedGuides = newGuides
 
-          items[dragItem.index] = item
+          items[currentDragItem.index] = item
 
           newState.regions = [...prev.regions]
           newState.regions[regionIndex] = { ...region, data: items }
@@ -101,18 +114,19 @@ export const useItemDrag = (
 
       setGuides(calculatedGuides)
     },
-    [dragItem, onUpdateState]
+    [onUpdateState]
   )
 
   const handleDragEnd = useCallback(() => {
-    if (!dragItem) return
+    const currentDragItem = dragItemRef.current
+    if (!currentDragItem) return
 
     onUpdateState((prev) => {
       const newState = { ...prev }
 
       // Find the dragged item
       const regionIndex = newState.regions.findIndex(
-        (r) => r.id === dragItem.region
+        (r) => r.id === currentDragItem.region
       )
       if (regionIndex === -1) return prev
 
@@ -120,7 +134,7 @@ export const useItemDrag = (
       if (!Array.isArray(region.data)) return prev
 
       const items = [...region.data]
-      const item = { ...items[dragItem.index] }
+      const item = { ...items[currentDragItem.index] }
 
       // Find Table Region (Body) to establish constraints
       // Assuming only one table region for now or finding the first one
@@ -179,15 +193,16 @@ export const useItemDrag = (
       }
 
       item.y = snappedY
-      items[dragItem.index] = item
+      items[currentDragItem.index] = item
       newState.regions[regionIndex] = { ...region, data: items }
 
       return newState
     })
 
     setDragItem(null)
+    dragItemRef.current = null
     setGuides([])
-  }, [dragItem, onUpdateState])
+  }, [onUpdateState])
 
   return {
     handleDragStart,

@@ -28,7 +28,7 @@ export const TableRegion: React.FC<RegionRenderProps> = ({
       className="absolute z-0"
       style={{
         top: mmToPx(region.top),
-        height: mmToPx(region.data[0].height),
+        height: mmToPx(region.height),
         left: mmToPx(margins?.left || 0),
         right: mmToPx(margins?.right || 0),
       }}

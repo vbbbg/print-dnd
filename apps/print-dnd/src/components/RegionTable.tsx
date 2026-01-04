@@ -5,6 +5,7 @@ import { ColumnResizeHandle } from './ColumnResizeHandle'
 interface RegionTableProps {
   data: TableItem
   rows?: any[]
+  height?: number // px
   onColumnResizeStart?: (
     index: number,
     e: React.MouseEvent,
@@ -18,6 +19,7 @@ interface RegionTableProps {
 export const RegionTable: React.FC<RegionTableProps> = ({
   data,
   rows = [],
+  height,
   onColumnResizeStart,
   isSelected,
   onClick,
@@ -35,6 +37,7 @@ export const RegionTable: React.FC<RegionTableProps> = ({
       style={{
         // Use generic table styling
         fontSize: '12px',
+        height: height || '100%',
       }}
       onClick={(e) => {
         e.stopPropagation()

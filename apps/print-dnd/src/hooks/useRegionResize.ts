@@ -27,12 +27,13 @@ export const useRegionResize = (
 
         // 1. Min Height for Current Region
         let minTopForCurrentRegion = currentRegion.top + minHeight
-        if (Array.isArray(currentRegion.data)) {
-          const isRelativeItems = currentRegion.type === 'table'
+        // If it's a table, we ignore its content height for resizing purposes (as per user request)
+        if (
+          currentRegion.type !== 'table' &&
+          Array.isArray(currentRegion.data)
+        ) {
           const maxItemBottom = currentRegion.data.reduce((max, item) => {
-            const itemAbsBottom = isRelativeItems
-              ? currentRegion.top + item.y + item.height
-              : item.y + item.height
+            const itemAbsBottom = item.y + item.height
             return Math.max(max, itemAbsBottom)
           }, currentRegion.top)
 
@@ -65,33 +66,21 @@ export const useRegionResize = (
         // We just clamp 'newTop'.
 
         let maxTopForNextRegion = nextRegionBottom - minHeight
-        if (Array.isArray(nextRegion.data)) {
-          const isRelativeItems = nextRegion.type === 'table'
-          const minAllowedTop = nextRegion.data.reduce((min, item) => {
-            let limit
-            if (isRelativeItems) {
-              // Relative items don't move abs position when region moves (they ride with it).
-              // limit = bottom - item.y - item.h
-              limit = nextRegionBottom - item.height - item.y
-            } else {
+        // If next region is a table, we ignore its content height constraint (allow squishing)
+        if (nextRegion.type !== 'table') {
+          if (Array.isArray(nextRegion.data)) {
+            const minAllowedTop = nextRegion.data.reduce((min, item) => {
+              // We only handle non-table items here because table items are skipped above
+              // But for type safety/completeness:
               // Absolute items: y is absolute paper coordinate.
-              // In original logic, we shifted them.
-              // If we shift them, their distance to bottom decreases if valid space shrinks?
-              // Actually if we move Top down, and shift items down, everything moves down.
-              // So they hit the bottom wall.
-              // The relative distance (item.y - top) stays constant?
-              // Yes, the intention of the original 'map' was to keep relative position constant.
-              // So: relativeY = item.y_current - current_nextRegion.top
-              // limit = nextRegionBottom - item.height - relativeY
               const relativeY = item.y - nextRegion.top
-              limit = nextRegionBottom - item.height - relativeY
-            }
-            return Math.min(min, limit)
-          }, maxTopForNextRegion)
-          maxTopForNextRegion = minAllowedTop
+              const limit = nextRegionBottom - item.height - relativeY
+              return Math.min(min, limit)
+            }, maxTopForNextRegion)
+            maxTopForNextRegion = minAllowedTop
+          }
         }
 
-        // Apply Clamping
         newTop = Math.max(
           minTopForCurrentRegion,
           Math.min(newTop, maxTopForNextRegion)
