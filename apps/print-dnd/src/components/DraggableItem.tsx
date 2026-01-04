@@ -3,7 +3,7 @@ import { useDrag } from 'react-dnd'
 import { getEmptyImage } from 'react-dnd-html5-backend'
 import { EditorItem } from '../types/editor'
 import { mmToPx } from '../constants/units'
-import { ResizeHandles, ResizeDirection } from './ResizeHandles'
+import { ResizeHandles } from './ResizeHandles'
 
 interface DraggableItemProps {
   item: EditorItem
@@ -11,7 +11,6 @@ interface DraggableItemProps {
   region: 'title' | 'header' | 'footer'
   isSelected?: boolean
   onClick?: () => void
-  onResizeStart?: (direction: ResizeDirection, e: React.MouseEvent) => void
   onDragStart?: (
     index: number,
     region: 'title' | 'header' | 'footer',
@@ -28,7 +27,6 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
   region,
   isSelected,
   onClick,
-  onResizeStart,
   onDragStart,
   onDragEnd,
   children,
@@ -72,7 +70,7 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
     cursor: 'move',
   }
 
-  const showHandles = (isHovered || isSelected) && onResizeStart && !isDragging
+  const showHandles = (isHovered || isSelected) && !isDragging
 
   return (
     <div
@@ -95,7 +93,9 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
       title={item.name || item.field}
     >
       {children}
-      {showHandles && <ResizeHandles onResizeStart={onResizeStart} />}
+      {showHandles && (
+        <ResizeHandles item={item} regionId={region} index={index} />
+      )}
     </div>
   )
 }

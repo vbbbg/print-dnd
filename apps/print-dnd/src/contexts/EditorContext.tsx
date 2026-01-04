@@ -3,7 +3,6 @@ import { ResizeDirection } from '../components/ResizeHandles'
 import { Guide } from '../types/editor'
 
 export interface InteractionHandler {
-  onResizeStart: (regionId: string, e: React.MouseEvent) => void
   onItemDragStart: (
     index: number,
     regionId: string,
@@ -12,15 +11,24 @@ export interface InteractionHandler {
   ) => void
   onItemDragMove?: (deltaX: number, deltaY: number) => void
   onItemDragEnd?: () => void
-  onItemResizeStart?: (
+  onItemResizeMove?: (
     index: number,
     regionId: string,
     direction: ResizeDirection,
-    e: React.MouseEvent,
-    itemX: number,
-    itemY: number,
-    itemWidth: number,
-    itemHeight: number
+    deltaX: number,
+    deltaY: number,
+    initialItem: any // Pass full initial state/item to calculate
+  ) => void
+  onColumnResizeMove?: (
+    colIndex: number,
+    deltaX: number,
+    initialWidths: { left: number; right: number },
+    minWidths: { left: number; right: number }
+  ) => void
+  onRegionResizeMove?: (
+    regionId: string,
+    deltaY: number,
+    initialNextRegionTop: number // MM
   ) => void
   onColumnResizeStart?: any
 }

@@ -11,7 +11,6 @@ export { getMockEditorState } from './utils/mockData'
 export type {
   EditorState,
   EditorItem,
-  TableData,
   TableColumn,
   PaperDefinition,
   Guide,

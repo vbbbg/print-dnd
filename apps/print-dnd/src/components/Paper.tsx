@@ -17,13 +17,55 @@ export const Paper: React.FC = () => {
   const { paperHeight, paperWidth, margins, regions } = state
 
   const { handlers, guides } = useEditorContext()
-  const { onItemDragMove, onItemDragEnd, onResizeStart } = handlers
+  const {
+    onItemDragMove,
+    onItemDragEnd,
+    onItemResizeMove,
+    onColumnResizeMove,
+    onRegionResizeMove,
+  } = handlers
 
   const [, dropRef] = useDrop({
-    accept: 'DRAGGABLE_ITEM',
-    hover: (_item, monitor) => {
+    accept: [
+      'DRAGGABLE_ITEM',
+      'RESIZE_HANDLE',
+      'RESIZE_COLUMN_HANDLE',
+      'RESIZE_REGION_HANDLE',
+    ],
+    hover: (item: any, monitor) => {
       const delta = monitor.getDifferenceFromInitialOffset()
-      if (delta && onItemDragMove) {
+      const itemType = monitor.getItemType()
+
+      if (!delta) return
+
+      if (itemType === 'RESIZE_HANDLE' && onItemResizeMove) {
+        onItemResizeMove(
+          item.index,
+          item.regionId,
+          item.direction,
+          delta.x,
+          delta.y,
+          {
+            initialX: item.initialX,
+            initialY: item.initialY,
+            initialWidth: item.initialWidth,
+            initialHeight: item.initialHeight,
+          }
+        )
+      } else if (itemType === 'RESIZE_COLUMN_HANDLE' && onColumnResizeMove) {
+        onColumnResizeMove(
+          item.colIndex,
+          delta.x,
+          item.initialWidths,
+          item.minWidths
+        )
+      } else if (itemType === 'RESIZE_REGION_HANDLE' && onRegionResizeMove) {
+        onRegionResizeMove(
+          item.regionId,
+          delta.y,
+          item.initialNextRegionTop // This was passed as handle's top
+        )
+      } else if (itemType === 'DRAGGABLE_ITEM' && onItemDragMove) {
         onItemDragMove(delta.x, delta.y)
       }
     },
@@ -71,7 +113,8 @@ export const Paper: React.FC = () => {
             {regionIndex < regions.length - 1 && (
               <ResizeHandle
                 top={mmToPx(region.top + region.height)}
-                onMouseDown={(e) => onResizeStart(region.id as any, e)}
+                regionId={region.id}
+                initialNextRegionTop={region.top + region.height} // Pass in MM
                 className={`resize-handle-${region.id} group z-${50 - regionIndex * 10}`}
               />
             )}

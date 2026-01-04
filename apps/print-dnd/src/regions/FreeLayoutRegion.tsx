@@ -7,7 +7,7 @@ import { DraggableItem } from '../components/DraggableItem'
 
 export const FreeLayoutRegion: React.FC<RegionRenderProps> = ({ region }) => {
   const { handlers, data } = useEditorContext()
-  const { onItemDragStart, onItemDragEnd, onItemResizeStart } = handlers
+  const { onItemDragStart, onItemDragEnd } = handlers
   const selectedItemIdx = useEditorStore((state) => state.selectedItemIdx)
 
   return (
@@ -28,21 +28,6 @@ export const FreeLayoutRegion: React.FC<RegionRenderProps> = ({ region }) => {
             onDragStart={onItemDragStart}
             onDragEnd={onItemDragEnd}
             onClick={() => onItemDragStart(index, region.id, item.x, item.y)}
-            onResizeStart={
-              onItemResizeStart
-                ? (direction, e) =>
-                    onItemResizeStart(
-                      index,
-                      region.id,
-                      direction,
-                      e,
-                      item.x,
-                      item.y,
-                      item.width,
-                      item.height
-                    )
-                : undefined
-            }
           >
             <Content
               item={item}

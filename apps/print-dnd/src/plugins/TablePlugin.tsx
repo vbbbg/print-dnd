@@ -15,15 +15,15 @@ const TableRender: React.FC<ComponentRenderProps> = ({
 }) => {
   // We assume item (EditorItem) has been augmented or we cast it to what RegionTable expects
   // For now, the "value" or specific table props might need to be stored in "item" or "data"
-  // Since TableData was separate in EditorState, we need to bridge this.
-  // For this refactor, let's assume bodyItems (TableData) is passed as `item` or we use a specific property
+  // Since TableItem was separate in EditorState, we need to bridge this.
+  // For this refactor, let's assume bodyItems (TableItem) is passed as `item` or we use a specific property
 
   // TEMPORARY ADAPTER: The current architecture has bodyItems as a top-level object in EditorState,
   // not an item in an array. This is a disparity.
   // However, the goal is to make Table a plugin.
   // So the body region should ideally contain a "Table Item".
 
-  // For now, we pass the *entire* item as the "data" prop to RegionTable if it matches TableData shape,
+  // For now, we pass the *entire* item as the "data" prop to RegionTable if it matches TableItem shape,
   // or we wrap it.
 
   const tableData = item as any // Bridge type

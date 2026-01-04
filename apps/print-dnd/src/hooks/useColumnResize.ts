@@ -1,106 +1,67 @@
-import { useState, useCallback } from 'react'
+import { useCallback } from 'react'
 import { EditorState, TableColumn } from '../types/editor'
 
 export const useColumnResize = (
   setEditorState: React.Dispatch<React.SetStateAction<EditorState>>
 ) => {
-  const [resizingColIndex, setResizingColIndex] = useState<number | null>(null)
-  const [startX, setStartX] = useState<number>(0)
-  const [startWidths, setStartWidths] = useState<number[]>([])
-  const [minWidths, setMinWidths] = useState<{ left: number; right: number }>({
-    left: 8,
-    right: 8,
-  })
-
-  // Helper to get body/table columns
-  const getBodyCols = (state: EditorState) => {
-    const region = state.regions.find((r) => r.id === 'body')
-    if (region && region.type === 'table' && region.data && region.data.cols) {
-      return region.data.cols
-    }
-    return []
-  }
-
-  const handleColumnResizeStart = useCallback(
-    (
-      index: number,
-      e: React.MouseEvent,
-      minWidthLeft: number = 8,
-      minWidthRight: number = 8
-    ) => {
-      e.preventDefault()
-      e.stopPropagation()
-
-      setResizingColIndex(index)
-      setStartX(e.clientX)
-      setMinWidths({ left: minWidthLeft, right: minWidthRight })
-
-      // Capture current widths of all visible columns to use as base
-      setEditorState((prevState) => {
-        const cols = getBodyCols(prevState)
-        const visibleCols = cols.filter((c: TableColumn) => c.visible !== false)
-        const widths = visibleCols.map((c: TableColumn) => c.width)
-        setStartWidths(widths)
-        return prevState
-      })
-    },
-    [setEditorState]
-  )
-
   const handleColumnResizeMove = useCallback(
-    (e: MouseEvent, currentState: EditorState) => {
-      if (resizingColIndex === null) return
-
-      // Find the visible columns again to match index
-      const visibleColIndices: number[] = []
-      const cols = getBodyCols(currentState)
-
-      cols.forEach((col: TableColumn, idx: number) => {
-        if (col.visible !== false) visibleColIndices.push(idx)
-      })
-
-      // The resizing column is the one at visibleColIndices[resizingColIndex]
-      // The next column is visibleColIndices[resizingColIndex + 1]
-      const leftColIdx = visibleColIndices[resizingColIndex]
-      const rightColIdx = visibleColIndices[resizingColIndex + 1]
-
-      if (leftColIdx === undefined || rightColIdx === undefined) return
-
-      const deltaX = e.clientX - startX
-
-      // Sensitivity factor
-      const sensitivity = 0.2
+    (
+      colIndex: number,
+      deltaX: number,
+      initialWidths: { left: number; right: number },
+      minWidths: { left: number; right: number }
+    ) => {
+      // Sensitivity factor (keeping consistent with previous logic, or maybe 1:1 for DnD)
+      // DnD delta is 1:1 pixels usually. Previous logic had 0.2 sensitivity.
+      // If DnD delta is raw pixels, we might want to keep it 1:1 or apply scaling.
+      // Let's assume 1:1 mapping for direct manipulation feel.
+      const sensitivity = 0.5 // Adjust as needed
       const deltaUnits = deltaX * sensitivity
 
-      // Check limits using dynamic min widths
+      const { left: startLeft, right: startRight } = initialWidths
+      const { left: minLeft, right: minRight } = minWidths
+
       let validDelta = deltaUnits
 
-      if (startWidths[resizingColIndex] + validDelta < minWidths.left) {
-        validDelta = minWidths.left - startWidths[resizingColIndex]
+      // Check constraints
+      if (startLeft + validDelta < minLeft) {
+        validDelta = minLeft - startLeft
       }
-      if (startWidths[resizingColIndex + 1] - validDelta < minWidths.right) {
-        validDelta = startWidths[resizingColIndex + 1] - minWidths.right
+      if (startRight - validDelta < minRight) {
+        validDelta = startRight - minRight
       }
 
-      const newLeftWidth = startWidths[resizingColIndex] + validDelta
-      const newRightWidth = startWidths[resizingColIndex + 1] - validDelta
+      const newLeftWidth = startLeft + validDelta
+      const newRightWidth = startRight - validDelta
 
-      // Update state
       setEditorState((prev) => {
+        // Find visible columns to map index correctly
         const bodyRegionIdx = prev.regions.findIndex((r) => r.id === 'body')
         if (bodyRegionIdx === -1) return prev
         const bodyRegion = prev.regions[bodyRegionIdx]
-        if (!bodyRegion.data) return prev
+        if (!bodyRegion.data || !bodyRegion.data.cols) return prev
 
-        const newCols = [...(bodyRegion.data.cols || [])]
+        const cols = bodyRegion.data.cols
+        const visibleColsIndices: number[] = []
+        cols.forEach((col: TableColumn, idx: number) => {
+          if (col.visible !== false) visibleColsIndices.push(idx)
+        })
 
-        if (newCols[leftColIdx])
-          newCols[leftColIdx] = { ...newCols[leftColIdx], width: newLeftWidth }
-        if (newCols[rightColIdx])
-          newCols[rightColIdx] = {
-            ...newCols[rightColIdx],
-            width: newRightWidth,
-          }
+        const leftColRealIdx = visibleColsIndices[colIndex]
+        const rightColRealIdx = visibleColsIndices[colIndex + 1]
+
+        if (leftColRealIdx === undefined || rightColRealIdx === undefined)
+          return prev
+
+        const newCols = [...cols]
+        newCols[leftColRealIdx] = {
+          ...newCols[leftColRealIdx],
+          width: newLeftWidth,
+        }
+        newCols[rightColRealIdx] = {
+          ...newCols[rightColRealIdx],
+          width: newRightWidth,
+        }
 
         const newRegions = [...prev.regions]
         newRegions[bodyRegionIdx] = {
@@ -117,19 +78,10 @@ export const useColumnResize = (
         }
       })
     },
-    [resizingColIndex, startX, startWidths, setEditorState]
+    [setEditorState]
   )
 
-  const handleColumnResizeEnd = useCallback(() => {
-    setResizingColIndex(null)
-    setStartX(0)
-    setStartWidths([])
-  }, [])
-
   return {
-    handleColumnResizeStart,
     handleColumnResizeMove,
-    handleColumnResizeEnd,
-    resizingColIndex,
   }
 }

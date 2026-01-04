@@ -4,7 +4,7 @@ import { Paper } from './Paper'
 // Toolbar imports removed as they are encapsulated in EditorToolbar
 import { EditorToolbar, EditorToolbarConfig } from './EditorToolbar'
 import { EditorProvider } from '../contexts/EditorContext'
-import { useGlobalDrag } from '../hooks/useGlobalDrag'
+import { useRegionResize } from '../hooks/useRegionResize'
 import { useItemDrag } from '../hooks/useItemDrag'
 import { useItemResize } from '../hooks/useItemResize'
 import { useColumnResize } from '../hooks/useColumnResize'
@@ -93,7 +93,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   } = useToolbar()
 
   // Use the custom hook for global drag handling (Regions)
-  const { dragging, setDragging } = useGlobalDrag(editorRef, handleStateUpdate)
+  const { handleRegionResizeMove } = useRegionResize(handleStateUpdate)
 
   // Use custom hook for item drag handling
   const {
@@ -105,16 +105,11 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   } = useItemDrag(handleStateUpdate)
 
   // Use custom hook for item resize handling
-  const { handleResizeStart: originalHandleItemResizeStart, resizing } =
-    useItemResize(editorRef, handleStateUpdate)
+  const { handleItemResizeMove } = useItemResize(handleStateUpdate)
 
   // Use custom hook for column resize handling
-  const {
-    handleColumnResizeStart,
-    handleColumnResizeMove,
-    handleColumnResizeEnd,
-    resizingColIndex,
-  } = useColumnResize(handleStateUpdate)
+  // Use custom hook for column resize handling
+  const { handleColumnResizeMove } = useColumnResize(handleStateUpdate)
 
   // Wrap item drag start
   const handleItemDragStart = useCallback(
@@ -125,75 +120,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     [originalHandleItemDragStart, setSelectedItemIdx]
   )
 
-  // Wrap item resize start
-  const handleItemResizeStart = useCallback(
-    (
-      index: number,
-      regionId: string,
-      direction: any,
-      e: React.MouseEvent,
-      itemX: number,
-      itemY: number,
-      itemWidth: number,
-      itemHeight: number
-    ) => {
-      originalHandleItemResizeStart(
-        index,
-        regionId as any,
-        direction,
-        e,
-        itemX,
-        itemY,
-        itemWidth,
-        itemHeight
-      )
-    },
-    [originalHandleItemResizeStart]
-  )
-
-  // Wrap region resize start
-  const handleRegionResizeStart = useCallback(
-    (regionId: string, e: React.MouseEvent) => {
-      e.preventDefault()
-      e.stopPropagation()
-      setDragging(regionId as any)
-    },
-    [setDragging]
-  )
-
-  const isDraggingAny =
-    dragging || dragItem || resizing || resizingColIndex !== null
-
-  // Global Mouse Move and Up handlers
-  React.useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (resizingColIndex !== null) {
-        handleColumnResizeMove(e, editorState)
-      }
-    }
-
-    const handleMouseUp = () => {
-      if (resizingColIndex !== null) {
-        handleColumnResizeEnd()
-      }
-    }
-
-    if (resizingColIndex !== null) {
-      window.addEventListener('mousemove', handleMouseMove)
-      window.addEventListener('mouseup', handleMouseUp)
-    }
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
-      window.removeEventListener('mouseup', handleMouseUp)
-    }
-  }, [
-    resizingColIndex,
-    handleColumnResizeStart,
-    handleColumnResizeMove,
-    handleColumnResizeEnd,
-    editorState,
-  ])
+  const isDraggingAny = dragItem !== null
 
   const handleSettingsChange = useCallback(
     (updates: Partial<EditorState>) => {
@@ -287,7 +214,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
             ref={editorRef}
           >
             <div
-              className={`m-auto ${isDraggingAny ? 'select-none' : ''} ${dragging ? 'cursor-ns-resize' : ''}`}
+              className={`m-auto ${isDraggingAny ? 'select-none' : ''}`}
               style={{
                 transform: `scale(${zoom / 100})`,
                 transformOrigin: 'top center',
@@ -297,12 +224,12 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
               <EditorProvider
                 value={{
                   handlers: {
-                    onResizeStart: handleRegionResizeStart,
                     onItemDragStart: handleItemDragStart,
                     onItemDragMove: handleDragMove,
                     onItemDragEnd: handleDragEnd,
-                    onItemResizeStart: handleItemResizeStart,
-                    onColumnResizeStart: handleColumnResizeStart,
+                    onItemResizeMove: handleItemResizeMove,
+                    onColumnResizeMove: handleColumnResizeMove,
+                    onRegionResizeMove: handleRegionResizeMove,
                   },
                   data: previewData || {},
                   guides: guides,
