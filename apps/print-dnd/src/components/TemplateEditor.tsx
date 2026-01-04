@@ -1,8 +1,9 @@
 import React, { useRef, useCallback } from 'react'
-import { EditorState, EditorItem, TableItem } from '../types/editor'
+import { EditorState, EditorItem } from '../types/editor'
 import { Paper } from './Paper'
 // Toolbar imports removed as they are encapsulated in EditorToolbar
 import { EditorToolbar, EditorToolbarConfig } from './EditorToolbar'
+import { EditorProvider } from '../contexts/EditorContext'
 import { useGlobalDrag } from '../hooks/useGlobalDrag'
 import { useItemDrag } from '../hooks/useItemDrag'
 import { useItemResize } from '../hooks/useItemResize'
@@ -293,18 +294,22 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                 transition: 'transform 0.1s ease-out',
               }}
             >
-              <Paper
-                state={editorState}
-                guides={guides}
-                onResizeStart={handleRegionResizeStart}
-                onItemDragStart={handleItemDragStart}
-                onItemDragMove={handleDragMove}
-                onItemDragEnd={handleDragEnd}
-                onItemResizeStart={handleItemResizeStart}
-                onColumnResizeStart={handleColumnResizeStart}
-                selectedItemIdx={selectedItemIdx}
-                data={previewData}
-              />
+              <EditorProvider
+                value={{
+                  handlers: {
+                    onResizeStart: handleRegionResizeStart,
+                    onItemDragStart: handleItemDragStart,
+                    onItemDragMove: handleDragMove,
+                    onItemDragEnd: handleDragEnd,
+                    onItemResizeStart: handleItemResizeStart,
+                    onColumnResizeStart: handleColumnResizeStart,
+                  },
+                  data: previewData || {},
+                  guides: guides,
+                }}
+              >
+                <Paper />
+              </EditorProvider>
             </div>
           </div>
 

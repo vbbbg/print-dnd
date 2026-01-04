@@ -2,14 +2,7 @@ import React from 'react'
 
 export interface RegionRenderProps {
   region: any
-  data: any // Global data
-  margins: any
   isSelected: boolean
-  onItemDragStart: any
-  onItemDragEnd: any
-  onItemResizeStart: any
-  onColumnResizeStart?: any
-  selectedItemIdx: any
 }
 
 export interface RegionPlugin {

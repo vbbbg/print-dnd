@@ -1,16 +1,18 @@
 import React from 'react'
 import { RegionRenderProps, regionRegistry } from '../core/RegionRegistry'
+import { useEditorContext } from '../contexts/EditorContext'
+import { useEditorStore } from '../store/editorStore'
 import { componentRegistry } from '../core/ComponentRegistry'
 import { mmToPx } from '../constants/units'
 
 export const TableRegion: React.FC<RegionRenderProps> = ({
   region,
-  data,
-  margins,
   isSelected,
-  onColumnResizeStart,
-  onItemDragStart,
 }) => {
+  const { handlers, data } = useEditorContext()
+  const { onColumnResizeStart, onItemDragStart } = handlers
+  const margins = useEditorStore((state) => state.margins)
+
   if (region.type !== 'table') return null
   if (!region.data || region.data.length === 0) return null
 

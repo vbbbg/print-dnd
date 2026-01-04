@@ -1,16 +1,15 @@
 import React from 'react'
 import { RegionRenderProps, regionRegistry } from '../core/RegionRegistry'
+import { useEditorContext } from '../contexts/EditorContext'
+import { useEditorStore } from '../store/editorStore'
 import { componentRegistry } from '../core/ComponentRegistry'
 import { DraggableItem } from '../components/DraggableItem'
 
-export const FreeLayoutRegion: React.FC<RegionRenderProps> = ({
-  region,
-  data,
-  onItemDragStart,
-  onItemDragEnd,
-  onItemResizeStart,
-  selectedItemIdx,
-}) => {
+export const FreeLayoutRegion: React.FC<RegionRenderProps> = ({ region }) => {
+  const { handlers, data } = useEditorContext()
+  const { onItemDragStart, onItemDragEnd, onItemResizeStart } = handlers
+  const selectedItemIdx = useEditorStore((state) => state.selectedItemIdx)
+
   return (
     <>
       {region.data?.map((item: any, index: number) => {
