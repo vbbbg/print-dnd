@@ -11,7 +11,6 @@ export interface EditorLayoutProps {
   toolbar?: EditorToolbarConfig
   editorState: EditorState
   zoom: number
-  isDraggingAny: boolean
   previewData?: Record<string, any>
   guides: any[]
   // Handlers/Actions
@@ -65,7 +64,6 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   toolbar,
   editorState,
   zoom,
-  isDraggingAny,
   previewData,
   guides,
   handlers,
@@ -184,7 +182,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
           className="flex-1 overflow-auto p-10 relative flex bg-gray-100/50"
         >
           <div
-            className={`m-auto ${isDraggingAny ? 'select-none' : ''}`}
+            className="m-auto"
             style={{
               transform: `scale(${zoom / 100})`,
               transformOrigin: 'top center',

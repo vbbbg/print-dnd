@@ -15,20 +15,11 @@ interface DragState {
 
 export const useItemDrag = () => {
   const store = useEditorStoreApi()
-  const [dragItem, setDragItem] = useState<DragState | null>(null)
   const dragItemRef = React.useRef<DragState | null>(null)
   const [guides, setGuides] = useState<Guide[]>([])
 
   const handleDragStart = useCallback(
     (index: number, regionId: string, itemX: number, itemY: number) => {
-      setDragItem({
-        index,
-        region: regionId,
-        initialItemX: itemX,
-        initialItemY: itemY,
-        startX: itemX,
-        startY: itemY,
-      })
       dragItemRef.current = {
         index,
         region: regionId,
@@ -163,7 +154,6 @@ export const useItemDrag = () => {
       return newState
     })
 
-    setDragItem(null)
     dragItemRef.current = null
     setGuides([])
   }, [])
@@ -172,7 +162,6 @@ export const useItemDrag = () => {
     handleDragStart,
     handleDragMove,
     handleDragEnd,
-    dragItem,
     guides,
   }
 }

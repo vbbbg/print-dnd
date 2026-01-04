@@ -68,7 +68,6 @@ const TemplateEditorContent: React.FC<TemplateEditorProps> = ({
     handleDragStart: originalHandleItemDragStart,
     handleDragMove,
     handleDragEnd,
-    dragItem,
     guides,
   } = useItemDrag()
 
@@ -92,8 +91,6 @@ const TemplateEditorContent: React.FC<TemplateEditorProps> = ({
     },
     [originalHandleItemDragStart, setSelection, selectedItemIdx]
   )
-
-  const isDraggingAny = dragItem !== null
 
   const handleSettingsChange = useCallback(
     (updates: Partial<EditorState>) => {
@@ -205,7 +202,6 @@ const TemplateEditorContent: React.FC<TemplateEditorProps> = ({
         toolbar={toolbar}
         editorState={editorState}
         zoom={zoom}
-        isDraggingAny={isDraggingAny}
         previewData={previewData}
         guides={guides}
         handlers={handlers}
