@@ -1,79 +1,35 @@
-import React, { useRef } from 'react'
-import { EditorState, Guide } from '../types/editor'
+import React from 'react'
 import { ResizeHandle } from './ResizeHandle'
-import { DraggableItem } from './DraggableItem'
-import { RegionTable } from './RegionTable'
 import { mmToPx } from '../constants/units'
-import { resolveItemText, resolveTitleItemText } from '../utils/itemUtils'
-import { ResizeDirection } from './ResizeHandles'
+import { MarginsGuide } from './MarginsGuide'
+import { AlignmentGuides } from './AlignmentGuides'
+import { regionRegistry } from '../core/RegionRegistry'
+import { useEditorContext } from '../contexts/EditorContext'
+import { useEditorStore } from '../store/editorStore'
+import '../regions/TableRegion'
+import '../regions/FreeLayoutRegion'
+import { RegionGuide } from './RegionGuide'
 
-interface PaperProps {
-  state: EditorState
-  onResizeStart: (
-    region: 'header' | 'body' | 'footer',
-    e: React.MouseEvent
-  ) => void
-  onItemDragStart: (
-    index: number,
-    region: 'title' | 'header' | 'footer',
-    e: React.MouseEvent,
-    itemX: number,
-    itemY: number
-  ) => void
-  onItemResizeStart?: (
-    index: number,
-    region: 'title' | 'header' | 'footer',
-    direction: ResizeDirection,
-    e: React.MouseEvent,
-    itemX: number,
-    itemY: number,
-    itemWidth: number,
-    itemHeight: number
-  ) => void
-  onColumnResizeStart?: (
-    index: number,
-    e: React.MouseEvent,
-    minWidthLeft: number,
-    minWidthRight: number
-  ) => void
-  guides?: Guide[]
-  selectedItemIdx?: {
-    region: 'title' | 'header' | 'footer' | 'body'
-    index: number
-  } | null
-  data?: Record<string, any>
-  onTableClick?: () => void
-}
+export const Paper: React.FC = () => {
+  const state = useEditorStore((state) => state)
+  const selectedItemIdx = useEditorStore((state) => state.selectedItemIdx)
+  const { paperHeight, paperWidth, margins, regions } = state
 
-export const Paper: React.FC<PaperProps> = ({
-  state,
-  onResizeStart,
-  onItemDragStart,
-  onItemResizeStart,
-  onColumnResizeStart,
-  guides,
-  selectedItemIdx,
-  data = {},
-  onTableClick,
-}) => {
-  const {
-    headerTop,
-    bodyTop,
-    footerTop,
-    paperHeight,
-    paperWidth,
-    titleItems,
-    headerItems,
-    bodyItems,
-    footerItems,
-    margins,
-  } = state
+  const { guides } = useEditorContext()
 
-  const paperRef = useRef<HTMLDivElement>(null)
+  // Calculate region positions
+  const regionRenderData = regions.map((region, idx) => {
+    let height = 0
+    if (idx < regions.length - 1) {
+      height = regions[idx + 1].top - region.top
+    } else {
+      height = paperHeight - region.top
+    }
+    return { ...region, height }
+  })
 
   return (
     <div
-      ref={paperRef}
       data-paper-root="true"
       className="relative bg-white shadow-xl mx-auto"
       style={{
@@ -81,233 +37,48 @@ export const Paper: React.FC<PaperProps> = ({
         height: mmToPx(paperHeight),
       }}
     >
-      {/* Margins Guide */}
-      {/* Margin Visuals */}
-      {margins && (
-        <>
-          {/* Top Margin */}
-          <div
-            className="absolute left-0 right-0 top-0 pointer-events-none z-40 bg-gray-200 opacity-30"
-            style={{
-              height: mmToPx(margins.top),
-            }}
-          />
-          {/* Bottom Margin */}
-          <div
-            className="absolute left-0 right-0 bottom-0 pointer-events-none z-40 bg-gray-200 opacity-30"
-            style={{
-              height: mmToPx(margins.bottom),
-            }}
-          />
-          {/* Left Margin */}
-          <div
-            className="absolute left-0 top-0 bottom-0 pointer-events-none z-40 bg-gray-200 opacity-30"
-            style={{
-              width: mmToPx(margins.left),
-            }}
-          />
-          {/* Right Margin */}
-          <div
-            className="absolute right-0 top-0 bottom-0 pointer-events-none z-40 bg-gray-200 opacity-30"
-            style={{
-              width: mmToPx(margins.right),
-            }}
-          />
-          {/* Dashed Border for Printable Area */}
-          <div
-            className="absolute pointer-events-none z-50 border-dashed border-gray-400 opacity-50"
-            style={{
-              top: mmToPx(margins.top),
-              bottom: mmToPx(margins.bottom),
-              left: mmToPx(margins.left),
-              right: mmToPx(margins.right),
-              borderWidth: '1px',
-            }}
-          />
-        </>
-      )}
+      <MarginsGuide margins={margins} />
 
-      {/* Title Region Background */}
-      <div
-        className="absolute w-full border-b border-dashed border-gray-300 box-border"
-        style={{
-          top: 0,
-          height: mmToPx(headerTop),
-        }}
-      />
+      <RegionGuide regions={regionRenderData} />
 
-      {/* Header Region Background */}
-      <div
-        className="absolute w-full border-b border-dashed border-gray-300 box-border"
-        style={{
-          top: mmToPx(headerTop),
-          height: mmToPx(bodyTop - headerTop),
-        }}
-      />
+      {/* Region Content */}
+      {regionRenderData.map((region, regionIndex) => {
+        const isSelected = selectedItemIdx?.region === region.id
 
-      {/* Body Region (Table) */}
-      <div
-        className="absolute w-full border-b border-dashed border-gray-300 box-border"
-        style={{
-          top: mmToPx(bodyTop),
-          height: mmToPx(footerTop - bodyTop),
-        }}
-      >
-        <div
-          className="absolute z-0 top-0 bottom-0"
-          style={{
-            left: mmToPx(margins?.left || 0),
-            right: mmToPx(margins?.right || 0),
-          }}
-        >
-          {/* Render Table */}
-          {bodyItems && (
-            <RegionTable
-              data={bodyItems}
-              rows={data.list}
-              onColumnResizeStart={onColumnResizeStart}
-              isSelected={selectedItemIdx?.region === 'body'}
-              onClick={onTableClick}
-            />
-          )}
-        </div>
-      </div>
-
-      {/* Footer Region Background */}
-      <div
-        className="absolute w-full box-border"
-        style={{
-          top: mmToPx(footerTop),
-          height: mmToPx(paperHeight - footerTop),
-        }}
-      />
-
-      {/* Render Items (Global Coordinates) */}
-      {titleItems?.map((item, index) => (
-        <DraggableItem
-          key={`title-${index}`}
-          item={item}
-          isSelected={
-            selectedItemIdx?.region === 'title' &&
-            selectedItemIdx?.index === index
-          }
-          onMouseDown={(e) =>
-            onItemDragStart(index, 'title', e, item.x, item.y)
-          }
-          onResizeStart={
-            onItemResizeStart
-              ? (direction, e) =>
-                  onItemResizeStart(
-                    index,
-                    'title',
-                    direction,
-                    e,
-                    item.x,
-                    item.y,
-                    item.width,
-                    item.height
-                  )
-              : undefined
-          }
-        >
-          {resolveTitleItemText(item, data)}
-        </DraggableItem>
-      ))}
-
-      {headerItems?.map((item, index) => (
-        <DraggableItem
-          key={`header-${index}`}
-          item={item}
-          isSelected={
-            selectedItemIdx?.region === 'header' &&
-            selectedItemIdx?.index === index
-          }
-          onMouseDown={(e) =>
-            onItemDragStart(index, 'header', e, item.x, item.y)
-          }
-          onResizeStart={
-            onItemResizeStart
-              ? (direction, e) =>
-                  onItemResizeStart(
-                    index,
-                    'header',
-                    direction,
-                    e,
-                    item.x,
-                    item.y,
-                    item.width,
-                    item.height
-                  )
-              : undefined
-          }
-        >
-          {resolveItemText(item, data)}
-        </DraggableItem>
-      ))}
-
-      {footerItems?.map((item, index) => (
-        <DraggableItem
-          key={`footer-${index}`}
-          item={item}
-          isSelected={
-            selectedItemIdx?.region === 'footer' &&
-            selectedItemIdx?.index === index
-          }
-          onMouseDown={(e) =>
-            onItemDragStart(index, 'footer', e, item.x, item.y)
-          }
-          onResizeStart={
-            onItemResizeStart
-              ? (direction, e) =>
-                  onItemResizeStart(
-                    index,
-                    'footer',
-                    direction,
-                    e,
-                    item.x,
-                    item.y,
-                    item.width,
-                    item.height
-                  )
-              : undefined
-          }
-        >
-          {resolveItemText(item, data)}
-        </DraggableItem>
-      ))}
-
-      {/* Resize Handles */}
-      {/* Higher z-index for upper handles ensures they are clickable even if they overlap with lower handles */}
-      <ResizeHandle
-        top={mmToPx(headerTop)}
-        onMouseDown={(e) => onResizeStart('header', e)}
-        className="resize-handle-header group z-30"
-      />
-      <ResizeHandle
-        top={mmToPx(bodyTop)}
-        onMouseDown={(e) => onResizeStart('body', e)}
-        className="resize-handle-body group z-20"
-      />
-      <ResizeHandle
-        top={mmToPx(footerTop)}
-        onMouseDown={(e) => onResizeStart('footer', e)}
-        className="resize-handle-footer group z-10"
-      />
-
-      {/* Alignment Guides */}
-      {guides?.map((guide, idx) => {
-        const isV = guide.type === 'vertical'
         return (
-          <div
-            key={`guide-${idx}`}
-            className={`absolute bg-blue-500 z-50 pointer-events-none ${isV ? 'w-px h-full' : 'h-px w-full'}`}
-            style={{
-              left: isV ? mmToPx(guide.pos) : 0,
-              top: isV ? 0 : mmToPx(guide.pos),
-            }}
-          />
+          <React.Fragment key={region.id}>
+            <RegionContent region={region} isSelected={isSelected} />
+
+            {/* Resize Handle (Bottom of region, except last one) */}
+            {regionIndex < regions.length - 1 && (
+              <ResizeHandle
+                top={mmToPx(region.top + region.height)}
+                regionId={region.id}
+                initialNextRegionTop={region.top + region.height} // Pass in MM
+                className={`resize-handle-${region.id} group z-${50 - regionIndex * 10}`}
+              />
+            )}
+          </React.Fragment>
         )
       })}
+
+      <AlignmentGuides guides={guides} />
     </div>
   )
+}
+
+// --- Sub-components for Abstraction ---
+const RegionContent: React.FC<{
+  region: any
+  isSelected: boolean
+}> = (props) => {
+  const { region } = props
+  const plugin = regionRegistry.get(region.type)
+
+  if (plugin) {
+    const Component = plugin.render
+    return <Component {...props} />
+  }
+
+  return <div>Unknown Region Type: {region.type}</div>
 }

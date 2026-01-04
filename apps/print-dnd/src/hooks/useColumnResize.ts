@@ -1,113 +1,87 @@
-import { useState, useCallback } from 'react'
-import { EditorState } from '../types/editor'
+import { useCallback } from 'react'
+import { TableColumn } from '../types/editor'
+import { useEditorStoreApi } from '../store/editorStore'
 
-export const useColumnResize = (
-  setEditorState: React.Dispatch<React.SetStateAction<EditorState>>
-) => {
-  const [resizingColIndex, setResizingColIndex] = useState<number | null>(null)
-  const [startX, setStartX] = useState<number>(0)
-  const [startWidths, setStartWidths] = useState<number[]>([])
-  const [minWidths, setMinWidths] = useState<{ left: number; right: number }>({
-    left: 8,
-    right: 8,
-  })
-
-  const handleColumnResizeStart = useCallback(
-    (
-      index: number,
-      e: React.MouseEvent,
-      minWidthLeft: number = 8,
-      minWidthRight: number = 8
-    ) => {
-      e.preventDefault()
-      e.stopPropagation()
-
-      setResizingColIndex(index)
-      setStartX(e.clientX)
-      setMinWidths({ left: minWidthLeft, right: minWidthRight })
-
-      // Capture current widths of all visible columns to use as base
-      setEditorState((prevState) => {
-        const visibleCols = prevState.bodyItems.cols.filter(
-          (c) => c.visible !== false
-        )
-        const widths = visibleCols.map((c) => c.width)
-        setStartWidths(widths)
-        return prevState
-      })
-    },
-    [setEditorState]
-  )
-
+export const useColumnResize = () => {
+  const store = useEditorStoreApi()
   const handleColumnResizeMove = useCallback(
-    (e: MouseEvent, currentState: EditorState) => {
-      if (resizingColIndex === null) return
-
-      // Find the visible columns again to match index
-      const visibleColIndices: number[] = []
-      currentState.bodyItems.cols.forEach((col, idx) => {
-        if (col.visible !== false) visibleColIndices.push(idx)
-      })
-
-      // The resizing column is the one at visibleColIndices[resizingColIndex]
-      // The next column is visibleColIndices[resizingColIndex + 1]
-      const leftColIdx = visibleColIndices[resizingColIndex]
-      const rightColIdx = visibleColIndices[resizingColIndex + 1]
-
-      if (leftColIdx === undefined || rightColIdx === undefined) return
-
-      const deltaX = e.clientX - startX
-
-      // Calculate delta in "width units" approximate
-      // Since widths are generic units, we need a scale factor.
-      // Ideally we map pixels to these units.
-      // For now, let's assume 1 unit ~= 1mm ~= 3.78px (approx) or simpler:
-      // Just scale by zoom? Or relative to table width?
-      // Simple approach: Use a sensitivity factor, e.g. 0.5 unit per pixel
-      const sensitivity = 0.2
+    (
+      colIndex: number,
+      deltaX: number,
+      initialWidths: { left: number; right: number },
+      minWidths: { left: number; right: number }
+    ) => {
+      // Sensitivity factor (keeping consistent with previous logic, or maybe 1:1 for DnD)
+      // DnD delta is 1:1 pixels usually. Previous logic had 0.2 sensitivity.
+      // If DnD delta is raw pixels, we might want to keep it 1:1 or apply scaling.
+      // Let's assume 1:1 mapping for direct manipulation feel.
+      const sensitivity = 0.5 // Adjust as needed
       const deltaUnits = deltaX * sensitivity
 
-      // Check limits using dynamic min widths
+      const { left: startLeft, right: startRight } = initialWidths
+      const { left: minLeft, right: minRight } = minWidths
+
       let validDelta = deltaUnits
 
-      if (startWidths[resizingColIndex] + validDelta < minWidths.left) {
-        validDelta = minWidths.left - startWidths[resizingColIndex]
+      // Check constraints
+      if (startLeft + validDelta < minLeft) {
+        validDelta = minLeft - startLeft
       }
-      if (startWidths[resizingColIndex + 1] - validDelta < minWidths.right) {
-        validDelta = startWidths[resizingColIndex + 1] - minWidths.right
+      if (startRight - validDelta < minRight) {
+        validDelta = startRight - minRight
       }
 
-      const newLeftWidth = startWidths[resizingColIndex] + validDelta
-      const newRightWidth = startWidths[resizingColIndex + 1] - validDelta
+      const newLeftWidth = startLeft + validDelta
+      const newRightWidth = startRight - validDelta
 
-      // Update state
-      setEditorState((prev) => {
-        const newCols = [...prev.bodyItems.cols]
-        newCols[leftColIdx] = { ...newCols[leftColIdx], width: newLeftWidth }
-        newCols[rightColIdx] = { ...newCols[rightColIdx], width: newRightWidth }
+      store.setState((prev) => {
+        // Find visible columns to map index correctly
+        const bodyRegionIdx = prev.regions.findIndex((r) => r.id === 'body')
+        if (bodyRegionIdx === -1) return prev
+        const bodyRegion = prev.regions[bodyRegionIdx]
+        if (!bodyRegion.data || !bodyRegion.data.cols) return prev
 
-        return {
-          ...prev,
-          bodyItems: {
-            ...prev.bodyItems,
+        const cols = bodyRegion.data.cols
+        const visibleColsIndices: number[] = []
+        cols.forEach((col: TableColumn, idx: number) => {
+          if (col.visible !== false) visibleColsIndices.push(idx)
+        })
+
+        const leftColRealIdx = visibleColsIndices[colIndex]
+        const rightColRealIdx = visibleColsIndices[colIndex + 1]
+
+        if (leftColRealIdx === undefined || rightColRealIdx === undefined)
+          return prev
+
+        const newCols = [...cols]
+        newCols[leftColRealIdx] = {
+          ...newCols[leftColRealIdx],
+          width: newLeftWidth,
+        }
+        newCols[rightColRealIdx] = {
+          ...newCols[rightColRealIdx],
+          width: newRightWidth,
+        }
+
+        const newRegions = [...prev.regions]
+        newRegions[bodyRegionIdx] = {
+          ...bodyRegion,
+          data: {
+            ...bodyRegion.data,
             cols: newCols,
           },
         }
+
+        return {
+          ...prev,
+          regions: newRegions,
+        }
       })
     },
-    [resizingColIndex, startX, startWidths, setEditorState]
+    []
   )
 
-  const handleColumnResizeEnd = useCallback(() => {
-    setResizingColIndex(null)
-    setStartX(0)
-    setStartWidths([])
-  }, [])
-
   return {
-    handleColumnResizeStart,
     handleColumnResizeMove,
-    handleColumnResizeEnd,
-    resizingColIndex,
   }
 }

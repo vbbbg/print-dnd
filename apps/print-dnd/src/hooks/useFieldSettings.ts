@@ -15,17 +15,23 @@ export const useFieldSettings = ({
   state,
   onChange,
 }: UseFieldSettingsProps) => {
-  // --- Common Logic for Free Layout Regions (Header/Footer) ---
+  // --- Common Logic for Free Layout Regions ---
+  const getRegionItems = (regionId: string): EditorItem[] => {
+    const region = state.regions.find((r) => r.id === regionId)
+    if (region && Array.isArray(region.data)) return region.data
+    return []
+  }
+
   const isFreeLayoutFieldActive = (items: EditorItem[], fieldValue: string) => {
     return items.some((item) => item.field === fieldValue)
   }
 
   const toggleFreeLayoutItem = (
-    currentItems: EditorItem[],
-    regionTop: number,
+    regionId: string,
     field: JsonField,
     updateState: (newItems: EditorItem[]) => void
   ) => {
+    const currentItems = getRegionItems(regionId)
     const isActive = isFreeLayoutFieldActive(currentItems, field.value)
     let newItems = [...currentItems]
 
@@ -36,8 +42,8 @@ export const useFieldSettings = ({
       // Add
       const marginLeft = state.margins?.left || 0
       const defaultX = marginLeft
-      // Default to top-left of region (no staggering)
-      const defaultY = regionTop
+      // Default to top of region (relative y = 0)
+      const defaultY = 0
 
       const newItem: EditorItem = {
         type: 'text',
@@ -57,34 +63,55 @@ export const useFieldSettings = ({
     updateState(newItems)
   }
 
+  const updateRegionItems = (regionId: string, newItems: EditorItem[]) => {
+    const idx = state.regions.findIndex((r) => r.id === regionId)
+    if (idx === -1) return
+
+    const region = state.regions[idx]
+    if (Array.isArray(region.data)) {
+      const newRegions = [...state.regions]
+      newRegions[idx] = { ...region, data: newItems as any }
+      onChange({ regions: newRegions })
+    }
+  }
+
   // --- Header Fields Logic ---
   const headerFields = useMemo(() => items.header, [])
 
   const isHeaderFieldActive = (fieldValue: string) => {
-    return isFreeLayoutFieldActive(state.headerItems, fieldValue)
+    return isFreeLayoutFieldActive(getRegionItems('header'), fieldValue)
   }
 
   const toggleHeaderField = (field: JsonField) => {
-    toggleFreeLayoutItem(
-      state.headerItems,
-      state.headerTop,
-      field,
-      (newItems) => onChange({ headerItems: newItems })
+    toggleFreeLayoutItem('header', field, (newItems) =>
+      updateRegionItems('header', newItems)
     )
   }
 
   // --- Body Fields Logic ---
   const bodyFields = useMemo(() => items.body, [])
 
+  const getBodyData = () => {
+    const region = state.regions.find((r) => r.id === 'body')
+    // Treat data as TableItem if region type is table
+    if (region && region.type === 'table') return region.data[0]
+    return { cols: [] } as any // fallback
+  }
+
   const isBodyFieldActive = (fieldValue: string) => {
-    return state.bodyItems.cols.some(
-      (col) => col.colname === fieldValue && col.visible !== false
+    const data = getBodyData()
+    if (!data.cols) return false
+    return data.cols.some(
+      (col: any) => col.colname === fieldValue && col.visible !== false
     )
   }
 
   const toggleBodyField = (field: JsonField) => {
     const active = isBodyFieldActive(field.value)
-    let newCols = [...state.bodyItems.cols]
+    const data = getBodyData()
+    if (!data.cols) return
+
+    let newCols = [...data.cols]
     const existingColIndex = newCols.findIndex(
       (col) => col.colname === field.value
     )
@@ -115,27 +142,35 @@ export const useFieldSettings = ({
       }
     }
 
-    onChange({
-      bodyItems: {
-        ...state.bodyItems,
-        cols: newCols,
-      },
-    })
+    // Update body region
+    const idx = state.regions.findIndex((r) => r.id === 'body')
+    if (idx !== -1) {
+      const region = state.regions[idx]
+      if (region.type === 'table') {
+        const newRegions = [...state.regions]
+        // region.data is TableItem[]
+        const newTableItems = [...region.data]
+        newTableItems[0] = { ...newTableItems[0], cols: newCols }
+
+        newRegions[idx] = {
+          ...region,
+          data: newTableItems,
+        }
+        onChange({ regions: newRegions })
+      }
+    }
   }
 
   // --- Footer Fields Logic ---
   const footerFields = useMemo(() => items.footer, [])
 
   const isFooterFieldActive = (fieldValue: string) => {
-    return isFreeLayoutFieldActive(state.footerItems, fieldValue)
+    return isFreeLayoutFieldActive(getRegionItems('footer'), fieldValue)
   }
 
   const toggleFooterField = (field: JsonField) => {
-    toggleFreeLayoutItem(
-      state.footerItems,
-      state.footerTop,
-      field,
-      (newItems) => onChange({ footerItems: newItems })
+    toggleFreeLayoutItem('footer', field, (newItems) =>
+      updateRegionItems('footer', newItems)
     )
   }
 

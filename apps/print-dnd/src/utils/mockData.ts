@@ -1,4 +1,4 @@
-import { EditorState, EditorItem, TableData } from '../types/editor'
+import { EditorState, EditorItem, TableItem } from '../types/editor'
 import { PAPER_DEFINITIONS } from '../constants/paper'
 
 export const getMockEditorState = (): EditorState => {
@@ -26,22 +26,6 @@ export const getMockEditorState = (): EditorState => {
 
   // Header Items - Reasonable layout for A4_2 (High density)
   const headerItems: EditorItem[] = [
-    {
-      alias: '单号',
-      field: 'billNo',
-      name: '单号',
-      type: 'text',
-      x: 140, // Top Right
-      y: 5,
-      width: 60,
-      height: 7,
-      value: '单号: {billNo}',
-      visible: true,
-      fontSize: 10,
-      fontFamily: 'SimHei',
-      fontColor: '#000000',
-      horizontalAlignment: 'right',
-    },
     {
       alias: '客户名称',
       field: 'customerName',
@@ -185,7 +169,12 @@ export const getMockEditorState = (): EditorState => {
   ]
 
   // Body Columns - Standard sales columns
-  const bodyItems: TableData = {
+  const bodyItems: TableItem = {
+    type: 'table',
+    x: 10, // Match left margin
+    y: 0, // Relative to top of region
+    width: 190, // 210 - 10 - 10
+    height: 75, // 130 - 55
     cols: [
       {
         alias: '行号',
@@ -239,15 +228,32 @@ export const getMockEditorState = (): EditorState => {
     ],
   }
 
+  // Combine all "free layout" items
+  const allItems = [...titleItems, ...headerItems, ...footerItems]
+
+  // Define boundaries
+  const headerTop = 15
+  const bodyTop = 55
+  const footerTop = 130
+  const paperHeight = 148.5
+
+  // Distribute items into regions based on Y position (using absolute coordinates)
+  const newTitleItems = allItems.filter((item) => item.y < headerTop)
+
+  const newHeaderItems = allItems.filter(
+    (item) => item.y >= headerTop && item.y < bodyTop
+  )
+
+  const newFooterItems = allItems.filter((item) => item.y >= footerTop)
+
   return {
     // 210mm x 148.5mm (A4_2)
     paperType: 'A4_2',
     paperWidth: 210,
-    paperHeight: 148.5,
+    paperHeight: paperHeight,
     paperDefinitions: PAPER_DEFINITIONS,
     name: '标准销售单 (二等分)',
 
-    // Adjusted margins and region tops for smaller height
     margins: {
       top: 5,
       bottom: 5,
@@ -255,13 +261,31 @@ export const getMockEditorState = (): EditorState => {
       right: 10,
     },
 
-    headerTop: 15, // Starts after Title
-    bodyTop: 55, // Reserving ~40mm for header info
-    footerTop: 130, // Reserving ~18mm for footer
-
-    titleItems,
-    headerItems,
-    bodyItems,
-    footerItems,
+    regions: [
+      {
+        id: 'title',
+        type: 'free-layout',
+        top: 0,
+        data: newTitleItems,
+      },
+      {
+        id: 'header',
+        type: 'free-layout',
+        top: headerTop,
+        data: newHeaderItems,
+      },
+      {
+        id: 'body',
+        type: 'table',
+        top: bodyTop,
+        data: [bodyItems],
+      },
+      {
+        id: 'footer',
+        type: 'free-layout',
+        top: footerTop,
+        data: newFooterItems,
+      },
+    ],
   }
 }

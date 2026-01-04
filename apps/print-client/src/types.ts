@@ -6,7 +6,7 @@ export interface PaperDefinition {
 }
 
 export interface EditorItem {
-  type: 'text' | 'image' | 'table' | 'qrcode' | 'line' // simplified for now
+  type: 'text' | 'image'
   x: number
   y: number
   width: number
@@ -34,38 +34,16 @@ export interface TableColumn {
   alias?: string
 }
 
-export interface TableItem extends EditorItem {
+export interface TableData {
   cols: TableColumn[]
   showSubtotal?: boolean
   showTotal?: boolean
 }
 
-export type RegionType = 'free-layout' | 'table' | 'custom'
-
-export interface RegionBase {
-  id: string
-  top: number
-  isActive?: boolean // For selection/interactions but typically derived
-}
-
-export interface FreeLayoutRegion extends RegionBase {
-  type: 'free-layout'
-  data: EditorItem[]
-}
-
-export interface TableRegion extends RegionBase {
-  type: 'table'
-  data: TableItem[]
-}
-
-export interface CustomRegion extends RegionBase {
-  type: 'custom'
-  data: any
-}
-
-export type Region = FreeLayoutRegion | TableRegion | CustomRegion
-
 export interface EditorState {
+  headerTop: number
+  bodyTop: number
+  footerTop: number
   paperHeight: number
   paperWidth: number
   paperType: 'A4' | 'A4_2' | 'A4_3' | 'custom'
@@ -77,10 +55,8 @@ export interface EditorState {
     left: number
     right: number
   }
-  regions: Region[]
-}
-
-export interface Guide {
-  type: 'horizontal' | 'vertical'
-  pos: number // mm
+  titleItems: EditorItem[]
+  headerItems: EditorItem[]
+  bodyItems: TableData
+  footerItems: EditorItem[]
 }

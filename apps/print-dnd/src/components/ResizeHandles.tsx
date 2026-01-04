@@ -1,14 +1,19 @@
-import React from 'react'
+import React, { useEffect } from 'react'
+import { useDrag } from 'react-dnd'
+import { getEmptyImage } from 'react-dnd-html5-backend'
+import { EditorItem } from '../types/editor'
 
 export type ResizeDirection = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw'
 
 interface ResizeHandlesProps {
-  onResizeStart: (direction: ResizeDirection, e: React.MouseEvent) => void
+  item: EditorItem
+  regionId: string
+  index: number
 }
 
 const HANDLE_SIZE = 8 // pixels
 
-const handles: Array<{
+const handlesConfig: Array<{
   direction: ResizeDirection
   cursor: string
   style: React.CSSProperties
@@ -73,27 +78,74 @@ const handles: Array<{
   },
 ]
 
+const Handle: React.FC<{
+  direction: ResizeDirection
+  cursor: string
+  style: React.CSSProperties
+  item: EditorItem
+  regionId: string
+  index: number
+}> = ({ direction, cursor, style, item, regionId, index }) => {
+  const [{ isDragging }, dragRef, preview] = useDrag({
+    type: 'RESIZE_HANDLE',
+    item: () => {
+      return {
+        type: 'RESIZE_HANDLE',
+        direction,
+        item,
+        regionId,
+        index,
+        initialX: item.x,
+        initialY: item.y,
+        initialWidth: item.width,
+        initialHeight: item.height,
+      }
+    },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  })
+
+  useEffect(() => {
+    preview(getEmptyImage(), { captureDraggingState: true })
+  }, [preview])
+
+  return (
+    <div
+      ref={dragRef}
+      className="absolute bg-white border-2 border-blue-500 rounded-sm hover:bg-blue-100"
+      style={{
+        ...style,
+        width: HANDLE_SIZE,
+        height: HANDLE_SIZE,
+        cursor,
+        zIndex: 100,
+        opacity: isDragging ? 0 : 1,
+      }}
+      onClick={(e) => {
+        // Prevent click propagation to item selection
+        e.stopPropagation()
+      }}
+    />
+  )
+}
+
 export const ResizeHandles: React.FC<ResizeHandlesProps> = ({
-  onResizeStart,
+  item,
+  regionId,
+  index,
 }) => {
   return (
     <>
-      {handles.map(({ direction, cursor, style }) => (
-        <div
+      {handlesConfig.map(({ direction, cursor, style }) => (
+        <Handle
           key={direction}
-          className="absolute bg-white border-2 border-blue-500 rounded-sm hover:bg-blue-100"
-          style={{
-            ...style,
-            width: HANDLE_SIZE,
-            height: HANDLE_SIZE,
-            cursor,
-            zIndex: 100,
-          }}
-          onMouseDown={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            onResizeStart(direction, e)
-          }}
+          direction={direction}
+          cursor={cursor}
+          style={style}
+          item={item}
+          regionId={regionId}
+          index={index}
         />
       ))}
     </>

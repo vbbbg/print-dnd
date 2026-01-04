@@ -1,9 +1,9 @@
 import React from 'react'
-import { TableData } from '../types/editor'
+import { TableItem } from '../types/editor'
 
 interface TableSettingsPanelProps {
-  data: TableData
-  onChange: (updates: Partial<TableData>) => void
+  data: TableItem
+  onChange: (updates: Partial<TableItem>) => void
 }
 
 export const TableSettingsPanel: React.FC<TableSettingsPanelProps> = ({

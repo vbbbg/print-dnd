@@ -1,10 +1,11 @@
 import React from 'react'
-import { TableData } from '../types/editor'
-import { pxToMm } from '../constants/units'
+import { TableItem, TableColumn } from '../types/editor'
+import { ColumnResizeHandle } from './ColumnResizeHandle'
 
 interface RegionTableProps {
-  data: TableData
+  data: TableItem
   rows?: any[]
+  height?: number // px
   onColumnResizeStart?: (
     index: number,
     e: React.MouseEvent,
@@ -18,55 +19,13 @@ interface RegionTableProps {
 export const RegionTable: React.FC<RegionTableProps> = ({
   data,
   rows = [],
+  height,
   onColumnResizeStart,
   isSelected,
   onClick,
 }) => {
   const visibleCols = data.cols.filter((col) => col.visible !== false)
   const totalWidth = visibleCols.reduce((sum, col) => sum + col.width, 0)
-
-  const handleResizeStart = (index: number, e: React.MouseEvent) => {
-    if (!onColumnResizeStart) return
-
-    // Measure content width using Canvas API to get "max-content" (no wrap) width
-    // This is cleaner than DOM cloning/layout thrashing
-    const measureTextWidth = (text: string, font: string) => {
-      const canvas = document.createElement('canvas')
-      const context = canvas.getContext('2d')
-      if (!context) return 0
-      context.font = font
-      return context.measureText(text).width
-    }
-
-    const getComputedFont = (el: HTMLElement) => {
-      const style = window.getComputedStyle(el)
-      return `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
-    }
-
-    const leftEl = document.getElementById(`header-col-${index}`)
-    const rightEl = document.getElementById(`header-col-${index + 1}`)
-
-    // Default safe min width (approx 8 units / 30px)
-    const DEFAULT_MIN = 8
-
-    let minLeft = DEFAULT_MIN
-    let minRight = DEFAULT_MIN
-
-    if (leftEl && leftEl.textContent) {
-      const font = getComputedFont(leftEl)
-      const textWidth = measureTextWidth(leftEl.textContent, font)
-      // Add padding (approx 12px)
-      minLeft = Math.max(DEFAULT_MIN, pxToMm(textWidth + 12))
-    }
-
-    if (rightEl && rightEl.textContent) {
-      const font = getComputedFont(rightEl)
-      const textWidth = measureTextWidth(rightEl.textContent, font)
-      minRight = Math.max(DEFAULT_MIN, pxToMm(textWidth + 12))
-    }
-
-    onColumnResizeStart(index, e, minLeft, minRight)
-  }
 
   const displayRows = rows && rows.length > 0 ? rows.slice(0, 2) : []
 
@@ -78,6 +37,7 @@ export const RegionTable: React.FC<RegionTableProps> = ({
       style={{
         // Use generic table styling
         fontSize: '12px',
+        height: height || '100%',
       }}
       onClick={(e) => {
         e.stopPropagation()
@@ -86,7 +46,7 @@ export const RegionTable: React.FC<RegionTableProps> = ({
     >
       {/* Table Header */}
       <div className="flex border-b border-gray-400 bg-gray-50 relative">
-        {visibleCols.map((col, index) => {
+        {visibleCols.map((col: TableColumn, index: number) => {
           const widthPercent = (col.width / totalWidth) * 100
           const isLast = index === visibleCols.length - 1
 
@@ -105,10 +65,14 @@ export const RegionTable: React.FC<RegionTableProps> = ({
 
               {/* Resize Handle */}
               {!isLast && onColumnResizeStart && (
-                <div
-                  className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize z-10 hover:bg-blue-400 opacity-0 hover:opacity-50 transition-opacity translate-x-1/2"
-                  onMouseDown={(e) => handleResizeStart(index, e)}
-                  title="Drag to resize"
+                <ColumnResizeHandle
+                  colIndex={index}
+                  initialWidths={{
+                    left: visibleCols[index].width,
+                    right: visibleCols[index + 1].width,
+                  }}
+                  minWidths={{ left: 8, right: 8 }} // Default min width
+                  className="absolute right-0 top-0 bottom-0 w-2 z-10 hover:bg-blue-400 opacity-0 hover:opacity-50 transition-opacity translate-x-1/2"
                 />
               )}
             </div>
@@ -123,7 +87,7 @@ export const RegionTable: React.FC<RegionTableProps> = ({
             key={rowIndex}
             className="flex border-b border-gray-200 last:border-0 min-h-[24px]"
           >
-            {visibleCols.map((col, index) => {
+            {visibleCols.map((col: TableColumn, index: number) => {
               const widthPercent = (col.width / totalWidth) * 100
               const isLast = index === visibleCols.length - 1
               return (
