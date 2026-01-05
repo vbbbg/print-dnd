@@ -18,6 +18,13 @@ export type {
 
 export type { JsonField, ItemsJson } from './types/fields'
 
+export { componentRegistry } from './core/ComponentRegistry'
+export { TextPlugin } from './plugins/TextPlugin'
+export { ImagePlugin } from './plugins/ImagePlugin'
+export { TablePlugin } from './plugins/TablePlugin'
+export { QRCodePlugin } from './plugins/QRCodePlugin'
+export { LinePlugin } from './plugins/LinePlugin'
+
 // Hooks
 export { useToolbar } from './hooks/useToolbar'
 export { useItemDrag } from './hooks/useItemDrag'
