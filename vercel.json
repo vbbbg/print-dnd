@@ -2,7 +2,7 @@
     "buildCommand": "pnpm build:web",
     "outputDirectory": "apps/print-editor/dist-app",
     "framework": "vite",
-    "installCommand": "pnpm install",
+    "installCommand": "pnpm install --no-frozen-lockfile",
     "rewrites": [
         {
             "source": "/(.*)",
