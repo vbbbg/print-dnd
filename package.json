@@ -3,9 +3,9 @@
     "version": "1.0.0",
     "private": true,
     "scripts": {
-        "dev:web": "pnpm --filter print-dnd dev",
-        "dev:pdf": "pnpm --filter pdf-generation dev",
-        "build:web": "pnpm --filter print-dnd build",
+        "dev:web": "pnpm --filter print-editor dev",
+        "dev:pdf": "pnpm --filter pdf-generator dev",
+        "build:web": "pnpm --filter print-editor build",
         "install:all": "pnpm install",
         "prepare": "husky install"
     },

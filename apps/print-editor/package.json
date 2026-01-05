@@ -1,5 +1,5 @@
 {
-  "name": "print-dnd",
+  "name": "print-editor",
   "private": false,
   "engines": {
     "node": ">=18.0.0"
@@ -72,6 +72,6 @@
     "vite": "^7.2.7",
     "vite-plugin-dts": "^3.9.1",
     "vitest": "^4.0.15",
-    "print-client": "workspace:*"
+    "pdf-generator": "workspace:*"
   }
 }

@@ -19,10 +19,13 @@ export default defineConfig({
       react: path.resolve(__dirname, './node_modules/react'),
       'react-dom': path.resolve(__dirname, './node_modules/react-dom'),
       '@': path.resolve(__dirname, './src'),
-      'print-client': path.resolve(__dirname, '../print-client/src/index.tsx'),
+      'pdf-generator': path.resolve(
+        __dirname,
+        '../pdf-generator/src/index.tsx'
+      ),
       '@react-pdf/renderer': path.resolve(
         __dirname,
-        '../print-client/node_modules/@react-pdf/renderer'
+        '../pdf-generator/node_modules/@react-pdf/renderer'
       ),
     },
   },
@@ -32,7 +35,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: path.resolve(__dirname, 'src/index.ts'),
-      name: 'PrintDnd',
+      name: 'PrintEditor',
       formats: ['es', 'umd'],
       fileName: (format) => `index.${format}.js`,
     },

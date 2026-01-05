@@ -1,4 +1,4 @@
-import { generatePdf } from 'print-client'
+import { generatePdf } from 'pdf-generator'
 import { TemplateEditor } from './components/TemplateEditor'
 import { EditorLeftSidebar } from './components/EditorLeftSidebar'
 import { EditorRightSidebar } from './components/EditorRightSidebar'

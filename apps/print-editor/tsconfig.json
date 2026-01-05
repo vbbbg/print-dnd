@@ -27,8 +27,8 @@
             "@/*": [
                 "./src/*"
             ],
-            "print-client": [
-                "../print-client/src/index.tsx"
+            "pdf-generator": [
+                "../pdf-generator/src/index.tsx"
             ]
         }
     },
