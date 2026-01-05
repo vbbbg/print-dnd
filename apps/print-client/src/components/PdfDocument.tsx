@@ -1,6 +1,11 @@
 import React, { useMemo } from 'react'
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
-import type { EditorState, EditorItem } from '../types'
+import type {
+  EditorState,
+  EditorItem,
+  FreeLayoutRegion,
+  TableRegion,
+} from '../types'
 import { resolveItemText } from '../utils/itemUtils'
 import { PdfTable } from './PdfTable'
 
@@ -65,25 +70,51 @@ const PaginatedDocument: React.FC<PaginatedDocumentProps> = ({
   widthPt,
   heightPt,
 }) => {
-  // 1. Calculate Available Table Space
-  const bodyTopMm = template.bodyTop
-  const footerTopMm = template.footerTop
-  const tableRegionHeightMm = footerTopMm - bodyTopMm
+  // 1. Extract Regions
+  const tableRegion = template.regions.find((r) => r.type === 'table') as
+    | TableRegion
+    | undefined
+
+  // All other regions are considered "static" layers (free-layout)
+  // We sort them by Z-index or just render them.
+  // For now, we assume they are distinct vertical sections or overlays.
+  const freeRegions = template.regions.filter(
+    (r) => r.type === 'free-layout'
+  ) as FreeLayoutRegion[]
+
+  // 2. Calculate Available Table Space
+  // We determine the table boundaries based on its position and the next region below it.
+  const bodyTopMm = tableRegion?.top || 50
+
+  // Find the nearest region *below* the table to act as the bottom boundary
+  // If no region is below, use paper height - margin
+  const nextRegionTop = template.regions
+    .filter((r) => r.top > bodyTopMm && r !== tableRegion)
+    .sort((a, b) => a.top - b.top)[0]?.top
+
+  const bottomBoundaryMm =
+    nextRegionTop || template.paperHeight - template.margins.bottom
+  const tableRegionHeightMm = bottomBoundaryMm - bodyTopMm
 
   // Safety check
   const safeTableHeightMm = Math.max(tableRegionHeightMm, 20) // at least 20mm
 
-  // 2. Estimate Row Height & Header/Footer Height
+  // 3. Estimate Row Height & Header/Footer Height
   // These are approximations in mm.
   const ROW_HEIGHT_MM = 8
   const HEADER_HEIGHT_MM = 8
   const SUBTOTAL_HEIGHT_MM = 8 // For "本页小计"
   const TOTAL_HEIGHT_MM = 8 // For "合计"
 
-  // 3. Prepare Data
+  // 4. Prepare Data
+  const tableItem = tableRegion?.data?.[0]
+  const tableCols = tableItem?.cols || []
+  const showSubtotal = tableItem?.showSubtotal
+  const showTotal = tableItem?.showTotal
+
   const tableDataList = Array.isArray(docData.list) ? docData.list : []
 
-  // 4. Pagination Logic
+  // 5. Pagination Logic
   const pages = useMemo(() => {
     const chunks: any[][] = []
 
@@ -108,7 +139,7 @@ const PaginatedDocument: React.FC<PaginatedDocumentProps> = ({
           HEADER_HEIGHT_MM +
           remaining * ROW_HEIGHT_MM +
           SUBTOTAL_HEIGHT_MM +
-          (template.bodyItems.showTotal ? TOTAL_HEIGHT_MM : 0)
+          (showTotal ? TOTAL_HEIGHT_MM : 0)
 
         if (contentHeight > safeTableHeightMm) {
           // Cannot fit logic: we need to split.
@@ -117,7 +148,7 @@ const PaginatedDocument: React.FC<PaginatedDocumentProps> = ({
             (safeTableHeightMm -
               HEADER_HEIGHT_MM -
               SUBTOTAL_HEIGHT_MM -
-              (template.bodyItems.showTotal ? TOTAL_HEIGHT_MM : 0)) /
+              (showTotal ? TOTAL_HEIGHT_MM : 0)) /
               ROW_HEIGHT_MM
           )
 
@@ -126,8 +157,6 @@ const PaginatedDocument: React.FC<PaginatedDocumentProps> = ({
             limit = lastPageMaxRowsWithTotal
           } else {
             // If we can't fit ANY rows with the total, we just fill this page with 'limit' (normal rows)
-            // and the next page will handle the rest (or just the Total if 0 rem).
-            // 'limit' is already set to safeNormalPageRows.
           }
         } else {
           // Fits!
@@ -144,7 +173,7 @@ const PaginatedDocument: React.FC<PaginatedDocumentProps> = ({
     if (chunks.length === 0) chunks.push([])
 
     return chunks
-  }, [tableDataList, safeTableHeightMm, template.bodyItems.showTotal])
+  }, [tableDataList, safeTableHeightMm, showTotal])
 
   const renderItem = (item: EditorItem, keyPrefix: string) => {
     const text = resolveItemText(item, docData)
@@ -179,7 +208,6 @@ const PaginatedDocument: React.FC<PaginatedDocumentProps> = ({
         const isLastPage = pageIdx === pages.length - 1
 
         // Calculate Subtotal for this page
-        // Assuming 'amount' field in row data is the string/number to sum.
         const pageSubTotalVal = pageRows.reduce((sum, row) => {
           let val = 0
           if (typeof row.amount === 'number') val = row.amount
@@ -189,7 +217,6 @@ const PaginatedDocument: React.FC<PaginatedDocumentProps> = ({
         }, 0)
 
         // Calculate Grand Total
-        // Use docData.currentDue string if available, otherwise sum entire list if available
         let grandTotalStr = '¥0.00'
         if (docData.currentDue) {
           grandTotalStr = docData.currentDue
@@ -222,40 +249,35 @@ const PaginatedDocument: React.FC<PaginatedDocumentProps> = ({
                 height: '100%',
               }}
             >
-              {/* Title Items: Page 1 only */}
-              {pageIdx === 0 &&
-                template.titleItems?.map((item, idx) =>
-                  renderItem(item, `t-${idx}`)
-                )}
-
-              {/* Header & Footer Items: All pages */}
-              {template.headerItems?.map((item, idx) =>
-                renderItem(item, `h-${idx}`)
-              )}
-              {template.footerItems?.map((item, idx) =>
-                renderItem(item, `f-${idx}`)
+              {/* Render All Free Layout Regions */}
+              {freeRegions.map((region, rIdx) =>
+                region.data?.map((item, iIdx) =>
+                  renderItem(item, `r-${rIdx}-i-${iIdx}`)
+                )
               )}
             </View>
 
             {/* Table Region */}
-            <View
-              style={{
-                position: 'absolute',
-                left: `${template.margins.left}mm`,
-                top: `${template.bodyTop}mm`,
-                width: `${template.paperWidth - template.margins.left - template.margins.right}mm`,
-                height: `${tableRegionHeightMm}mm`,
-              }}
-            >
-              <PdfTable
-                cols={template.bodyItems.cols}
-                data={pageRows}
-                showSubtotal={template.bodyItems.showSubtotal}
-                showTotal={isLastPage && template.bodyItems.showTotal}
-                subTotal={subTotalStr}
-                grandTotal={grandTotalStr}
-              />
-            </View>
+            {tableRegion && (
+              <View
+                style={{
+                  position: 'absolute',
+                  left: `${template.margins.left}mm`,
+                  top: `${bodyTopMm}mm`,
+                  width: `${template.paperWidth - template.margins.left - template.margins.right}mm`,
+                  height: `${tableRegionHeightMm}mm`,
+                }}
+              >
+                <PdfTable
+                  cols={tableCols}
+                  data={pageRows}
+                  showSubtotal={showSubtotal}
+                  showTotal={isLastPage && showTotal}
+                  subTotal={subTotalStr}
+                  grandTotal={grandTotalStr}
+                />
+              </View>
+            )}
           </Page>
         )
       })}

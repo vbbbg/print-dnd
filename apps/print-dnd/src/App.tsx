@@ -1,3 +1,4 @@
+import { generatePdf } from 'print-client'
 import { TemplateEditor } from './components/TemplateEditor'
 import { EditorLeftSidebar } from './components/EditorLeftSidebar'
 import { EditorRightSidebar } from './components/EditorRightSidebar'
@@ -9,6 +10,8 @@ import { ImagePlugin } from './plugins/ImagePlugin'
 import { TablePlugin } from './plugins/TablePlugin'
 
 import { MOCK_REAL_DATA } from './utils/mockRealData'
+import { EditorState } from '@/types/editor.ts'
+import { getMockEditorState } from '@/utils/mockData.ts'
 
 // Register default plugins
 componentRegistry.register(TextPlugin)
@@ -16,6 +19,33 @@ componentRegistry.register(ImagePlugin)
 componentRegistry.register(TablePlugin)
 
 function App() {
+  const handlePreview = async (editorState?: EditorState) => {
+    if (!editorState) {
+      console.error('Preview failed: No editor state provided')
+      return
+    }
+    try {
+      console.log('Generating PDF preview...', editorState)
+      // Use current editor state and mock data
+      const blob = await generatePdf(editorState, [MOCK_REAL_DATA])
+      const url = URL.createObjectURL(blob)
+
+      // Create hidden link to download
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `preview-${Date.now()}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+
+      console.log('PDF generated successfully')
+    } catch (error) {
+      console.error('Failed to generate PDF:', error)
+      alert('生成PDF失败，请查看控制台日志')
+    }
+  }
+
   const customToolbar = (state: ToolbarState): ToolbarGroup[] => [
     {
       id: 'history',
@@ -81,7 +111,7 @@ function App() {
           id: 'preview-btn',
           icon: Printer,
           title: '打印预览',
-          onClick: () => console.log('preview'),
+          onClick: handlePreview,
         },
       ],
     },
@@ -89,6 +119,7 @@ function App() {
 
   return (
     <TemplateEditor
+      initialState={getMockEditorState()}
       previewData={MOCK_REAL_DATA}
       toolbar={{ groups: customToolbar }}
       renderLeftPanel={(props) => <EditorLeftSidebar {...props} />}

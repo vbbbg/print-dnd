@@ -37,11 +37,12 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
     ...group,
     items: group.items.map((item) => {
       const newItem = { ...item }
-      if (item.action && handlers[item.action]) {
-        const internalHandler = handlers[item.action]
-        const userHandler = item.onClick
+      const internalHandler = item.action ? handlers[item.action] : undefined
+      const userHandler = item.onClick
+
+      if (internalHandler || userHandler) {
         newItem.onClick = () => {
-          internalHandler()
+          if (internalHandler) internalHandler()
           if (userHandler) userHandler(state.editorState)
         }
       }

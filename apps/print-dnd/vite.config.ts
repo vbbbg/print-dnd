@@ -14,9 +14,20 @@ export default defineConfig({
     }),
   ],
   resolve: {
+    dedupe: ['react', 'react-dom', '@react-pdf/renderer'],
     alias: {
+      react: path.resolve(__dirname, './node_modules/react'),
+      'react-dom': path.resolve(__dirname, './node_modules/react-dom'),
       '@': path.resolve(__dirname, './src'),
+      'print-client': path.resolve(__dirname, '../print-client/src/index.tsx'),
+      '@react-pdf/renderer': path.resolve(
+        __dirname,
+        '../print-client/node_modules/@react-pdf/renderer'
+      ),
     },
+  },
+  optimizeDeps: {
+    include: ['@react-pdf/renderer'],
   },
   build: {
     lib: {

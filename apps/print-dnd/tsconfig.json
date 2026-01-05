@@ -26,6 +26,9 @@
         "paths": {
             "@/*": [
                 "./src/*"
+            ],
+            "print-client": [
+                "../print-client/src/index.tsx"
             ]
         }
     },

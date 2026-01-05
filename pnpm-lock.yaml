@@ -78,7 +78,7 @@ importers:
   apps/print-client:
     dependencies:
       '@react-pdf/renderer':
-        specifier: ^4.0.0
+        specifier: ^4.3.1
         version: 4.3.1(react@19.2.3)
       lucide-react:
         specifier: ^0.561.0
@@ -220,6 +220,9 @@ importers:
       prettier:
         specifier: ^3.0.0
         version: 3.7.4
+      print-client:
+        specifier: workspace:*
+        version: link:../print-client
       react:
         specifier: ^18.2.0
         version: 18.3.1
