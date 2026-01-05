@@ -1,0 +1,12 @@
+{
+    "buildCommand": "pnpm build:web",
+    "outputDirectory": "apps/print-editor/dist-app",
+    "framework": "vite",
+    "installCommand": "pnpm install",
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ]
+}
